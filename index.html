@@ -29,10 +29,11 @@
             //Peripheral function variables
             var mouse = new THREE.Vector2(), INTERSECTED;
             //Flag Variables
-            var Pulse, debug, RandomAlpha;
+            var Pulse, debug, RandomAlpha, AspectRatio;
             //Set this to how many points you want
-            var numPoints = 5000;
-            
+            var ParticleCount;
+            var rnd = Math.random() / 2 + 0.5;
+
             //Function calls to start up the proccesses.
             init();
             CreateScene();
@@ -48,14 +49,15 @@
                 
             var container,scene,element,ScreenWidth,ScreenHeight,controls;
             var camera, renderer, radius, camHelper, Raycaster;
-                
+            var color, colors = [];
             //Geometry variables for the various objects in this space
             var SurfaceGeometry, SurfaceMaterial, SurfaceLight, Surface;
             var SignalPointGeometry, SignalPointMaterial, SignalPoint;
             
             //Check for keypress/mouse events
-            document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+            //document.addEventListener( 'mousemove', onDocumentMouseMove, false );
             document.addEventListener( 'keydown', OnKeyDown, false );
+           // window.addEventListener('resize',onWindowResize, false);
             }
         
             //Key Bindings
@@ -92,7 +94,7 @@
                 camera.right  = ScreenWidth  /  2;
                 camera.top    = ScreenHeight /  2;
                 camera.bottom = ScreenHeight / -2;
-
+                
                 controls.handleResize();
             }
             
@@ -112,19 +114,24 @@
                 ScreenHeight = window.innerHeight;
                 
                 //Create camera
-                camera = new THREE.OrthographicCamera(ScreenWidth / - 2, ScreenWidth / 2, ScreenHeight / 2, ScreenHeight / - 2, 1, 1000);
-                camera.position.z = 300;
+                var AspectRatio = ScreenWidth/ScreenHeight;
+                var ViewSize = 900;
+                //camera = new THREE.OrthographicCamera(-ScreenWidth / 2 , ScreenWidth / 2, ScreenHeight / 2, ScreenHeight / - 2, 1, 1000);
+                camera = new THREE.OrthographicCamera(-AspectRatio*ViewSize / 2 , AspectRatio*ViewSize / 2, ViewSize / 2, ViewSize / - 2, -1000, 1000);
+                camera.position.z = 900;
+                camera.updateProjectionMatrix();
 
                 //Set up mouse controls
-                controls = new THREE.OrthographicTrackballControls(camera, container);    
+                controls = new THREE.OrthographicTrackballControls(camera, renderer.domElement);    
                // controls.rotateSpeed = 2.0;
-                controls.noRotate = true;
-                controls.zoomSpeed = 2.2;
-                controls.panSpeed = 1.8;
-                controls.noZoom = false;
-                controls.noPan = false;
-                controls.staticMoving = false;
+               // controls.noRotate = false;
+               // controls.zoomSpeed = 2.2;
+               // controls.panSpeed = 1.8;
+               // controls.noZoom = false;
+               // controls.noPan = false;
+               // controls.staticMoving = false;
                 controls.dynamicDampingFactor = 0.3;
+            
                 
                 //Assigning renderer attributes
                 renderer.setClearColor( 0xf0f0f0 );
@@ -164,8 +171,14 @@
                 Pulse = true;
                 if (debug)
                 {
+                                    
+                    var hex = 0xff0000;
+                    var boundingbox = new THREE.BoundingBoxHelper(plane, hex);
+                    boundingbox.update();
+                    scene.add(boundingbox);
+                    
                     camHelper = new THREE.CameraHelper( camera );
-                    //scene.add(CamHelper);
+                   // scene.add(camHelper);
 
                     stats = new Stats();
                     stats.domElement.style.position = 'absolute';
@@ -184,7 +197,69 @@
             //Since shaders are our best bet for this, I'll definitely try to understand how to use them.
             function DrawPoints()
             {
-                radius = Math.random() * 5 + 1;
+                /*
+                objects = [];
+
+				var material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } );
+
+				var loader = new THREE.JSONLoader();
+				loader.load( 'obj/Suzanne.js', function ( geometry ) {
+
+					geometry.computeVertexNormals();
+
+					for ( var i = 0; i < 5000; i ++ ) {
+
+						var mesh = new THREE.Mesh( geometry, material );
+
+						mesh.position.x = Math.random() * 8000 - 4000;
+						mesh.position.y = Math.random() * 8000 - 4000;
+						mesh.position.z = 0;
+						mesh.rotation.x = Math.random() * 2 * Math.PI;
+						mesh.rotation.y = Math.random() * 2 * Math.PI;
+						mesh.scale.x = mesh.scale.y = mesh.scale.z = Math.random() * 50 + 100;
+
+						objects.push( mesh );
+
+						scene.add( mesh );
+
+					}
+
+				} );*/
+            
+                ParticleCount = 100;
+                CircleGeometry = new THREE.Geometry();
+                sprite = THREE.ImageUtils.loadTexture("Assets/Images/particle.png");
+                for (var i = 0; i < ParticleCount; i++)
+                {
+                    var vertex = new THREE.Vector3();
+                    vertex.x = 2000 * Math.random() - 1000;
+                    vertex.y  = ScreenHeight * Math.random();
+                    vertex.z = 1;
+                    var rnd = Math.random() / 2 + 2;
+                    //CircleGeometry.colors.push(new THREE.Color(rnd, rnd / 4, 0));
+                    CircleGeometry.colors.push(new THREE.Color(255, 0, 0));
+                    CircleGeometry.vertices.push( vertex );
+                }
+                CircleMaterial = new THREE.PointCloudMaterial( 
+                    { size: 20, 
+                     sizeAttenuation: true, 
+                     blending: THREE.AdditiveBlending, 
+                     map: sprite,
+                     alphaTest: 0.1, 
+                     transparent:true, 
+                     opacity: 0.9,
+                     vertexColors: true
+                     
+                    } );
+                //CircleMaterial.color.setRGB(255,0,0);
+                particleSystem = new THREE.PointCloud( CircleGeometry, CircleMaterial);
+                particleSystem.sortParticles = false;
+                scene.add(particleSystem);
+                
+            
+                
+                
+              /*  radius = Math.random() * 5 + 1;
                 //var mergedGeometry = new THREE.Geometry();
                 for (var i = 0; i < numPoints; i++)
                 {
@@ -206,7 +281,7 @@
                     scene.add(SignalPoint);
                     points.push(SignalPoint);
 
-                }
+                }*/
                 //var final_mesh = new THREE.mesh(mergedGeometry, new THREE.MeshBasicMaterial( { color: 0xff0000 } ));
                 //scene.add(mergedGeometry);
             }
@@ -214,26 +289,16 @@
             //This causes the points to pulse, linear method, need to implement quadratic easing
             function SignalPulse()
             {
+                particleSystem.dynamic = true;
+                particleSystem.geometry.verticesNeedUpdate = true;
+                particleSystem.geometry.__dirtyVertices = true;
+
                 if (Pulse)
                 {
-                for (var l = 0; l < points.length; l++)
-                {   
-                    if (points[l].scale.x > 2)
-                    {
-                        points[l].scale.x -= .1 + 1;
-                    }
-                    if ((points[l].scale.y) > 2)
-                    {
-                        points[l].scale.y -= .1 + 1;
-                    }
-                    if (points[l].scale.x <= 2)
-                    {
-                        points[l].scale.x += .1;
-                    }
-                    if (points[l].scale.y <= 2)
-                    {
-                         points[l].scale.y += .1 ;
-                    }
+                for (var p = 0; p < particleSystem.geometry.vertices.length; p++)
+                {
+                    
+                    particleSystem.geometry.vertices[p].scale += Math.random() * 110;
                     
                 }
                 }
@@ -242,11 +307,33 @@
             }
             
             //Find the points that intersect the cursor's position(x,y)
+            function ColorParticle()
+            {
+                var step = 0;
+                if (step % 8 === 0) {
+                    for (var i = 0; i < particleSystem.geometry.colors.length; i++) {
+                        particleSystem.geometry.colors[i] = new THREE.Color(0x000000 );
+                    }
+                        particleSystem.geometry.colorsNeedUpdate = true;
+                }
+                        step++;
+            }
+            function LinearTween()
+            {
+                var time,start,change,duration;
+                for (var j = 0; j < particleSystem.geometry.vertices.length; j++)
+                {
+                    particleSystem.geometry.vertices[j].opacity = 0;
+                    console.log(particleSystem.geometry.vertices[j].opacity);
+                }
+            }
             function FindIntersects()
             {
-                Raycaster.setFromCamera(mouse, camera);
+			
+
+               /* Raycaster.setFromCamera(mouse, camera);
                 //The intersects are the points we are checking if the mouse  hovers over.
-                var intersects = Raycaster.intersectObjects(points),
+                var intersects = Raycaster.intersectObjects([particleSystem]),
                 material;
                 //If there are points to check, then we can animate them.
                 if (intersects.length > 0) {
@@ -262,15 +349,12 @@
                                 if (material.emissive) 
                                 {
                                     material.emissive.setHex(INTERSECTED.currentHex);
-                                   // INTERSECTED.scale.x *= 5;
-                                   // INTERSECTED.scale.y *= 5;
+                                    material.emissive.setHex(0xff0000);                            
+
                                 }
                                 else
                                 {
-                                    material.color.setHex(INTERSECTED.currentHex);
-                                   // INTERSECTED.scale.x *= 5;
-                                   // INTERSECTED.scale.y *= 5;
-                                   
+                                    material.color.setHex(INTERSECTED.currentHex);                                   
                                 }
                             }
                            
@@ -281,19 +365,12 @@
                         if(material.emissive)
                         {
                             INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-                            material.emissive.setHex(0xff0000);
-                           // INTERSECTED.scale.x = Math.random() * 2 + 1;
-                            //INTERSECTED.scale.y = Math.random() * 2 + 1;
-                            
+                            material.emissive.setHex(0xff0000);                            
                         }
                         else{
                             INTERSECTED.currentHex = material.color.getHex();
-                            material.color.setHex(0xff0000);
-                           // INTERSECTED.scale.x = Math.random() * 2 + 1;
-                           // INTERSECTED.scale.y = Math.random() * 2 + 1;
+                            material.color.setHex(0xff0000);                        
                         }
-
-                        //console.log(INTERSECTED.position);
                     }
 
                 } else {
@@ -313,36 +390,38 @@
 
                     INTERSECTED = null;
 
-                }
+                }*/
             }
             
-            //This function will allow us to change the transparency of the points
-            function ChangeAlpha()
-            {
-                for (var m = 0; m < points.length; m ++)
-                {
-                    points[m].material.opacity = 0;
-                }
-            }
+            
             
             //Main animation function
             function animate() {
+               // particleSystem.rotation.z -= 0.1;
+               // particleSystem.rotation.y += 0.1;
+               // particleSystem.rotation.x += 0.1;
+             //   particles.geometry.vertices
                 requestAnimationFrame(animate);
                 render();
+
             }
             
             //Update and Draw
             function render()
             {
-                FindIntersects();
-                SignalPulse();
+                //ColorParticle();
+               // LinearTween();
+                //FindIntersects();
+                //SignalPulse();
                // ChangeAlpha();
+              //  camera.lookAt(plane.position);
                 controls.update();
                 renderer.render(scene, camera);
                 stats.update();
 
-            }
 
+            }
+            window.onload = init;
 
 		</script>
 
