@@ -15,130 +15,157 @@
 			}
 		</style>
 	</head>
-	<body>
-        
-		<script src="JS/three.js"></script>
-		<script src="JS/stats.js"></script>
-        <script src="JS/OrthographicTrackBallControls.js"></script>
-        <script src="JS/Detector.js"></script>
-        <script src="JS/OrbitControls.js"></script>
-		<script>
-            //var MergedGeometry, FinalGeometry;
-            //Rendering/drawing variables
-            var points = [],plane; //need to change points to key-value pair container
-            //Peripheral function variables
-            var mouse = new THREE.Vector2(), INTERSECTED;
-            //Flag Variables
-            var Pulse, debug, RandomAlpha, AspectRatio;
-            //Set this to how many points you want
-            var ParticleCount;
-            var rnd = Math.random() / 2 + 0.5;
+	<body onload = "init();" style = "background-color:#000000">
+        <script src = 'JS/tween.js'></script>
+		<script type = 'text/javascript' src = 'JS/three.js'></script>
+		<script type = 'text/javascript' src = "JS/stats.js"></script>
+        <script type = 'text/javascript' src = 'JS/Detector.js'></script>
+        <script type = 'text/javascript' src = 'JS/OrbitControls.js'></script>
+        <script type="x-shader/x-vertex" id="vertexshader">
 
-            //Function calls to start up the proccesses.
-            init();
-            CreateScene();
-            DrawPoints();
-            animate();
-            resize();
+			attribute float size;
+			attribute vec3 customColor;
+
+			varying vec3 vColor;
+
+			void main() {
+				vColor = customColor;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );
+				gl_Position = projectionMatrix * mvPosition;
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentshader">
+			uniform vec3 color;
+			uniform sampler2D texture;
+			varying vec3 vColor;
+			void main() {
+				gl_FragColor = vec4( color * vColor, 1.0 );
+				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+			}
+
+		</script>
+
+
+		<script>
+                
+                var geometry,attributes,uniforms;
+                //Rendering/drawing variables
+                var points = [],plane; //need to change points to key-value pair container
+                //Peripheral function variables
+                var INTERSECTED, mouse;
+                var PARTICLE_SIZE = 20;
+                //Flag Variables
+                var Pulse, debug,intersects, AspectRatio;
+                //Set this to how many points you want
+                var particles = 10;
+                //Function calls to start up the proccesses.
+                init();
+                CreateScene();
+                animate();
             
             function init()
             {
-            //Initialize
-            //Check for WebGL Support on browser
-            if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-                
-            var container,scene,element,ScreenWidth,ScreenHeight,controls;
-            var camera, renderer, radius, camHelper, Raycaster;
-            var color, colors = [];
-            //Geometry variables for the various objects in this space
-            var SurfaceGeometry, SurfaceMaterial, SurfaceLight, Surface;
-            var SignalPointGeometry, SignalPointMaterial, SignalPoint;
+                //Initialize
+                //Check for WebGL Support on browser
+                if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-            //Check for keypress/mouse events
-            //document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-            document.addEventListener( 'keydown', OnKeyDown, false );
-           // window.addEventListener('resize',onWindowResize, false);
-            }
-        
-            //Key Bindings
-            function OnKeyDown( event )
-            {
-                switch(event.keyCode)
+                var container,scene,element,ScreenWidth,ScreenHeight,controls;
+                var camera, renderer, radius, camHelper, raycaster;
+                var color, colors = [];
+                //Geometry variables for the various objects in this space
+                //var SignalPointGeometry, SignalPointMaterial, SignalPoint;
+                attributes = 
                 {
+				size:        { type: 'f', value: [] },
+				customColor: { type: 'c', value: [] },
+                vertexOpacity: {type: 'f', value: []}
+                };
+                uniforms = 
+                {
+				color:     { type: "c", value: new THREE.Color( 0xffffff ) },
+				texture:   { type: "t", value: THREE.ImageUtils.loadTexture( "Assets/Images/circle.png" ) }
+			     };
+                //Check for keypress/mouse events
+                document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                document.addEventListener( 'keydown', OnKeyDown, false );
+                //document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+                window.addEventListener('resize',onWindowResize, false);
+            }
 
-                case 80: // 'P' Key, Toggles Pulse Animation
-                Pulse = !Pulse;
-                break;
-                }
-            }
-            //Mouse hover //does nothing yet
-            function onDocumentMouseMove( event )
-            {
-                event.preventDefault();
-                mouse.x = (event.clientX / ScreenWidth ) * 2 - 1;
-                mouse.y = - ( event.clientY / ScreenHeight ) * 2 + 1;
-            }
-            //Mouse press down //does nothing yet
-            function onDocumentMouseDown( event )
-            {
-                event.preventDefault();
-                mouse.x = (event.clientX / ScreenWidth ) * 2 - 1;
-                mouse.y = - ( event.clientY / ScreenHeight ) * 2 + 1;
-            }
-            //Handles resizing the window, a little buggy at the moment, needs to be fixed.
-            function resize() {
-                
-                renderer.setSize(ScreenWidth, ScreenHeight);
-                //Orthographic camera adjustments
-                camera.left   = ScreenWidth  / -2;
-                camera.right  = ScreenWidth  /  2;
-                camera.top    = ScreenHeight /  2;
-                camera.bottom = ScreenHeight / -2;
-                
-                controls.handleResize();
-            }
-            
             //Main animation function
             function CreateScene()
             {
-                
                 scene  = new THREE.Scene();
                 renderer = new THREE.WebGLRenderer({antialias: false});
-                Raycaster = new THREE.Raycaster();
-                var numPoints;
-
+                raycaster = new THREE.Raycaster();
+                mouse = new THREE.Vector2(), 
+                    
                 container = document.createElement( 'div' );
                 container.style.position = 'relative';
                 document.body.appendChild( container );
                 ScreenWidth = window.innerWidth;
                 ScreenHeight = window.innerHeight;
                 
+                var shaderMaterial = new THREE.ShaderMaterial( {
+
+                    uniforms:       uniforms,
+                    attributes:     attributes,
+                    vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+                    blending:       THREE.AdditiveAlphaBlending,
+                    depthTest:      true,
+                    depthWrite: false,
+                    transparent:    true,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1,
+                    opacity: 0.5,
+                    size_attenuation: true
+
+                });
+                
+                var radius = 200;
+                geometry = new THREE.BufferGeometry();
+                var positions = new Float32Array( particles * 3 );
+                var values_color = new Float32Array( particles * 3 );
+                var values_size = new Float32Array( particles );
+
+                var color = new THREE.Color('255,0,0');
+                for( var v = 0; v < particles; v++ ) 
+                    {
+                    values_size[ v ] = PARTICLE_SIZE * 2;
+                    positions[ v * 3 + 0 ] = ( Math.random() * 2 - 1 ) * radius;
+                    positions[ v * 3 + 1 ] = 1;//( Math.random() * 2 - 1 ) * radius;
+                    positions[ v * 3 + 2 ] = ( Math.random() * 2 - 1 ) * radius;
+                    //color.setHSL( v / particles, 1.0, 0.5 );
+
+                    values_color[ v * 3 + 0 ] = color.r;
+                    values_color[ v * 3 + 1 ] = color.g;
+                    values_color[ v * 3 + 2 ] = color.b;
+                    //values_color[ v ] = new THREE.Color().setHSL( 0.01 + 0.1 * ( v / particles ), 1.0, 0.3 );
+			         }
+            //
+                geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+                geometry.addAttribute( 'customColor', new THREE.BufferAttribute( values_color, 3 ) );
+                geometry.addAttribute( 'size', new THREE.BufferAttribute( values_size, 1 ) );
+                particleSystem = new THREE.PointCloud( geometry, shaderMaterial );
                 //Create camera
                 var AspectRatio = ScreenWidth/ScreenHeight;
                 var ViewSize = 900;
-                //camera = new THREE.OrthographicCamera(-ScreenWidth / 2 , ScreenWidth / 2, ScreenHeight / 2, ScreenHeight / - 2, 1, 1000);
-               // camera = new THREE.OrthographicCamera(-AspectRatio*ViewSize / 2 , AspectRatio*ViewSize / 2, ViewSize / 2, ViewSize / - 2, -1000, 1000);
-               // camera.position.z = 900;
-               // camera.updateProjectionMatrix();
+                camera = new THREE.PerspectiveCamera( 50, ScreenWidth / ScreenHeight, 1, 4000 );
+                camera.position.set( 700, 245, 475 );
+                camera.lookAt(new THREE.Vector3(0,0,0) );
 
                 //Set up mouse controls
-               // controls = new THREE.OrthographicTrackBallControls(camera, renderer.domElement);
-                   
-                camera = new THREE.PerspectiveCamera( 50, ScreenWidth / ScreenHeight, 1, 2000 );
-            
-				camera.position.set( 700, 245, 475 );
-				camera.lookAt(new THREE.Vector3(0,0,0) );
                 controls = new THREE.OrbitControls(camera); 
-               // controls.rotateSpeed = 2.0;
-               // controls.noRotate = false;
-               // controls.zoomSpeed = 2.2;
-               // controls.panSpeed = 1.8;
-               // controls.noZoom = false;
-               // controls.noPan = false;
-               // controls.staticMoving = false;
+                controls.zoomSpeed = 2.2;
                 controls.dynamicDampingFactor = 0.3;
-            
-                
+
+
                 //Assigning renderer attributes
                 renderer.setClearColor( 0xf0f0f0 );
                 renderer.setPixelRatio( window.devicePixelRatio );
@@ -148,27 +175,21 @@
                 renderer.domElement.style.position = "relative";
                 container.appendChild(renderer.domElement);
 
-                //renderer.shadowMapEnabled = true;
-                //renderer.shadowMapType = THREE.PCFShadowMap;
-
-                //SurfaceGeometry = new THREE.BoxGeometry(500, 500, 10);
-                //SurfaceMaterial = new THREE.MeshPhongMaterial({wireframe:false, color: 0xFF0000, fill: true});
-                //Surface = new THREE.Mesh(SurfaceGeometry, SurfaceMaterial);
-
                 //Set up background for 3D space, in this case: a map of the area, will need to add support for multiple maps.
                 plane = new THREE.Mesh(
                         new THREE.PlaneBufferGeometry( ScreenWidth, ScreenHeight, 8, 8 ),
-                        new THREE.MeshPhongMaterial( { 
+                        new THREE.MeshPhongMaterial( 
+                            { 
                             map: THREE.ImageUtils.loadTexture('Assets/Images/NewOfficeTS.png'), 
                             color: 0x000000, 
                             opacity: 0.25, 
-                            transparent: true } ));
-                plane.visible = true;
-               // plane.anisotropy = 16;
+                            transparent: true,
+                            visible: true,
+                            frustumCulled: false
+                            } ));
                 plane.position.y = 0;
                 plane.rotation.x = - Math.PI / 2;
-              //  plane.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 25, 0 ) );
-                plane.frustumCulled = false;
+
                 SurfaceLight = new THREE.SpotLight( 0xffffff, 1.5 );
                 SurfaceLight.position.set( 0, 500, 2000 );
                 SurfaceLight.castShadow = true;
@@ -180,213 +201,122 @@
                 SurfaceLight.shadowMapWidth = 2048;
                 SurfaceLight.shadowMapHeight = 2048;
 
-                //debugging info
+                    //debugging info
                 debug = true;
                 Pulse = true;
                 if (debug)
-                {
-                                    
+                {                
                     var hex = 0xff0000;
                     var boundingbox = new THREE.BoundingBoxHelper(plane, hex);
                     boundingbox.update();
                     scene.add(boundingbox);
-                    
                     camHelper = new THREE.CameraHelper( camera );
-                   // scene.add(camHelper);
-
+                    // scene.add(camHelper);
                     stats = new Stats();
                     stats.domElement.style.position = 'absolute';
                     stats.domElement.style.top = '0px'
                     container.appendChild(stats.domElement);
-                }
-            
-            camera.add(plane);
-            scene.add( SurfaceLight );
-            scene.add( camera );
-            scene.add( plane );
+                    }
+                scene.add( particleSystem );
+                camera.add( plane );
+                scene.add( SurfaceLight );
+                scene.add( camera );
+                scene.add( plane );
             }
-            
-            //Draw all the points
-            //I will attempt to batch these draws and compare it to the linear draw function
-            //Since shaders are our best bet for this, I'll definitely try to understand how to use them.
-            function DrawPoints()
-            {
-                /*
-                objects = [];
 
-				var material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } );
-
-				var loader = new THREE.JSONLoader();
-				loader.load( 'obj/Suzanne.js', function ( geometry ) {
-
-					geometry.computeVertexNormals();
-
-					for ( var i = 0; i < 5000; i ++ ) {
-
-						var mesh = new THREE.Mesh( geometry, material );
-
-						mesh.position.x = Math.random() * 8000 - 4000;
-						mesh.position.y = Math.random() * 8000 - 4000;
-						mesh.position.z = 0;
-						mesh.rotation.x = Math.random() * 2 * Math.PI;
-						mesh.rotation.y = Math.random() * 2 * Math.PI;
-						mesh.scale.x = mesh.scale.y = mesh.scale.z = Math.random() * 50 + 100;
-
-						objects.push( mesh );
-
-						scene.add( mesh );
-
-					}
-
-				} );*/
-            
-                ParticleCount = 100;
-                CircleGeometry = new THREE.Geometry();
-                sprite = THREE.ImageUtils.loadTexture("Assets/Images/particle.png");
-                for (var i = 0; i < ParticleCount; i++)
-                {
-                    var vertex = new THREE.Vector3();
-                    vertex.x = 2000 * Math.random() - 1000;
-                    vertex.y = 1;
-                    vertex.z = 500 * Math.random() - 100;
-                    var rnd = Math.random() / 2 + 2;
-                    //CircleGeometry.colors.push(new THREE.Color(rnd, rnd / 4, 0));
-                    CircleGeometry.colors.push(new THREE.Color(255, 0, 0));
-                    CircleGeometry.vertices.push( vertex );
-                }
-                CircleMaterial = new THREE.PointCloudMaterial( 
-                    { size: 20, 
-                     sizeAttenuation: true, 
-                     blending: THREE.AdditiveBlending, 
-                     map: sprite,
-                     alphaTest: 0.1, 
-                     transparent:true, 
-                     opacity: 0.9,
-                     vertexColors: true
-                     
-                    } );
-                //CircleMaterial.color.setRGB(255,0,0);
-                particleSystem = new THREE.PointCloud( CircleGeometry, CircleMaterial);
-                particleSystem.sortParticles = false;
-                scene.add(particleSystem);
-                
-            }
-            
             //This causes the points to pulse, linear method, need to implement quadratic easing
             function SignalPulse()
             {
-                particleSystem.dynamic = true;
-                particleSystem.geometry.verticesNeedUpdate = true;
-                particleSystem.geometry.__dirtyVertices = true;
-
-                if (Pulse)
-                {
-                for (var p = 0; p < particleSystem.geometry.vertices.length; p++)
-                {
+                var pos;
+                var time = Date.now() * 0.005;
+                //particleSystem.rotation.z = 0.01 * time;
+                var size = geometry.attributes.size.array;
                     
-                    particleSystem.geometry.vertices[p].scale += Math.random() * 110;
+                for( var i = 0; i < particles; i++ ) {
+                    size[ i ] = 10 * ( 1 + Math.sin( 0.1 * i + time ) );
                     
                 }
-                }
-                else return;
-
+                geometry.attributes.size.needsUpdate = true;
             }
             
             //Find the points that intersect the cursor's position(x,y)
             function ColorParticle()
             {
+                particleSystem.geometry.colorsNeedUpdate = true;
                 var step = 0;
                 if (step % 8 === 0) {
                     for (var i = 0; i < particleSystem.geometry.colors.length; i++) {
-                        particleSystem.geometry.colors[i] = new THREE.Color(0x000000 );
+                        particleSystem.geometry.colors[i] = new THREE.Color(0x123152 * Math.random() + 1000 );
                     }
-                        particleSystem.geometry.colorsNeedUpdate = true;
                 }
                         step++;
             }
-            function LinearTween()
-            {
-                var time,start,change,duration;
-                for (var j = 0; j < particleSystem.geometry.vertices.length; j++)
-                {
-                    particleSystem.geometry.vertices[j].opacity = 0;
-                    console.log(particleSystem.geometry.vertices[j].opacity);
-                }
-            }
+            
+            //Change size on hover!
             function FindIntersects()
             {
-			
+              /*  raycaster.setFromCamera( mouse, camera );
 
-               /* Raycaster.setFromCamera(mouse, camera);
-                //The intersects are the points we are checking if the mouse  hovers over.
-                var intersects = Raycaster.intersectObjects([particleSystem]),
-                material;
-                //If there are points to check, then we can animate them.
-                if (intersects.length > 0) {
+				intersects = raycaster.intersectObject( particleSystem );
 
-                    //Intersected is the current mouse selection.
-                    if (INTERSECTED != intersects[0].object) 
-                    {
-                            //If we have an intersection, we check if we can change the color or light
-                            if (INTERSECTED)
-                            {
-                                material = INTERSECTED.material;
-                                //If the material emits light, we can change the color in hex.
-                                if (material.emissive) 
-                                {
-                                    material.emissive.setHex(INTERSECTED.currentHex);
-                                    material.emissive.setHex(0xff0000);                            
+				if ( intersects.length > 0 ) {
 
-                                }
-                                else
-                                {
-                                    material.color.setHex(INTERSECTED.currentHex);                                   
-                                }
-                            }
-                           
-                        
-                        INTERSECTED = intersects[0].object;
-                        material = INTERSECTED.material;
+					if ( INTERSECTED != intersects[ 0 ].index ) {
 
-                        if(material.emissive)
-                        {
-                            INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-                            material.emissive.setHex(0xff0000);                            
-                        }
-                        else{
-                            INTERSECTED.currentHex = material.color.getHex();
-                            material.color.setHex(0xff0000);                        
-                        }
-                    }
+						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE*100;
 
-                } else {
+						INTERSECTED = intersects[ 0 ].index;
 
-                    if (INTERSECTED){
-                        material = INTERSECTED.material;
+						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE * 100;
+						attributes.size.needsUpdate = true;
 
-                        if(material.emissive){
-                            material.emissive.setHex(INTERSECTED.currentHex);
-                            
-                        }
-                        else
-                        {
-                            material.color.setHex(INTERSECTED.currentHex);
-                        }
-                    }
+					}
 
-                    INTERSECTED = null;
+				} else if ( INTERSECTED !== null ) {
 
-                }*/
+					attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE*100;
+					attributes.size.needsUpdate = true;
+					INTERSECTED = null;
+
+				}*/
+
             }
-            
-            
+             //Key Bindings
+            function OnKeyDown( event )
+            {
+                switch(event.keyCode)
+                {
+
+                case 80: // 'P' Key, Toggles Pulse Animation
+                Pulse = !Pulse;
+                break;
+                }
+            }
+            //Mouse hover
+            function onDocumentMouseMove( event )
+            {
+                event.preventDefault();
+
+                mouse.x = (event.clientX / ScreenWidth ) * 2 - 1;
+                mouse.y = - ( event.clientY / ScreenHeight ) * 2 + 1;
+            }
+            //Mouse press down
+            function onDocumentMouseDown( event )
+            {
+                event.preventDefault();
+                mouse.x = (event.clientX / ScreenWidth ) * 2 - 1;
+                mouse.y = - ( event.clientY / ScreenHeight ) * 2 + 1;
+            }
+            //Handles resizing the window, a little buggy at the moment, needs to be fixed.
+          
+            function onWindowResize() {
+                camera.aspect = ScreenWidth / ScreenHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( ScreenWidth, ScreenHeight);
+            }
             
             //Main animation function
             function animate() {
-               // particleSystem.rotation.z -= 0.1;
-               // particleSystem.rotation.y += 0.1;
-               // particleSystem.rotation.x += 0.1;
-             //   particles.geometry.vertices
                 requestAnimationFrame(animate);
                 render();
 
@@ -395,21 +325,33 @@
             //Update and Draw
             function render()
             {
-                //ColorParticle();
-               // LinearTween();
+                SignalPulse();
+                camera.lookAt( scene.position );
+
                 //FindIntersects();
-                //SignalPulse();
-               // ChangeAlpha();
-              //  camera.lookAt(plane.position);
-                controls.update();
-                renderer.render(scene, camera);
-                stats.update();
+                raycaster.setFromCamera( mouse, camera );
+				intersects = raycaster.intersectObject( particleSystem );
+				if ( intersects.length > 0 ) {
 
+					if ( INTERSECTED != intersects[ 0 ].index ) {
+						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE;
+						INTERSECTED = intersects[ 0 ].index;
+						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE * 100;
+                        console.log(INTERSECTED);
+                        console.log(attributes.size.value[ INTERSECTED ]);
+                        attributes.size.needsUpdate = true;
 
+					}
+
+				} else if ( INTERSECTED !== null ) {
+					attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE*100;
+					attributes.size.needsUpdate = true;
+					INTERSECTED = null;
+				}
+            controls.update();
+            renderer.render(scene, camera);
+            stats.update();
             }
-            window.onload = init;
-
 		</script>
-
 	</body>
 </html>
