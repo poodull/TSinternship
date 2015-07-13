@@ -1,357 +1,422 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <div id="target"></div>
-	<head>
-		<title>three.js webgl - interactive cubes</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				font-family: Monospace;
-				background-color: #f0f0f0;
-				margin: 0px;
-				overflow: hidden;
-			}
-		</style>
-	</head>
-	<body onload = "init();" style = "background-color:#000000">
-        <script src = 'JS/tween.js'></script>
-		<script type = 'text/javascript' src = 'JS/three.js'></script>
-		<script type = 'text/javascript' src = "JS/stats.js"></script>
-        <script type = 'text/javascript' src = 'JS/Detector.js'></script>
-        <script type = 'text/javascript' src = 'JS/OrbitControls.js'></script>
-        <script type="x-shader/x-vertex" id="vertexshader">
+<head>
+	<title>Hello World (Three.js)</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<body>
 
-			attribute float size;
-			attribute vec3 customColor;
-
-			varying vec3 vColor;
-
-			void main() {
-				vColor = customColor;
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-				gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );
-				gl_Position = projectionMatrix * mvPosition;
-
-			}
-
-		</script>
-
-		<script type="x-shader/x-fragment" id="fragmentshader">
-			uniform vec3 color;
-			uniform sampler2D texture;
-			varying vec3 vColor;
-			void main() {
-				gl_FragColor = vec4( color * vColor, 1.0 );
-				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
-			}
-
-		</script>
+<script src="js/Three.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/Stats.js"></script>
+<script src="js/tween.js"></script>
+<script src="js/OrbitControls.js"></script>
 
 
-		<script>
-                
-                var geometry,attributes,uniforms;
-                //Rendering/drawing variables
-                var points = [],plane; //need to change points to key-value pair container
-                //Peripheral function variables
-                var INTERSECTED, mouse;
-                var PARTICLE_SIZE = 20;
-                //Flag Variables
-                var Pulse, debug,intersects, AspectRatio;
-                //Set this to how many points you want
-                var particles = 10;
-                //Function calls to start up the proccesses.
-                init();
-                CreateScene();
-                animate();
-            
-            function init()
+<!-- ------------------------------------------------------------ -->
+
+<div id="ThreeJS" style="z-index: 1; position: absolute; left:0px; top:0px"></div>
+<script>
+	
+//////////	
+// MAIN //
+//////////
+// standard global variables
+var container, scene, camera, renderer, controls, stats;
+var clock = new THREE.Clock(); 
+var mouse = new THREE.Vector2(),offset = new THREE.Vector3(),
+			INTERSECTED, SELECTED;;
+var raycaster = new THREE.Raycaster();
+var Points = [];
+    
+window.requestAnimFrame = (function(){
+     return  window.requestAnimationFrame       || 
+              window.webkitRequestAnimationFrame || 
+              window.mozRequestAnimationFrame    || 
+              window.oRequestAnimationFrame      || 
+              window.msRequestAnimationFrame     || 
+              function(/* function */ callback, /* DOMElement */ element)
+              {
+                    window.setTimeout(callback, 1000 / 60);
+              };
+            })();
+// custom global variables
+var cube;
+//debug var
+var Pulse = false, EaseIn = false, EaseOut = false;
+    
+// initialization
+init();
+
+// animation loop / game loop
+animate();
+
+///////////////
+// FUNCTIONS //
+///////////////
+			
+function init() 
+{
+	///////////
+	// SCENE //
+	///////////
+	scene = new THREE.Scene();
+
+	////////////
+	// CAMERA //
+	////////////
+	
+	// set the view size in pixels (custom or according to window size)
+	// var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;	
+	// camera attributes
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	// set up camera
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	// add the camera to the scene
+	scene.add(camera);
+	// the camera defaults to position (0,0,0)
+	// 	so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
+	camera.position.set(0,150,400);
+	camera.lookAt(scene.position);	
+	
+	//////////////
+	// RENDERER //
+	//////////////
+	
+	// create and start the renderer; choose antialias setting.
+	if ( Detector.webgl )
+		renderer = new THREE.WebGLRenderer( {antialias:true} );
+	else
+		renderer = new THREE.CanvasRenderer(); 
+	
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	
+	// attach div element to variable to contain the renderer
+	container = document.getElementById( 'ThreeJS' );
+	// alternatively: to create the div at runtime, use:
+	//   container = document.createElement( 'div' );
+	//    document.body.appendChild( container );
+	
+	// attach renderer to the container div
+	container.appendChild( renderer.domElement );
+	
+	
+
+	// move mouse and: left   click to rotate, 
+	//                 middle click to zoom, 
+	//                 right  click to pan
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	///////////
+	// STATS //
+	///////////
+	
+	// displays current and past frames per second attained by scene
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
+	
+	///////////
+	// LIGHT //
+	///////////
+	
+	// create a light
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,250,0);
+	scene.add(light);
+	//var ambientLight = new THREE.AmbientLight(0x111111);
+	// scene.add(ambientLight);
+    DrawPoints();
+    // create a set of coordinate axes to help orient user
+	//    specify length in pixels in each direction
+	var axes = new THREE.AxisHelper(100);
+	scene.add( axes );
+	
+	///////////
+	// FLOOR //
+	///////////
+	
+	// note: 4x4 checkboard pattern scaled so that each square is 25 by 25 pixels.
+	var floorTexture = new THREE.ImageUtils.loadTexture( 'Assets/Images/NewOfficeTS.png' );
+	//floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+	//floorTexture.repeat.set( 10, 10 );
+	// DoubleSide: render texture on both sides of mesh
+	var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+	var floorGeometry = new THREE.PlaneBufferGeometry(1000, 1000, 1, 1);
+	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor.position.y = -0.5;
+	floor.rotation.x = Math.PI / 2;
+	scene.add(floor);
+	
+	/////////
+	// SKY //
+	/////////
+	
+	// recommend either a skybox or fog effect (can't use both at the same time) 
+	// without one of these, the scene's background color is determined by webpage background
+
+	// make sure the camera's "far" value is large enough so that it will render the skyBox!
+	var skyBoxGeometry = new THREE.BoxGeometry( 10000, 10000, 10000 );
+	// BackSide: render faces from inside of the cube, instead of from outside (default).
+	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+	// scene.add(skyBox);
+    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+    document.addEventListener( 'keydown', OnKeyDown, false );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+
+
+	// fog must be added to scene before first render
+	scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
+}
+function RemovePoints()
+    {
+        for (var r = 0; r < Points.length; r++)
+        {
+            scene.remove(Points[r]);
+        }
+    }
+	////////////
+	// EVENTS //
+	////////////
+
+function onDocumentTouchStart( event ) {				
+    event.preventDefault();
+    event.clientX = event.touches[0].clientX;
+    event.clientY = event.touches[0].clientY;
+    onDocumentMouseDown( event );
+
+			}	
+function onDocumentMouseDown( event ) {				
+    event.preventDefault();
+    
+    mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
+    mouse.y = - ( event.clientY / renderer.domElement.height ) * 2 + 1;
+
+			}	
+function onDocumentMouseMove( event ) 
+{
+
+    event.preventDefault();
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+}
+
+function onWindowResize() 
+{
+    camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+    
+function OnKeyDown( event )
+{
+    switch(event.keyCode)
+    {
+        case 80: // 'P' Key, Toggles Pulse Animation
+            Pulse = !Pulse;
+            break;
+        case 79: // 'O' Key, Toggle Tween Out
+            EaseOut = !EaseOut;
+            EaseIn = false;
+            break;
+        case 73:
+            EaseIn = !EaseIn;
+            EaseOut = false;
+            break;
+        case 46: // 'DELETE' Key, remove all children
+            RemovePoints();
+            break;
+        case 45:
+            AddPoint()
+            break;
+
+    }
+}
+function FindIntersects()
+{
+    raycaster.setFromCamera(mouse, camera);
+    //The intersects are the points we are checking if the mouse  hovers over.
+    var intersects = raycaster.intersectObjects(Points),material;
+    //If there are points to check, then we can animate them.
+    if (intersects.length > 0) 
+    {
+     //Intersected is the current mouse selection.
+        if (INTERSECTED != intersects[0].object) 
+        {
+            //If we have an intersection, we check if we can change the color or light
+            if (INTERSECTED)
             {
-                //Initialize
-                //Check for WebGL Support on browser
-                if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
-                var container,scene,element,ScreenWidth,ScreenHeight,controls;
-                var camera, renderer, radius, camHelper, raycaster;
-                var color, colors = [];
-                //Geometry variables for the various objects in this space
-                //var SignalPointGeometry, SignalPointMaterial, SignalPoint;
-                attributes = 
+                material = INTERSECTED.material;
+                //If the material emits light, we can change the color in hex.
+                if (material.emissive) 
                 {
-				size:        { type: 'f', value: [] },
-				customColor: { type: 'c', value: [] },
-                vertexOpacity: {type: 'f', value: []}
-                };
-                uniforms = 
-                {
-				color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-				texture:   { type: "t", value: THREE.ImageUtils.loadTexture( "Assets/Images/circle.png" ) }
-			     };
-                //Check for keypress/mouse events
-                document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-                document.addEventListener( 'keydown', OnKeyDown, false );
-                //document.addEventListener( 'mousedown', onDocumentMouseDown, false);
-                window.addEventListener('resize',onWindowResize, false);
-            }
-
-            //Main animation function
-            function CreateScene()
-            {
-                scene  = new THREE.Scene();
-                renderer = new THREE.WebGLRenderer({antialias: false});
-                raycaster = new THREE.Raycaster();
-                mouse = new THREE.Vector2(), 
-                    
-                container = document.createElement( 'div' );
-                container.style.position = 'relative';
-                document.body.appendChild( container );
-                ScreenWidth = window.innerWidth;
-                ScreenHeight = window.innerHeight;
-                
-                var shaderMaterial = new THREE.ShaderMaterial( {
-
-                    uniforms:       uniforms,
-                    attributes:     attributes,
-                    vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-                    fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
-                    blending:       THREE.AdditiveAlphaBlending,
-                    depthTest:      true,
-                    depthWrite: false,
-                    transparent:    true,
-                    polygonOffset: true,
-                    polygonOffsetFactor: 1,
-                    polygonOffsetUnits: 1,
-                    opacity: 0.5,
-                    size_attenuation: true
-
-                });
-                
-                var radius = 200;
-                geometry = new THREE.BufferGeometry();
-                var positions = new Float32Array( particles * 3 );
-                var values_color = new Float32Array( particles * 3 );
-                var values_size = new Float32Array( particles );
-
-                var color = new THREE.Color('255,0,0');
-                for( var v = 0; v < particles; v++ ) 
+                    material.emissive.setHex(INTERSECTED.currentHex);
+                }
+                    else
                     {
-                    values_size[ v ] = PARTICLE_SIZE * 2;
-                    positions[ v * 3 + 0 ] = ( Math.random() * 2 - 1 ) * radius;
-                    positions[ v * 3 + 1 ] = 1;//( Math.random() * 2 - 1 ) * radius;
-                    positions[ v * 3 + 2 ] = ( Math.random() * 2 - 1 ) * radius;
-                    //color.setHSL( v / particles, 1.0, 0.5 );
+                        material.color.setHex(INTERSECTED.currentHex);   
+                    }
+            }
+                           
+                        
+            INTERSECTED = intersects[0].object;
+            //Add point on click
+            var vector = new THREE.Vector3().copy( intersects[ 0 ].point );
 
-                    values_color[ v * 3 + 0 ] = color.r;
-                    values_color[ v * 3 + 1 ] = color.g;
-                    values_color[ v * 3 + 2 ] = color.b;
-                    //values_color[ v ] = new THREE.Color().setHSL( 0.01 + 0.1 * ( v / particles ), 1.0, 0.3 );
-			         }
+            intersects[ 0 ].object.worldToLocal( vector );
+
+            console.log( 'local point: ', vector );
             //
-                geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-                geometry.addAttribute( 'customColor', new THREE.BufferAttribute( values_color, 3 ) );
-                geometry.addAttribute( 'size', new THREE.BufferAttribute( values_size, 1 ) );
-                particleSystem = new THREE.PointCloud( geometry, shaderMaterial );
-                //Create camera
-                var AspectRatio = ScreenWidth/ScreenHeight;
-                var ViewSize = 900;
-                camera = new THREE.PerspectiveCamera( 50, ScreenWidth / ScreenHeight, 1, 4000 );
-                camera.position.set( 700, 245, 475 );
-                camera.lookAt(new THREE.Vector3(0,0,0) );
+            material = INTERSECTED.material;
 
-                //Set up mouse controls
-                controls = new THREE.OrbitControls(camera); 
-                controls.zoomSpeed = 2.2;
-                controls.dynamicDampingFactor = 0.3;
+            if(material.emissive)
+            {
+                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                material.emissive.setHex(0xff0000);                            
+            }
+            else
+            {
+                INTERSECTED.currentHex = material.color.getHex();
+                material.color.setHex(0xff0000);
+            }
+        }
 
-
-                //Assigning renderer attributes
-                renderer.setClearColor( 0xf0f0f0 );
-                renderer.setPixelRatio( window.devicePixelRatio );
-                renderer.setSize(ScreenWidth, ScreenHeight);
-                renderer.sortObjects = false;
-                renderer.autoclear = false;
-                renderer.domElement.style.position = "relative";
-                container.appendChild(renderer.domElement);
-
-                //Set up background for 3D space, in this case: a map of the area, will need to add support for multiple maps.
-                plane = new THREE.Mesh(
-                        new THREE.PlaneBufferGeometry( ScreenWidth, ScreenHeight, 8, 8 ),
-                        new THREE.MeshPhongMaterial( 
-                            { 
-                            map: THREE.ImageUtils.loadTexture('Assets/Images/NewOfficeTS.png'), 
-                            color: 0x000000, 
-                            opacity: 0.25, 
-                            transparent: true,
-                            visible: true,
-                            frustumCulled: false
-                            } ));
-                plane.position.y = 0;
-                plane.rotation.x = - Math.PI / 2;
-
-                SurfaceLight = new THREE.SpotLight( 0xffffff, 1.5 );
-                SurfaceLight.position.set( 0, 500, 2000 );
-                SurfaceLight.castShadow = true;
-                SurfaceLight.shadowCameraNear = 200;
-                SurfaceLight.shadowCameraFar = camera.far;
-                SurfaceLight.shadowCameraFov = 50;
-                SurfaceLight.shadowBias = -0.00022;
-                SurfaceLight.shadowDarkness = 0.5;
-                SurfaceLight.shadowMapWidth = 2048;
-                SurfaceLight.shadowMapHeight = 2048;
-
-                    //debugging info
-                debug = true;
-                Pulse = true;
-                if (debug)
-                {                
-                    var hex = 0xff0000;
-                    var boundingbox = new THREE.BoundingBoxHelper(plane, hex);
-                    boundingbox.update();
-                    scene.add(boundingbox);
-                    camHelper = new THREE.CameraHelper( camera );
-                    // scene.add(camHelper);
-                    stats = new Stats();
-                    stats.domElement.style.position = 'absolute';
-                    stats.domElement.style.top = '0px'
-                    container.appendChild(stats.domElement);
+        } else 
+        {
+                if (INTERSECTED){
+                    material = INTERSECTED.material;
+                        if(material.emissive)
+                        {
+                            material.emissive.setHex(INTERSECTED.currentHex);
+                        }
+                        else
+                        {
+                            material.color.setHex(INTERSECTED.currentHex);
+                        }
                     }
-                scene.add( particleSystem );
-                camera.add( plane );
-                scene.add( SurfaceLight );
-                scene.add( camera );
-                scene.add( plane );
-            }
-
-            //This causes the points to pulse, linear method, need to implement quadratic easing
-            function SignalPulse()
-            {
-                var pos;
-                var time = Date.now() * 0.005;
-                //particleSystem.rotation.z = 0.01 * time;
-                var size = geometry.attributes.size.array;
-                    
-                for( var i = 0; i < particles; i++ ) {
-                    size[ i ] = 10 * ( 1 + Math.sin( 0.1 * i + time ) );
-                    
+                    INTERSECTED = null;
                 }
-                geometry.attributes.size.needsUpdate = true;
+    }
+function tweenAlphaOut()
+    {
+    if(EaseOut){
+        if (Points[0].material.opacity > 0){
+           for (var m = 0; m < Points.length; m++)
+           {
+               Points[m].material.opacity -= .01;
+           }
             }
-            
-            //Find the points that intersect the cursor's position(x,y)
-            function ColorParticle()
-            {
-                particleSystem.geometry.colorsNeedUpdate = true;
-                var step = 0;
-                if (step % 8 === 0) {
-                    for (var i = 0; i < particleSystem.geometry.colors.length; i++) {
-                        particleSystem.geometry.colors[i] = new THREE.Color(0x123152 * Math.random() + 1000 );
-                    }
-                }
-                        step++;
-            }
-            
-            //Change size on hover!
-            function FindIntersects()
-            {
-              /*  raycaster.setFromCamera( mouse, camera );
+        }
+    }
+function tweenAlphaIn()
+    {
+    if (EaseIn){
+    if (Points[0].material.opacity < 1){
+        for (var m = 0; m < Points.length; m++)
+           {
+               Points[m].material.opacity += .01;
+           }
+        }
+        
+    }
+    }
+function AddPoint()
+    {
+          for (var r = 0; r < Points.length; r++)
+        {
+            scene.add(Points[r]);
+        }
+    }
+function DrawPoints()
+    {
+        	
+	//////////////
+	// GEOMETRY //
+	//////////////
+		
+	// most objects displayed are a "mesh":
+	//  a collection of points ("geometry") and
+	//  a set of surface parameters ("material")
+    var merged = new THREE.Geometry();
+    
+    var geometry = new THREE.BoxGeometry( 5, 5, 5 );
+    var numPoints = 100;
+    for (var i = 0; i < numPoints; i++)
+    {
+        var Box = new THREE.Mesh( geometry, 
+                     new THREE.MeshLambertMaterial({
+                            color: Math.random() * 0xffffff,
+                            transparent: true                                                                                                                               }));
+        Box.position.x = Math.random() * 1000 - 500;
+        Box.position.y = 1;
+        Box.position.z = Math.random() * 800 - 400;
+        //circle.rotation.x =//- Math.pi/2;
+        scene.add( Box );
+        Points.push(Box);
+    }
+        
+    }
+function SignalPulse()
+{
+    if (Pulse){
+   for (var j = 0; j < Points.length; j++)
+    {
+        Points[j].scale.x += .1;
+        Points[j].scale.y += .1;
+        Points[j].scale.z += .1;
 
-				intersects = raycaster.intersectObject( particleSystem );
+        if (Points[j].scale.x >= 2)
+        {
+            Points[j].scale.x -= .1+1;
+            Points[j].scale.y -= .1+1;
+            Points[j].scale.z -= .1+1;
+        }
+        //console.log(Points[j].scale);
+    }
+    }
+}
+function animate() 
+{
+    requestAnimFrame(animate);
+   // TWEEN.update();
+	render();		
+	update();
+}
 
-				if ( intersects.length > 0 ) {
+function update()
+{
+	// delta = change in time since last call (in seconds)
+	var delta = clock.getDelta(); 
 
-					if ( INTERSECTED != intersects[ 0 ].index ) {
+	// functionality provided by THREEx.KeyboardState.js
+	controls.update();
+	stats.update();
+}
 
-						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE*100;
+function render()
+{
+   // tweenAlpha();
+    tweenAlphaOut();
+    tweenAlphaIn();
+    SignalPulse();
+    FindIntersects();
+    
+    //SignalPulse();
+    //RemovePoints();
+	renderer.render( scene, camera );
+}
 
-						INTERSECTED = intersects[ 0 ].index;
+</script>
 
-						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE * 100;
-						attributes.size.needsUpdate = true;
-
-					}
-
-				} else if ( INTERSECTED !== null ) {
-
-					attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE*100;
-					attributes.size.needsUpdate = true;
-					INTERSECTED = null;
-
-				}*/
-
-            }
-             //Key Bindings
-            function OnKeyDown( event )
-            {
-                switch(event.keyCode)
-                {
-
-                case 80: // 'P' Key, Toggles Pulse Animation
-                Pulse = !Pulse;
-                break;
-                }
-            }
-            //Mouse hover
-            function onDocumentMouseMove( event )
-            {
-                event.preventDefault();
-
-                mouse.x = (event.clientX / ScreenWidth ) * 2 - 1;
-                mouse.y = - ( event.clientY / ScreenHeight ) * 2 + 1;
-            }
-            //Mouse press down
-            function onDocumentMouseDown( event )
-            {
-                event.preventDefault();
-                mouse.x = (event.clientX / ScreenWidth ) * 2 - 1;
-                mouse.y = - ( event.clientY / ScreenHeight ) * 2 + 1;
-            }
-            //Handles resizing the window, a little buggy at the moment, needs to be fixed.
-          
-            function onWindowResize() {
-                camera.aspect = ScreenWidth / ScreenHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize( ScreenWidth, ScreenHeight);
-            }
-            
-            //Main animation function
-            function animate() {
-                requestAnimationFrame(animate);
-                render();
-
-            }
-            
-            //Update and Draw
-            function render()
-            {
-                SignalPulse();
-                camera.lookAt( scene.position );
-
-                //FindIntersects();
-                raycaster.setFromCamera( mouse, camera );
-				intersects = raycaster.intersectObject( particleSystem );
-				if ( intersects.length > 0 ) {
-
-					if ( INTERSECTED != intersects[ 0 ].index ) {
-						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE;
-						INTERSECTED = intersects[ 0 ].index;
-						attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE * 100;
-                        console.log(INTERSECTED);
-                        console.log(attributes.size.value[ INTERSECTED ]);
-                        attributes.size.needsUpdate = true;
-
-					}
-
-				} else if ( INTERSECTED !== null ) {
-					attributes.size.value[ INTERSECTED ] = PARTICLE_SIZE*100;
-					attributes.size.needsUpdate = true;
-					INTERSECTED = null;
-				}
-            controls.update();
-            renderer.render(scene, camera);
-            stats.update();
-            }
-		</script>
-	</body>
+</body>
 </html>
