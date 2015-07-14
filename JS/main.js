@@ -1,23 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-	<title>Proof of Concept</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-</head>
-<body>
-
-<script src="js/Three.js"></script>
-<script src="js/Detector.js"></script>
-<script src="js/Stats.js"></script>
-<script src="js/OrbitControls.js"></script>
-<script src ="js/tween.js"></script>
-
-
-<!-- ------------------------------------------------------------ -->
-
-<div id="ThreeJS" style="z-index: 1; position: absolute; left:0px; top:0px"></div>
-<script>
 	
 //////////	
 // MAIN //
@@ -42,8 +22,6 @@ window.requestAnimFrame = (function() {
                     window.setTimeout(callback, 1000 / 60);
               };
             })();
-
-    
 // initialization
 init();
 
@@ -387,8 +365,3 @@ function render() {
     //FindIntersects();
    	renderer.render( scene, camera );
 }
-
-</script>
-
-</body>
-</html>
