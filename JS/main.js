@@ -85,7 +85,6 @@ function init() {
 	scene.add(light);
 	//var ambientLight = new THREE.AmbientLight(0x111111);
 	// scene.add(ambientLight);
-    DrawPoints();
     // create a set of coordinate axes to help orient user
 	//    specify length in pixels in each direction
 //	var axes = new THREE.AxisHelper(100);
@@ -103,7 +102,8 @@ function init() {
 	floor.position.y = 0;
 	floor.rotation.x = Math.PI / 2;
 	scene.add(floor);
-	
+    DrawPoints();
+
 	// recommend either a skybox or fog effect (can't use both at the same time) 
 	// without one of these, the scene's background color is determined by webpage background
 	// make sure the camera's "far" value is large enough so that it will render the skyBox!
@@ -157,27 +157,14 @@ function onWindowResize() {
 function OnKeyDown( event ) {
     switch(event.keyCode)
     {
-        case 80: // 'P' Key, Toggles Pulse Animation
-            Pulse = !Pulse;
-            break;
-        case 79: // 'O' Key, Toggle Tween Out
-            EaseOut = !EaseOut;
-            EaseIn = false;
-            break;
-        case 73:
-            EaseIn = !EaseIn;
-            EaseOut = false;
-            break;
-        case 46: // 'DELETE' Key, remove all children
+        case 46: // 'DELETE' Key, Toggle delete selected point
             Remove = !Remove; 
             break;
         case 45: //'INSERT' Key, add one single point
             AddPoint();
-            console.log("test");
-            //AddPoint()
             break;
         case 35:
-            RemovePoints();
+            RemovePoints(); //Remove point when clicked!
             break;
 
     }
@@ -240,9 +227,9 @@ function FindIntersects() {
                     INTERSECTED = null;
                 }
     }
-function tweenAlphaOut( mesh_IntersectedPoint ) {
+function tweenAlphaOut( mesh ) {
         TWEEN.removeAll();
-        new TWEEN.Tween( mesh_IntersectedPoint.material ).to( {
+        new TWEEN.Tween( mesh.material ).to( {
 						opacity:0 }, 10000 ).easing( TWEEN.Easing.Elastic.Out).start();
                 /*new TWEEN.Tween( IntersectedPoint.scale ).to( {
 						x:1,
@@ -251,8 +238,8 @@ function tweenAlphaOut( mesh_IntersectedPoint ) {
                 }, 3000 ).easing( TWEEN.Easing.Elastic.Out).start();*/
     }
 				
-function tweenAlphaIn( mesh_NewBox ) {
-        new TWEEN.Tween( mesh_NewBox.scale ).to( {
+function tweenAlphaIn( mesh ) {
+        new TWEEN.Tween( mesh.scale ).to( {
             x:2,
             y:2,
             z:2
@@ -260,7 +247,8 @@ function tweenAlphaIn( mesh_NewBox ) {
     }
 //Add a single point to the plane.
 //TODO: Take input or load new json file with data and render
-function AddPoint() {
+function GenerateCube()
+{
     var geo_Cube = new THREE.BoxGeometry( 5, 5, 5 );
     var mat_Cube = new THREE.MeshLambertMaterial({
                             color: Math.random() * 0xffffff,
@@ -272,11 +260,26 @@ function AddPoint() {
     mesh_NewPoint.position.x = Math.random() * 1000 - 500;
     mesh_NewPoint.position.y = 2;
     mesh_NewPoint.position.z = Math.random() * 800 - 400;
-    scene.add( mesh_NewPoint );
-    tweenAlphaIn(mesh_NewPoint);
-    Points.push(mesh_NewPoint);
+    return mesh_NewPoint;
+}
+function AddPoint() {
+
+    var mesh_Cube = GenerateCube();
+    scene.add( mesh_Cube );
+    tweenAlphaIn( mesh_Cube );
+    Points.push( mesh_Cube );
     }
-    
+function DrawPoints() {
+	// most objects displayed are a "mesh":
+	//  a collection of points ("geometry") and
+	//  a set of surface parameters ("material")    
+    var numPoints = 3000;
+    var mesh_Box;
+    for (var i = 0; i < numPoints; i++)
+    {
+        AddPoint();
+    }
+    }
 //Remove selected point on click
 function RemovePoint() {
     var deleted = [];
@@ -324,29 +327,7 @@ function RemovePoint() {
         }
         }
     }
-function DrawPoints() {
-	// most objects displayed are a "mesh":
-	//  a collection of points ("geometry") and
-	//  a set of surface parameters ("material")    
-    var geometry = new THREE.BoxGeometry( 5, 5, 5 );
-    var numPoints = 2;
-    for (var i = 0; i < numPoints; i++)
-    {
-        var mesh_Box = new THREE.Mesh( geometry, 
-                     new THREE.MeshLambertMaterial({
-                            color: Math.random() * 0xffffff,
-                            opacity:0.8,
-                            transparent: true}));
-        mesh_Box.position.x = Math.random() * 1000 - 500;
-        mesh_Box.position.y = 2;
-        mesh_Box.position.z = Math.random() * 800 - 400;
-        //circle.rotation.x =//- Math.pi/2;
-        scene.add( mesh_Box );
-        tweenAlphaIn(mesh_Box);
 
-        Points.push(mesh_Box);
-    }
-    }
 function animate() {
     window.requestAnimFrame(animate);
 	render();		
