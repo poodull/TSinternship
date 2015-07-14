@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<title>Hello World (Three.js)</title>
+	<title>Proof of Concept</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
@@ -10,7 +10,6 @@
 <script src="js/Three.js"></script>
 <script src="js/Detector.js"></script>
 <script src="js/Stats.js"></script>
-<script src="js/tween.js"></script>
 <script src="js/OrbitControls.js"></script>
 
 
@@ -29,8 +28,10 @@ var mouse = new THREE.Vector2(),offset = new THREE.Vector3(),
 			INTERSECTED, SELECTED;;
 var raycaster = new THREE.Raycaster();
 var Points = [];
-    
-window.requestAnimFrame = (function(){
+var Removed = [];
+var Remove = false;
+
+window.requestAnimFrame = (function() {
      return  window.requestAnimationFrame       || 
               window.webkitRequestAnimationFrame || 
               window.mozRequestAnimationFrame    || 
@@ -45,7 +46,7 @@ window.requestAnimFrame = (function(){
 var cube;
 //debug var
 var Pulse = false, EaseIn = false, EaseOut = false;
-    
+var AddClick = false, Remove = false;
 // initialization
 init();
 
@@ -56,8 +57,7 @@ animate();
 // FUNCTIONS //
 ///////////////
 			
-function init() 
-{
+function init() {
 	///////////
 	// SCENE //
 	///////////
@@ -140,15 +140,14 @@ function init()
 	// FLOOR //
 	///////////
 	
-	// note: 4x4 checkboard pattern scaled so that each square is 25 by 25 pixels.
+	// note: Office Image/Plane Background
 	var floorTexture = new THREE.ImageUtils.loadTexture( 'Assets/Images/NewOfficeTS.png' );
 	//floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
 	//floorTexture.repeat.set( 10, 10 );
-	// DoubleSide: render texture on both sides of mesh
 	var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
 	var floorGeometry = new THREE.PlaneBufferGeometry(1000, 1000, 1, 1);
 	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-	floor.position.y = -0.5;
+	floor.position.y = 0;
 	floor.rotation.x = Math.PI / 2;
 	scene.add(floor);
 	
@@ -160,10 +159,10 @@ function init()
 	// without one of these, the scene's background color is determined by webpage background
 
 	// make sure the camera's "far" value is large enough so that it will render the skyBox!
-	var skyBoxGeometry = new THREE.BoxGeometry( 10000, 10000, 10000 );
+	//var skyBoxGeometry = new THREE.BoxGeometry( 10000, 10000, 10000 );
 	// BackSide: render faces from inside of the cube, instead of from outside (default).
-	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
-	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+	//var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+	//var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
 	// scene.add(skyBox);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     document.addEventListener( 'mousedown', onDocumentMouseDown, false );
@@ -176,10 +175,8 @@ function init()
 	// fog must be added to scene before first render
 	scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
 }
-function RemovePoints()
-    {
-        for (var r = 0; r < Points.length; r++)
-        {
+function RemovePoints() {
+        for (var r = 0; r < Points.length; r++) {
             scene.remove(Points[r]);
         }
     }
@@ -199,27 +196,25 @@ function onDocumentMouseDown( event ) {
     
     mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
     mouse.y = - ( event.clientY / renderer.domElement.height ) * 2 + 1;
-
+    //AddPoint();
+    RemovePoint();
 			}	
-function onDocumentMouseMove( event ) 
-{
+function onDocumentMouseMove( event ) {
 
-    event.preventDefault();
+    //event.preventDefault();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
 }
 
-function onWindowResize() 
-{
+function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
     
-function OnKeyDown( event )
-{
+function OnKeyDown( event ) {
     switch(event.keyCode)
     {
         case 80: // 'P' Key, Toggles Pulse Animation
@@ -234,107 +229,141 @@ function OnKeyDown( event )
             EaseOut = false;
             break;
         case 46: // 'DELETE' Key, remove all children
-            RemovePoints();
+            Remove = !Remove; 
             break;
-        case 45:
-            AddPoint()
+        case 45: //Toggle
+            AddPoint();
+            console.log("test");
+            //AddPoint()
             break;
 
     }
 }
-function FindIntersects()
-{
+function FindIntersects() {
     raycaster.setFromCamera(mouse, camera);
     //The intersects are the points we are checking if the mouse  hovers over.
     var intersects = raycaster.intersectObjects(Points),material;
     //If there are points to check, then we can animate them.
-    if (intersects.length > 0) 
-    {
+    if (intersects.length > 0) {
      //Intersected is the current mouse selection.
-        if (INTERSECTED != intersects[0].object) 
-        {
+        if (INTERSECTED != intersects[0].object) {
             //If we have an intersection, we check if we can change the color or light
-            if (INTERSECTED)
-            {
+            if (INTERSECTED) {
                 material = INTERSECTED.material;
                 //If the material emits light, we can change the color in hex.
-                if (material.emissive) 
-                {
+                if (material.emissive) {
                     material.emissive.setHex(INTERSECTED.currentHex);
                 }
-                    else
-                    {
+                //If not, try to change the color of the material.
+                else {
                         material.color.setHex(INTERSECTED.currentHex);   
                     }
             }
                            
                         
             INTERSECTED = intersects[0].object;
-            //Add point on click
-            var vector = new THREE.Vector3().copy( intersects[ 0 ].point );
-
-            intersects[ 0 ].object.worldToLocal( vector );
-
-            console.log( 'local point: ', vector );
-            //
             material = INTERSECTED.material;
-
-            if(material.emissive)
-            {
+            console.log(INTERSECTED);
+            if(material.emissive) {
                 INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
                 material.emissive.setHex(0xff0000);                            
             }
-            else
-            {
+            else {
                 INTERSECTED.currentHex = material.color.getHex();
                 material.color.setHex(0xff0000);
             }
         }
 
-        } else 
+        }
+        //Reset back to original color
+        else 
         {
                 if (INTERSECTED){
                     material = INTERSECTED.material;
-                        if(material.emissive)
-                        {
+                        if(material.emissive) {
                             material.emissive.setHex(INTERSECTED.currentHex);
                         }
-                        else
-                        {
+                        else {
                             material.color.setHex(INTERSECTED.currentHex);
                         }
                     }
                     INTERSECTED = null;
                 }
     }
-function tweenAlphaOut()
+function tweenAlphaOut(IntersectedPoint)
     {
-    if(EaseOut){
-        if (Points[0].material.opacity > 0){
-           for (var m = 0; m < Points.length; m++)
-           {
-               Points[m].material.opacity -= .01;
-           }
+   // if(EaseOut){
+        while (IntersectedPoint.material.opacity > 0) {
+            IntersectedPoint.material.opacity -= .1;
+            console.log( IntersectedPoint.material.opacity );
             }
-        }
+      //  }
     }
-function tweenAlphaIn()
-    {
+function tweenAlphaIn() {
     if (EaseIn){
     if (Points[0].material.opacity < 1){
-        for (var m = 0; m < Points.length; m++)
-           {
+        for (var m = 0; m < Points.length; m++) {
                Points[m].material.opacity += .01;
            }
         }
-        
+            }
     }
+function AddPoint() {
+    var geo_Cube = new THREE.BoxGeometry( 5, 5, 5 );
+    var mesh_NewPoint = new THREE.Mesh( geo_Cube, 
+                     new THREE.MeshLambertMaterial({
+                            color: Math.random() * 0xffffff,
+                            transparent: true}));
+    mesh_NewPoint.position.x = Math.random() * 1000 - 500;
+    mesh_NewPoint.position.y = 2;
+    mesh_NewPoint.position.z = Math.random() * 800 - 400;
+    //circle.rotation.x =//- Math.pi/2;
+    scene.add( mesh_NewPoint );
+    Points.push(mesh_NewPoint);
     }
-function AddPoint()
-    {
-          for (var r = 0; r < Points.length; r++)
-        {
-            scene.add(Points[r]);
+function RemovePoint() {
+    var deleted = [];
+    raycaster.setFromCamera(mouse, camera);
+    //The intersects are the points we are checking if the mouse  hovers over.
+    var intersects = raycaster.intersectObjects(Points),material;
+    //If there are points to check, then we can animate them.
+    if (intersects.length > 0) {
+     //Intersected is the current mouse selection.
+        if (INTERSECTED != intersects[0].object) {
+            //If we have an intersection, we check if we can change the color or light
+            if (INTERSECTED) {
+                material = INTERSECTED.material;
+                //scene.remove(INTERSECTED);
+                //If the material emits light, we can change the color in hex.
+                if (material.emissive) {
+                    material.emissive.setHex(INTERSECTED.currentHex);
+                    
+                }
+                //If not, try to change the color of the material.
+                else {
+                        material.color.setHex(INTERSECTED.currentHex);   
+
+                    }
+            }
+                           
+            INTERSECTED = intersects[0].object;
+            material = INTERSECTED.material;            
+            //TWEEN OUT!!
+           if (Remove){ 
+                tweenAlphaOut(INTERSECTED);}
+           // Removed.push(INTERSECTED);
+            
+            if(material.emissive) {
+                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                material.emissive.setHex(0xff0000);   
+                
+            }
+            else {
+                INTERSECTED.currentHex = material.color.getHex();
+                material.color.setHex(0xff0000);
+            }
+        }
+
         }
     }
 function DrawPoints()
@@ -350,15 +379,15 @@ function DrawPoints()
     var merged = new THREE.Geometry();
     
     var geometry = new THREE.BoxGeometry( 5, 5, 5 );
-    var numPoints = 100;
+    var numPoints = 1;
     for (var i = 0; i < numPoints; i++)
     {
         var Box = new THREE.Mesh( geometry, 
                      new THREE.MeshLambertMaterial({
                             color: Math.random() * 0xffffff,
-                            transparent: true                                                                                                                               }));
+                            transparent: true}));
         Box.position.x = Math.random() * 1000 - 500;
-        Box.position.y = 1;
+        Box.position.y = 2;
         Box.position.z = Math.random() * 800 - 400;
         //circle.rotation.x =//- Math.pi/2;
         scene.add( Box );
@@ -371,30 +400,27 @@ function SignalPulse()
     if (Pulse){
    for (var j = 0; j < Points.length; j++)
     {
-        Points[j].scale.x += .1;
-        Points[j].scale.y += .1;
-        Points[j].scale.z += .1;
+        Points[j].scale.x += .01;
+        Points[j].scale.y += .01;
+        Points[j].scale.z += .01;
 
-        if (Points[j].scale.x >= 2)
-        {
-            Points[j].scale.x -= .1+1;
-            Points[j].scale.y -= .1+1;
-            Points[j].scale.z -= .1+1;
+        if (Points[j].scale.x >= 2) {
+            Points[j].scale.x -= .01+1;
+            Points[j].scale.y -= .01+1;
+            Points[j].scale.z -= .01+1;
         }
         //console.log(Points[j].scale);
     }
     }
 }
-function animate() 
-{
+function animate() {
     requestAnimFrame(animate);
    // TWEEN.update();
 	render();		
 	update();
 }
 
-function update()
-{
+function update()  {
 	// delta = change in time since last call (in seconds)
 	var delta = clock.getDelta(); 
 
@@ -403,13 +429,12 @@ function update()
 	stats.update();
 }
 
-function render()
-{
+function render() {
    // tweenAlpha();
-    tweenAlphaOut();
-    tweenAlphaIn();
+    //tweenAlphaOut();
+   // tweenAlphaIn();
     SignalPulse();
-    FindIntersects();
+ //   FindIntersects();
     
     //SignalPulse();
     //RemovePoints();
