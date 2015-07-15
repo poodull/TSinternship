@@ -25,6 +25,7 @@ window.requestAnimFrame = (function() {
 // initialization
 init();
 
+
 // animation loop 
 animate();
 
@@ -32,7 +33,7 @@ animate();
 function init() {
 	//Create the scene
 	scene = new THREE.Scene();
-	
+
 	// set the view size in pixels (custom or according to window size)
 	// var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
 	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;	
@@ -103,7 +104,6 @@ function init() {
 	floor.rotation.x = Math.PI / 2;
 	scene.add(floor);
     DrawPoints();
-
 	// recommend either a skybox or fog effect (can't use both at the same time) 
 	// without one of these, the scene's background color is determined by webpage background
 	// make sure the camera's "far" value is large enough so that it will render the skyBox!
@@ -247,7 +247,7 @@ function tweenAlphaIn( mesh ) {
     }
 //Add a single point to the plane.
 //TODO: Take input or load new json file with data and render
-function GenerateCube()
+function GenerateCube(cubeNum)
 {
     var geo_Cube = new THREE.BoxGeometry( 5, 5, 5 );
     var mat_Cube = new THREE.MeshLambertMaterial({
@@ -257,27 +257,29 @@ function GenerateCube()
     
     var mesh_NewPoint = new THREE.Mesh( geo_Cube,mat_Cube );
     
-    mesh_NewPoint.position.x = Math.random() * 1000 - 500;
+    mesh_NewPoint.position.x = (10*cubeNum); //Math.random() * 800 - 400;
     mesh_NewPoint.position.y = 2;
-    mesh_NewPoint.position.z = Math.random() * 800 - 400;
+    mesh_NewPoint.position.z = 10*cubeNum;//Math.random() * 800 - 400;
     return mesh_NewPoint;
 }
-function AddPoint() {
+function AddPoint(cubeNum) {
 
-    var mesh_Cube = GenerateCube();
+    var mesh_Cube = GenerateCube(cubeNum);
     scene.add( mesh_Cube );
     tweenAlphaIn( mesh_Cube );
     Points.push( mesh_Cube );
+//   CubeIndices.push(dataset[cubeNum].id);
+  //  CubeTLW.push(dataset
     }
 function DrawPoints() {
 	// most objects displayed are a "mesh":
 	//  a collection of points ("geometry") and
 	//  a set of surface parameters ("material")    
-    var numPoints = 3000;
+    var numPoints = 50;
     var mesh_Box;
     for (var i = 0; i < numPoints; i++)
     {
-        AddPoint();
+        AddPoint(i);
     }
     }
 //Remove selected point on click
@@ -327,6 +329,7 @@ function RemovePoint() {
         }
         }
     }
+
 
 function animate() {
     window.requestAnimFrame(animate);

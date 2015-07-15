@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang = "en">
+<head>
+	<title>Config page</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type = "text/javascript">
+    (function($){
+        function processJSON( e ){
+            $.ajax({
+             url:"index.html",
+             dataType: 'jsonp', // Notice! JSONP <-- P (lowercase)
+             success:function(json){
+                 // do stuff with json (in this case an array)
+                 alert("Success");
+             },
+             error:function(){
+                 alert("Error");
+             }      
+        });
+
+            e.preventDefault();
+        }
+
+        $('#my-form').submit( processJSON);
+    })(jQuery);
+</script>
+</head>
+</html>
