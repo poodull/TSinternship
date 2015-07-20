@@ -13,6 +13,7 @@
   4. Node modules are included in the project folder.
   
     a. If you need to test/add modules, then:
+
         1. cd into path/to/project_directory using Cygwin.
         2. type npm install [module_name], it will be installed into the modules directory.
   5. Run bin/www and go to localhost:portnum, where portnum > 1024.
