@@ -7,7 +7,7 @@
   
     a. Either buy it or use the free 30 day trial.
 
-    b. Drag into desired project folder location or __dirname/IdeaProjects/Spiral
+    b. Clone Repo and Drag into desired project folder location or __dirname/IdeaProjects/Spiral
   2. Install Cygwin Terminal 64 Bit Edition.
   3. Download [JMeter 2.13](http://jmeter.apache.org/)
     
