@@ -77,28 +77,23 @@ function init() {
     stats.domElement.style.zIndex = 100;
     container.appendChild(stats.domElement);
 
-    // create a light
-    var light = new THREE.PointLight(0xffffff);
-    light.position.set(0, 250, 0);
-    scene.add(light);
-    //var ambientLight = new THREE.AmbientLight(0x111111);
+
+    // var ambientLight = new THREE.AmbientLight(0x111111);
     // scene.add(ambientLight);
     // create a set of coordinate axes to help orient user
     //    specify length in pixels in each direction
-    var axes = new THREE.AxisHelper(100);
-    scene.add(axes);
+
 
     // note: Office Image/Plane Background
     //import image and deserialize
     LoadData();
-    DrawPoints();
     // recommend either a skybox or fog effect (can't use both at the same time)
     // without one of these, the scene's background color is determined by webpage background
     // make sure the camera's "far" value is large enough so that it will render the skyBox!
-    var skyBoxGeometry = new THREE.SphereGeometry( 20000, 100, 100 ) //20000, 20000 );
+    var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100) //20000, 20000 );
     // BackSide: render faces from inside of the cube, instead of from outside (default).
-    var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
-    var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+    var skyBoxMaterial = new THREE.MeshBasicMaterial({color: 0x9999ff, side: THREE.BackSide});
+    var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
     scene.add(skyBox);
 
     document.addEventListener('mousemove', onDocumentMouseMove, false);
@@ -109,7 +104,7 @@ function init() {
 
 
     // fog must be added to scene before first render
-  // scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
+    // scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
 }
 
 //Events(Keypresses and Mouse functions)
@@ -159,46 +154,83 @@ function OnKeyDown(event) {
 function ImportFloorImage(floor_data, floor_id) {
     return floor_data[floor_id].image;
 }
-function CreateFloor(dataset)
-{
-    var FloorNumber = 0;
+
+function CreateFloor(dataset, FloorNumber) {
+    var light = new THREE.PointLight(0xffffff);
+
+
     var CurrentFloor = dataset[FloorNumber];
-    var image = ImportFloorImage(dataset,FloorNumber);
+    var image = ImportFloorImage(dataset, FloorNumber);
 
     var floorPlan = "data:image/png;base64," + image; //'Assets/Images/NewOfficeTS.png';
     var floorTexture = new THREE.ImageUtils.loadTexture(floorPlan);
     var floorMaterial = new THREE.MeshBasicMaterial({
         map: floorTexture,
         side: THREE.DoubleSide,
-        // blending: THREE.Normal,//THREE.AdditiveAlpha,
-        transparent: true
+        //blending: THREE.AdditiveBlending,//THREE.AdditiveAlpha,
+        transparent: true,
+        depthWrite: false,
+        //   depthTest:false
     });
     var ImageHeight = 1985, ImageWidth = 985;
     var floorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1);
     var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    //Set the scaling
-    floor.scale.set(CurrentFloor.scale,CurrentFloor.scale,CurrentFloor.scale);
-    //Set the position
-    floor.position.x = CurrentFloor.origin_x + CurrentFloor.building_offset_x;
-    floor.position.z = CurrentFloor.origin_y + CurrentFloor.building_offset_y;
-    floor.position.y = CurrentFloor.altitude + CurrentFloor.building_offset_z;
-    //Keep it flat against the camera!
-    floor.rotation.x = Math.PI / 2;
+    DrawPoints(floor,dataset);
 
+    //Set the scaling
+    floor.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    //Set the position
+    floor.position.x = CurrentFloor.building_offset_x + CurrentFloor.origin_x;
+    floor.position.z = CurrentFloor.origin_y;
+    floor.position.y = CurrentFloor.altitude + CurrentFloor.building_offset_z;
+    //Keep the plane flat against the camera!
+    floor.rotation.x = Math.PI / 2;
+    //floor.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( CurrentFloor.origin_x,0, CurrentFloor.origin_y ) );
+    console.log("floor_x: " + floor.position.x + " floor_y: " + floor.position.y + " floor_z: " + floor.position.z)
+    var origin = new THREE.AxisHelper(200);
+    origin.position.x = CurrentFloor.origin_x;
+    origin.position.y = floor.position.y;
+    origin.position.z = CurrentFloor.origin_y;
+    //origin.geometry.applyMatrix( new THREE.Matrix4().makeBasis( CurrentFloor.origin_x,floor.position.y, CurrentFloor.origin_y ) );
+
+    //origin.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( CurrentFloor.origin_x,floor.position.y, CurrentFloor.origin_y ) );
+    var hex  = 0xff0000;
+    var bbox = new THREE.BoundingBoxHelper( floor, hex );
+    bbox.update();
+    scene.add( bbox );
+    light.position.set(0, floor.position.y + 250, 0);
+    scene.add(light);
+    scene.add(origin);
     scene.add(floor);
 }
 
+function LoadFloors(data, FloorNumber) {
+    for (var i = 0; i < FloorNumber; i++) {
+        CreateFloor(data, i);
+    }
+}
 
 function LoadData() {
+
     LoadFloorPlan(dataset, function (result) {
-        //console.log(result);
-        CreateFloor(dataset);
+        // console.log(result);
+        var numFloors = result.length;
+
+        var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
+        if (inputFloors <= numFloors + 1) {
+            alert("Loading...");
+            LoadFloors(result, inputFloors);
+        }
+
+
+        //  CreateFloor(result);
     });
 }
 
 //Hide points from renderer
 function RemovePoints() {
-    for (var r = 0; r < Points.length; r++) {
+    var numPoints = Points.length;
+    for (var r = 0; r < numPoints; r++) {
         scene.remove(Points[r]);
     }
 }
@@ -275,22 +307,51 @@ function tweenAlphaIn(mesh) {
 }
 //Add a single point to the plane.
 //TODO: Take input or load new json file with data and render
+//Need cube data input
 function GenerateCube(cubeNum) {
-    var geo_Cube = new THREE.BoxGeometry(5, 5, 5);
+    var CubeW = 20, CubeH = 20, CubeL = 20;
+    var geo_Cube = new THREE.BoxGeometry(CubeW, CubeH, CubeL);
     var mat_Cube = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
-        transparent: true,
-        opacity: 0.8
+        transparent: false,
+        // opacity: 0.8
+        //blending: THREE.AdditiveBlending
     });
 
     var mesh_NewPoint = new THREE.Mesh(geo_Cube, mat_Cube);
 
-    mesh_NewPoint.position.x = (10 * cubeNum); //Math.random() * 800 - 400;
-    mesh_NewPoint.position.y = 5;
+    mesh_NewPoint.position.x = Math.random() * 800 - 400;
+    mesh_NewPoint.position.y = 1000 + CubeH; //+ geo_Cube.height;
     mesh_NewPoint.position.z = 10 * cubeNum;//Math.random() * 800 - 400;
+    console.log(cubeNum);
+    console.log("X: " + mesh_NewPoint.position.x);
+    console.log("Y: " + mesh_NewPoint.position.y);
+    console.log("Z: " + mesh_NewPoint.position.z);
     return mesh_NewPoint;
 }
-function AddPoint(cubeNum) {
+function GenerateCube1(cubeNum, Width, Height, Length, pos_x, pos_y, pos_z) {
+    var CubeW = 20, CubeH = 20, CubeL = 20;
+    var geo_Cube = new THREE.BoxGeometry(CubeW, CubeH, CubeL);
+    var mat_Cube = new THREE.MeshLambertMaterial({
+        color: Math.random() * 0xffffff,
+        transparent: false,
+        // opacity: 0.8
+        //blending: THREE.AdditiveBlending
+    });
+
+    var Cube = new THREE.Mesh(geo_Cube, mat_Cube);
+
+    Cube.position.x = pos_x;
+    Cube.position.y = pos_y; //+ geo_Cube.height;
+    Cube.position.z = pos_z;//Math.random() * 800 - 400;
+   // console.log(cubeNum);
+  //  console.log("X: " + Cube.position.x);
+  //  console.log("Y: " + Cube.position.y);
+  //  console.log("Z: " + Cube.position.z);
+    return Cube;
+}
+
+function AddPoint(cubeNum, floor) {
 
     var mesh_Cube = GenerateCube(cubeNum);
     scene.add(mesh_Cube);
@@ -299,15 +360,35 @@ function AddPoint(cubeNum) {
 //   CubeIndices.push(dataset[cubeNum].id);
     //  CubeTLW.push(dataset
 }
-function DrawPoints() {
+function DrawPoints(plane,floor_data) {
     // most objects displayed are a "mesh":
     //  a collection of points ("geometry") and
     //  a set of surface parameters ("material")
-    var numPoints = 50;
+    var numPoints = 0;
     var mesh_Box;
     for (var i = 0; i < numPoints; i++) {
-        AddPoint(i);
+        AddPoint(i, plane);
     }
+    //Floor 2
+    var c1 = GenerateCube1(1, 20, 20, 20, 0, 0, 0);
+    var c2 = GenerateCube1(1, 20, 20, 20, 0, 1000, 0);
+    var c3 = GenerateCube1(1, 20, 20, 20, 0, 2000, 0);
+
+    //c1.geometry.applyMatrix( new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y ) );
+
+  //  c1.geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0,0, 0 ) );
+   // c2.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( floor_data[2].origin_x,0, floor_data[2].origin_y ) );
+    //var basis2 = new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y );
+  //  var basis3 = new THREE.Matrix4().makeBasis( floor_data[2].origin_x,0, floor_data[2].origin_y );
+
+   // c2.geometry.applyMatrix(basis2);
+    //c2.geometry.applyMatrix(basis2);
+
+   // c3.geometry.applyMatrix(basis3);
+   // console.log(floor_data[1].origin_x);
+    //scene.add(c1);
+   // scene.add(c2);
+   // scene.add(c3);
 }
 //Remove selected point on click
 function RemovePoint() {
@@ -316,7 +397,8 @@ function RemovePoint() {
     //The intersects are the points we are checking if the mouse  hovers over.
     var intersects = raycaster.intersectObjects(Points), material;
     //If there are points to check, then we can animate them.
-    if (intersects.length > 0) {
+    var intersects_length = intersects.length;
+    if (intersects_length > 0) {
         //Intersected is the current mouse selection.
         if (INTERSECTED != intersects[0].object) {
             //If we have an intersection, we check if we can change the color or light
