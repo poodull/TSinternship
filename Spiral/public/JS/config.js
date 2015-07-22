@@ -17,9 +17,6 @@ function LoadFloorPlan(dataset, callback){
                     if (floor_data.hasOwnProperty(key)) {
                         var obj = floor_data[key];
                         dataset[key] = obj;
-                        //console.log(obj);
-                        // console.log(dataset[key]);
-                        //  dataset = datase
                     }
                 }
                  result = dataset;

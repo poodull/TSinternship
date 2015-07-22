@@ -43,7 +43,7 @@ function init() {
     scene.add(camera);
     // the camera defaults to position (0,0,0)
     // 	so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
-    camera.position.set(0, 150, 400);
+    camera.position.set(0, 1500, 4000);
     camera.lookAt(scene.position);
 
     // create and start the renderer; choose antialias setting.
@@ -142,7 +142,8 @@ function OnKeyDown(event) {
             AddPoint();
             break;
         case 35:
-            RemovePoints(); //Remove point when clicked!
+            //
+            // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
             // LoadFloorPlanFromJSON;
@@ -156,7 +157,6 @@ function ImportFloorImage(floor_data, floor_id) {
 }
 
 function CreateFloor(dataset, FloorNumber) {
-    var light = new THREE.PointLight(0xffffff);
 
 
     var CurrentFloor = dataset[FloorNumber];
@@ -172,36 +172,93 @@ function CreateFloor(dataset, FloorNumber) {
         depthWrite: false,
         //   depthTest:false
     });
-    var ImageHeight = 1985, ImageWidth = 985;
+    var ImageHeight = 1985, ImageWidth = 995;
     var floorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1);
-    var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    DrawPoints(floor,dataset);
-
-    //Set the scaling
-    floor.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    var Floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    DrawPoints(Floor, dataset);
+    var baseFloor = dataset[0];
+    //console.log(baseFloor);
+    Floor.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
     //Set the position
-    floor.position.x = CurrentFloor.building_offset_x + CurrentFloor.origin_x;
-    floor.position.z = CurrentFloor.origin_y;
-    floor.position.y = CurrentFloor.altitude + CurrentFloor.building_offset_z;
+    var altitude = parseInt(CurrentFloor.altitude);
+    var b_offset_z = parseInt(CurrentFloor.building_offset_z);
+    var origin_x = parseInt(CurrentFloor.origin_x);
+    var origin_y = parseInt(CurrentFloor.origin_y);
+    var base_origin_x = parseInt(baseFloor.origin_x);
+    var base_origin_y = parseInt(baseFloor.origin_y);
+    //console.log("The Base Origin: " + base_origin_x +"," + base_origin_y);
+    //console.log("The Current Floor Origin: " + origin_x + "," + origin_y);
+    //Check if this is the base floor, so we don't move it too much
+    //should add a check to see if we are in the same building and if we are, figure which one is the base floor
+    //then move the other floors relative to the base floor.
+    if (FloorNumber == 0)
+    {
+        origin_x = 0;
+        origin_y = 0;
+    }
+    Floor.position.x = base_origin_x + origin_x;//CurrentFloor.building_offset_x + CurrentFloor.origin_x;
+    Floor.position.z = base_origin_y + origin_y;
+    Floor.position.y = altitude;// + b_offset_z;
     //Keep the plane flat against the camera!
-    floor.rotation.x = Math.PI / 2;
-    //floor.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( CurrentFloor.origin_x,0, CurrentFloor.origin_y ) );
-    console.log("floor_x: " + floor.position.x + " floor_y: " + floor.position.y + " floor_z: " + floor.position.z)
-    var origin = new THREE.AxisHelper(200);
-    origin.position.x = CurrentFloor.origin_x;
-    origin.position.y = floor.position.y;
-    origin.position.z = CurrentFloor.origin_y;
-    //origin.geometry.applyMatrix( new THREE.Matrix4().makeBasis( CurrentFloor.origin_x,floor.position.y, CurrentFloor.origin_y ) );
+    Floor.rotation.x = Math.PI / 2;
 
-    //origin.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( CurrentFloor.origin_x,floor.position.y, CurrentFloor.origin_y ) );
-    var hex  = 0xff0000;
-    var bbox = new THREE.BoundingBoxHelper( floor, hex );
-    bbox.update();
-    scene.add( bbox );
-    light.position.set(0, floor.position.y + 250, 0);
-    scene.add(light);
+    var origin = new THREE.AxisHelper(200);
+    origin.position.x = base_origin_x;
+    origin.position.y = Floor.position.y;
+    origin.position.z = base_origin_y;
+
+    var hex = 0xff0000;
+    var CurrentFloorDimensions = [];
+    var fbox = new THREE.BoundingBoxHelper(Floor, hex);
+    Floor.geometry.computeBoundingBox();
+    var FloorGeometry = Floor.geometry;
+    //var width =
+   // var height = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
+ //   var depth = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
+   // var min_x,max_x,min_y,max_y,min_z,max_z;
+    CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
+    CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
+    CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
+    CurrentFloorDimensions["min_x"] = FloorGeometry.boundingBox.min.x + origin_x + base_origin_x;
+    CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x + origin_x + base_origin_x;
+    CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y + origin_y + base_origin_y;
+    CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y + origin_y + base_origin_y;
+   // CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;
+    //CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;
+   // console.log("Floor Number:" + FloorNumber);
+   // console.log(Floor.position);
+
+
+    // AllFloorDimensions[FloorNumber] = (CurrentFloorDimensions);
+   // console.log(AllFloorDimensions);
+   // console.log(FloorDimensions["max_x"]);
+   // console.log(FloorDimensions["min_x"]);
+    //console.log(typeof  parseInt(dataset[FloorNumber].origin_x));
+    //console.log("The center of the bounding box is at: " + fbox.geometry.center);
+    //console.log(width + "," + height + "," + depth);
+   // console.log("The range is:");
+   // console.log(CurrentFloorDimensions);
+    var min_x = Floor.position.x +  FloorGeometry.boundingBox.min.x;
+    var max_x = Floor.position.x +  FloorGeometry.boundingBox.max.x;
+    var min_y = Floor.position.x +  FloorGeometry.boundingBox.min.y;
+    var max_y = Floor.position.x +  FloorGeometry.boundingBox.max.y;
+   // console.log(worldtoLocal(Floor.position));
+    //console.log("world: " + Floor.position.x + "," + Floor.position.y + "," + Floor.position.z );
+    //var vector = new THREE.Vector3().copy( Floor.position);
+   //console.log( Floor.worldToLocal( vector ) );
+   // console.log("local: " + vector.x + "," + vector.y + "," + vector.z);
+   // console.log("X: (" + relative_min_x + "," + relative_max_x + ")");
+  //  console.log("Y: (" + relative_min_y + "," + relative_max_y + ")");
+   // console.log("Z: (" + f_geo.boundingBox.min.z + "," + f_geo.boundingBox.max.z + ")");
+
+    EventPublisher(min_x,max_x,min_y,max_y,Floor);
+    fbox.update();
+    scene.add(fbox);
+    var light1 = new THREE.PointLight(0xffffff);
+    light1.position.set(base_origin_x + origin_x, Floor.position.y + 250, base_origin_y + origin_y);
+    scene.add(light1);
     scene.add(origin);
-    scene.add(floor);
+    scene.add(Floor);
 }
 
 function LoadFloors(data, FloorNumber) {
@@ -221,17 +278,22 @@ function LoadData() {
             alert("Loading...");
             LoadFloors(result, inputFloors);
         }
-
-
         //  CreateFloor(result);
     });
 }
-
-//Hide points from renderer
-function RemovePoints() {
-    var numPoints = Points.length;
-    for (var r = 0; r < numPoints; r++) {
-        scene.remove(Points[r]);
+//turn this into a class
+function EventPublisher(min_x,max_x,min_y,max_y,Floor) {
+    var RandomCubes = true;
+    if (RandomCubes)
+    {
+        var randomX;
+        var randomY;
+        for (var i = 0; i < 100; i++)
+        {
+            randomX = Math.floor(Math.random() * (max_x - min_x) + min_x);
+            randomY = Math.floor(Math.random() * (max_y - min_y) + min_y);
+            scene.add(GenerateCircle(randomX,Floor.position.y + (1 * Floor.scale.y),randomY));
+        }
     }
 }
 //Mouse hover check
@@ -290,7 +352,7 @@ function tweenAlphaOut(mesh) {
     TWEEN.removeAll();
     new TWEEN.Tween(mesh.material).to({
         opacity: 0
-    }, 10000).easing(TWEEN.Easing.Elastic.Out).start();
+    }, 5000).easing(TWEEN.Easing.Elastic.Out).start();
     /*new TWEEN.Tween( IntersectedPoint.scale ).to( {
      x:1,
      y:1,
@@ -313,9 +375,8 @@ function GenerateCube(cubeNum) {
     var geo_Cube = new THREE.BoxGeometry(CubeW, CubeH, CubeL);
     var mat_Cube = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
-        transparent: false,
-        // opacity: 0.8
-        //blending: THREE.AdditiveBlending
+        transparent: true,
+        opacity: 0.8
     });
 
     var mesh_NewPoint = new THREE.Mesh(geo_Cube, mat_Cube);
@@ -323,32 +384,35 @@ function GenerateCube(cubeNum) {
     mesh_NewPoint.position.x = Math.random() * 800 - 400;
     mesh_NewPoint.position.y = 1000 + CubeH; //+ geo_Cube.height;
     mesh_NewPoint.position.z = 10 * cubeNum;//Math.random() * 800 - 400;
-    console.log(cubeNum);
-    console.log("X: " + mesh_NewPoint.position.x);
-    console.log("Y: " + mesh_NewPoint.position.y);
-    console.log("Z: " + mesh_NewPoint.position.z);
+
     return mesh_NewPoint;
 }
-function GenerateCube1(cubeNum, Width, Height, Length, pos_x, pos_y, pos_z) {
-    var CubeW = 20, CubeH = 20, CubeL = 20;
-    var geo_Cube = new THREE.BoxGeometry(CubeW, CubeH, CubeL);
-    var mat_Cube = new THREE.MeshLambertMaterial({
+function GenerateCircle( pos_x, pos_y, pos_z ) {
+   // var CubeW = 20, CubeH = 20, CubeL = 20;
+    var geo_Circle= new THREE.CircleGeometry(10,32);
+    var mat_Circle = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
-        transparent: false,
-        // opacity: 0.8
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide
         //blending: THREE.AdditiveBlending
     });
 
-    var Cube = new THREE.Mesh(geo_Cube, mat_Cube);
+    var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
 
-    Cube.position.x = pos_x;
-    Cube.position.y = pos_y; //+ geo_Cube.height;
-    Cube.position.z = pos_z;//Math.random() * 800 - 400;
-   // console.log(cubeNum);
-  //  console.log("X: " + Cube.position.x);
-  //  console.log("Y: " + Cube.position.y);
-  //  console.log("Z: " + Cube.position.z);
-    return Cube;
+    Circle.position.x = pos_x;
+    Circle.position.y = pos_y; //+ geo_Cube.height;
+    Circle.position.z = pos_z;//Math.random() * 800 - 400;
+    Circle.rotation.x = Math.PI / 2;
+       // Circle.rotation.x = Math.PI / 2;
+   // Circle.rotation.x = Math.PI / 2;
+
+    // console.log(cubeNum);
+    //  console.log("X: " + Cube.position.x);
+    //  console.log("Y: " + Cube.position.y);
+    //  console.log("Z: " + Cube.position.z);
+    Points.push(Circle);
+    return Circle;
 }
 
 function AddPoint(cubeNum, floor) {
@@ -360,7 +424,7 @@ function AddPoint(cubeNum, floor) {
 //   CubeIndices.push(dataset[cubeNum].id);
     //  CubeTLW.push(dataset
 }
-function DrawPoints(plane,floor_data) {
+function DrawPoints(plane, floor_data) {
     // most objects displayed are a "mesh":
     //  a collection of points ("geometry") and
     //  a set of surface parameters ("material")
@@ -370,25 +434,25 @@ function DrawPoints(plane,floor_data) {
         AddPoint(i, plane);
     }
     //Floor 2
-    var c1 = GenerateCube1(1, 20, 20, 20, 0, 0, 0);
-    var c2 = GenerateCube1(1, 20, 20, 20, 0, 1000, 0);
-    var c3 = GenerateCube1(1, 20, 20, 20, 0, 2000, 0);
+    var f_scale = floor_data[1].scale;
+    //console.log(f_scale);
+    var cubeW = 1 * f_scale, cubeH = 1 * f_scale, cubeL = 1 * f_scale;
 
+
+    //2nd floor scale
+    //c1.geometry.scale.multiplyScalar(f_scale,f_scale,f_scale);
     //c1.geometry.applyMatrix( new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y ) );
 
-  //  c1.geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0,0, 0 ) );
-   // c2.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( floor_data[2].origin_x,0, floor_data[2].origin_y ) );
+    //  c1.geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0,0, 0 ) );
+    // c2.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( floor_data[2].origin_x,0, floor_data[2].origin_y ) );
     //var basis2 = new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y );
-  //  var basis3 = new THREE.Matrix4().makeBasis( floor_data[2].origin_x,0, floor_data[2].origin_y );
+    //  var basis3 = new THREE.Matrix4().makeBasis( floor_data[2].origin_x,0, floor_data[2].origin_y );
 
-   // c2.geometry.applyMatrix(basis2);
+    // c2.geometry.applyMatrix(basis2);
     //c2.geometry.applyMatrix(basis2);
 
-   // c3.geometry.applyMatrix(basis3);
-   // console.log(floor_data[1].origin_x);
-    //scene.add(c1);
-   // scene.add(c2);
-   // scene.add(c3);
+    // c3.geometry.applyMatrix(basis3);
+    // console.log(floor_data[1].origin_x);
 }
 //Remove selected point on click
 function RemovePoint() {
@@ -439,7 +503,13 @@ function RemovePoint() {
         }
     }
 }
-
+function AnimateKeyFrame()
+{
+    //Update while data is gathered.
+    //TODO: POP the circle into existence (.5 seconds)
+    // then DWELL for 3 seconds
+    //
+}
 
 function animate() {
     window.requestAnimFrame(animate);
