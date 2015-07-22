@@ -69,8 +69,8 @@
       <file leaf-file-name="main.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/public/JS/main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.48752835">
-              <caret line="260" column="21" selection-start-line="260" selection-start-column="21" selection-end-line="260" selection-end-column="21" />
+            <state vertical-scroll-proportion="-0.8503401">
+              <caret line="535" column="50" selection-start-line="534" selection-start-column="18" selection-end-line="535" selection-end-column="50" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -593,12 +593,12 @@
       <workItem from="1437489392569" duration="4742000" />
       <workItem from="1437494534175" duration="2456000" />
       <workItem from="1437497538541" duration="39000" />
-      <workItem from="1437497632601" duration="33456000" />
+      <workItem from="1437497632601" duration="41827000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="93068000" />
+    <option name="totallyTimeSpent" value="101439000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1600" height="860" extended-state="0" />
@@ -1062,8 +1062,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/public/JS/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.48752835">
-          <caret line="260" column="21" selection-start-line="260" selection-start-column="21" selection-end-line="260" selection-end-column="21" />
+        <state vertical-scroll-proportion="-0.8503401">
+          <caret line="535" column="50" selection-start-line="534" selection-start-column="18" selection-end-line="535" selection-end-column="50" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>

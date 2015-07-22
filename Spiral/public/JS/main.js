@@ -11,7 +11,8 @@ var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
 var raycaster = new THREE.Raycaster();
 var Points = [], Remove = false;
 var Removed = [];
-
+var Pumping = false;
+var Loading = true;
 window.requestAnimFrame = (function () {
     return window.requestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
@@ -25,6 +26,7 @@ window.requestAnimFrame = (function () {
 // initialization
 init();
 // animation loop 
+//animate();
 animate();
 
 //necessary functions
@@ -102,7 +104,6 @@ function init() {
     document.addEventListener('keydown', OnKeyDown, false);
     window.addEventListener('resize', onWindowResize, false);
 
-
     // fog must be added to scene before first render
     // scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
 }
@@ -112,7 +113,7 @@ function onDocumentTouchStart(event) {
     event.preventDefault();
     event.clientX = event.touches[0].clientX;
     event.clientY = event.touches[0].clientY;
-    onDocumentMouseDown(event);
+    onDocumentMouseDown(eventl);
 }
 function onDocumentMouseDown(event) {
     event.preventDefault();
@@ -146,7 +147,8 @@ function OnKeyDown(event) {
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
-            // LoadFloorPlanFromJSON;
+            Pumping = !Pumping;
+            AnimateKeyframe();
             break;
 
     }
@@ -278,6 +280,7 @@ function LoadData() {
             alert("Loading...");
             LoadFloors(result, inputFloors);
         }
+        Loading = false;
         //  CreateFloor(result);
     });
 }
@@ -288,11 +291,11 @@ function EventPublisher(min_x,max_x,min_y,max_y,Floor) {
     {
         var randomX;
         var randomY;
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < 1; i++)
         {
             randomX = Math.floor(Math.random() * (max_x - min_x) + min_x);
             randomY = Math.floor(Math.random() * (max_y - min_y) + min_y);
-            scene.add(GenerateCircle(randomX,Floor.position.y + (1 * Floor.scale.y),randomY));
+            scene.add(GenerateCircle(randomX,Floor.position.y + 1,randomY));
         }
     }
 }
@@ -352,7 +355,7 @@ function tweenAlphaOut(mesh) {
     TWEEN.removeAll();
     new TWEEN.Tween(mesh.material).to({
         opacity: 0
-    }, 5000).easing(TWEEN.Easing.Elastic.Out).start();
+    }, 3000).easing(TWEEN.Easing.Elastic.Out).start();
     /*new TWEEN.Tween( IntersectedPoint.scale ).to( {
      x:1,
      y:1,
@@ -389,7 +392,7 @@ function GenerateCube(cubeNum) {
 }
 function GenerateCircle( pos_x, pos_y, pos_z ) {
    // var CubeW = 20, CubeH = 20, CubeL = 20;
-    var geo_Circle= new THREE.CircleGeometry(10,32);
+    var geo_Circle= new THREE.CircleGeometry(100,32);
     var mat_Circle = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
         transparent: true,
@@ -401,7 +404,7 @@ function GenerateCircle( pos_x, pos_y, pos_z ) {
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
 
     Circle.position.x = pos_x;
-    Circle.position.y = pos_y; //+ geo_Cube.height;
+    Circle.position.y = pos_y+1; //+ geo_Cube.height;
     Circle.position.z = pos_z;//Math.random() * 800 - 400;
     Circle.rotation.x = Math.PI / 2;
        // Circle.rotation.x = Math.PI / 2;
@@ -503,18 +506,76 @@ function RemovePoint() {
         }
     }
 }
-function AnimateKeyFrame()
+function FakeData()
+{
+
+}
+
+function AnimateKeyframe()
 {
     //Update while data is gathered.
     //TODO: POP the circle into existence (.5 seconds)
     // then DWELL for 3 seconds
-    //
+   // TWEEN.removeAll();
+
+        if (!Loading) {
+            var circle = Points[0];
+            var tweenIn = new TWEEN.Tween(circle.material)
+                .to({
+                    opacity: 0.8,
+                    duration: 0.5
+                })
+                .easing(TWEEN.Easing.Exponential.In);
+
+            var tweenOut = new TWEEN.Tween(circle.material)
+                .to({
+                    opacity: 0.0,
+                    duration: 3,
+                    radius: 0
+                })
+                .easing(TWEEN.Easing.Linear.None);
+            var tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
+                .to({
+                    x: 2,
+                    y: 2,
+                    z: 2
+                }, 3000).easing(TWEEN.Easing.Bounce.In);
+            var tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
+                .to({
+                    x: 0,
+                    y: 0,
+                    z: 0
+                }, 3000).easing(TWEEN.Easing.Bounce.Out);
+            tweenAlphaSizeIn.start();
+            console.log(circle.material.opacity);
+            tweenOut.chain(tweenAlphaSizeOut);
+            tweenIn.chain(tweenAlphaSizeIn);
+          //  tweenOut.chain(tweenIn);
+         //   tweenOut.repeat(Infinity);
+            tweenOut.chain(tweenIn);
+            setTimeout(function(){tweenOut.start();},3000);
+            if(Pumping) {
+                tweenOut.start();
+                tweenOut.repeat(1000);
+                /*if (circle.material.opacity >= 0.8) {
+                    //  tweenAlphaSizeOut.start();
+                    tweenOut.start();
+                }
+                else {
+                    tweenIn.start();
+                    //  tweenAlphaSizeIn.start();
+                }*/
+            }
+
+        }
+
 }
 
 function animate() {
     window.requestAnimFrame(animate);
     render();
     update();
+
 }
 
 function update() {
