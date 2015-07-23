@@ -25,7 +25,7 @@ window.requestAnimFrame = (function () {
 })();
 // initialization
 init();
-// animation loop 
+// animation loop
 //animate();
 animate();
 
@@ -147,8 +147,7 @@ function OnKeyDown(event) {
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
-            Pumping = !Pumping;
-            AnimateKeyframe();
+            AnimationHandler();
             break;
 
     }
@@ -193,8 +192,7 @@ function CreateFloor(dataset, FloorNumber) {
     //Check if this is the base floor, so we don't move it too much
     //should add a check to see if we are in the same building and if we are, figure which one is the base floor
     //then move the other floors relative to the base floor.
-    if (FloorNumber == 0)
-    {
+    if (FloorNumber == 0) {
         origin_x = 0;
         origin_y = 0;
     }
@@ -215,9 +213,9 @@ function CreateFloor(dataset, FloorNumber) {
     Floor.geometry.computeBoundingBox();
     var FloorGeometry = Floor.geometry;
     //var width =
-   // var height = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
- //   var depth = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
-   // var min_x,max_x,min_y,max_y,min_z,max_z;
+    // var height = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
+    //   var depth = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
+    // var min_x,max_x,min_y,max_y,min_z,max_z;
     CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
     CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
     CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
@@ -225,37 +223,37 @@ function CreateFloor(dataset, FloorNumber) {
     CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x + origin_x + base_origin_x;
     CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y + origin_y + base_origin_y;
     CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y + origin_y + base_origin_y;
-   // CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;
+    // CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;
     //CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;
-   // console.log("Floor Number:" + FloorNumber);
-   // console.log(Floor.position);
+    // console.log("Floor Number:" + FloorNumber);
+    // console.log(Floor.position);
 
 
     // AllFloorDimensions[FloorNumber] = (CurrentFloorDimensions);
-   // console.log(AllFloorDimensions);
-   // console.log(FloorDimensions["max_x"]);
-   // console.log(FloorDimensions["min_x"]);
+    // console.log(AllFloorDimensions);
+    // console.log(FloorDimensions["max_x"]);
+    // console.log(FloorDimensions["min_x"]);
     //console.log(typeof  parseInt(dataset[FloorNumber].origin_x));
     //console.log("The center of the bounding box is at: " + fbox.geometry.center);
     //console.log(width + "," + height + "," + depth);
-   // console.log("The range is:");
-   // console.log(CurrentFloorDimensions);
-    var min_x = Floor.position.x +  FloorGeometry.boundingBox.min.x;
-    var max_x = Floor.position.x +  FloorGeometry.boundingBox.max.x;
-    var min_y = Floor.position.x +  FloorGeometry.boundingBox.min.y;
-    var max_y = Floor.position.x +  FloorGeometry.boundingBox.max.y;
-   // console.log(worldtoLocal(Floor.position));
+    // console.log("The range is:");
+    // console.log(CurrentFloorDimensions);
+    var min_x = Floor.position.x + FloorGeometry.boundingBox.min.x;
+    var max_x = Floor.position.x + FloorGeometry.boundingBox.max.x;
+    var min_y = Floor.position.x + FloorGeometry.boundingBox.min.y;
+    var max_y = Floor.position.x + FloorGeometry.boundingBox.max.y;
+    // console.log(worldtoLocal(Floor.position));
     //console.log("world: " + Floor.position.x + "," + Floor.position.y + "," + Floor.position.z );
     //var vector = new THREE.Vector3().copy( Floor.position);
-   //console.log( Floor.worldToLocal( vector ) );
-   // console.log("local: " + vector.x + "," + vector.y + "," + vector.z);
-   // console.log("X: (" + relative_min_x + "," + relative_max_x + ")");
-  //  console.log("Y: (" + relative_min_y + "," + relative_max_y + ")");
-   // console.log("Z: (" + f_geo.boundingBox.min.z + "," + f_geo.boundingBox.max.z + ")");
+    //console.log( Floor.worldToLocal( vector ) );
+    // console.log("local: " + vector.x + "," + vector.y + "," + vector.z);
+    // console.log("X: (" + relative_min_x + "," + relative_max_x + ")");
+    //  console.log("Y: (" + relative_min_y + "," + relative_max_y + ")");
+    // console.log("Z: (" + f_geo.boundingBox.min.z + "," + f_geo.boundingBox.max.z + ")");
 
-    EventPublisher(min_x,max_x,min_y,max_y,Floor);
-    fbox.update();
-    scene.add(fbox);
+    EventPublisher(min_x, max_x, min_y, max_y, Floor);
+   // fbox.update();
+    //scene.add(fbox);
     var light1 = new THREE.PointLight(0xffffff);
     light1.position.set(base_origin_x + origin_x, Floor.position.y + 250, base_origin_y + origin_y);
     scene.add(light1);
@@ -285,17 +283,15 @@ function LoadData() {
     });
 }
 //turn this into a class
-function EventPublisher(min_x,max_x,min_y,max_y,Floor) {
+function EventPublisher(min_x, max_x, min_y, max_y, Floor) {
     var RandomCubes = true;
-    if (RandomCubes)
-    {
+    if (RandomCubes) {
         var randomX;
         var randomY;
-        for (var i = 0; i < 1; i++)
-        {
+        for (var i = 0; i < 2; i++) {
             randomX = Math.floor(Math.random() * (max_x - min_x) + min_x);
             randomY = Math.floor(Math.random() * (max_y - min_y) + min_y);
-            scene.add(GenerateCircle(randomX,Floor.position.y + 1,randomY));
+            scene.add(GenerateCircle(randomX, Floor.position.y + 3, randomY));
         }
     }
 }
@@ -390,9 +386,9 @@ function GenerateCube(cubeNum) {
 
     return mesh_NewPoint;
 }
-function GenerateCircle( pos_x, pos_y, pos_z ) {
-   // var CubeW = 20, CubeH = 20, CubeL = 20;
-    var geo_Circle= new THREE.CircleGeometry(100,32);
+function GenerateCircle(pos_x, pos_y, pos_z) {
+    // var CubeW = 20, CubeH = 20, CubeL = 20;
+    var geo_Circle = new THREE.CircleGeometry(100, 32);
     var mat_Circle = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
         transparent: true,
@@ -404,11 +400,11 @@ function GenerateCircle( pos_x, pos_y, pos_z ) {
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
 
     Circle.position.x = pos_x;
-    Circle.position.y = pos_y+1; //+ geo_Cube.height;
+    Circle.position.y = pos_y + 1; //+ geo_Cube.height;
     Circle.position.z = pos_z;//Math.random() * 800 - 400;
     Circle.rotation.x = Math.PI / 2;
-       // Circle.rotation.x = Math.PI / 2;
-   // Circle.rotation.x = Math.PI / 2;
+    // Circle.rotation.x = Math.PI / 2;
+    // Circle.rotation.x = Math.PI / 2;
 
     // console.log(cubeNum);
     //  console.log("X: " + Cube.position.x);
@@ -506,70 +502,86 @@ function RemovePoint() {
         }
     }
 }
-function FakeData()
-{
+function FakeData() {
 
 }
+function AnimationHandler() {
+    this.queue = [];
+    this.active = false;
+    this.timer = null;
+    this.createTween = function ( object,startTime,endTime ) {
+        // return array of tween coordinate data (start->end)
+        type = type || 'default';
+        var tween = [start];
+        var tmp = start;
+        var diff = end - start;
+    };
+    if (!Loading) {
+        this.timer = Date.now();
+        var circle = Points[0];
+        var anims = [];
+        var tweenOut = new TWEEN.Tween(circle.material)
+            .to({
+                opacity: 0.0,
+                duration: 3,
+                radius: 0,
+                delay: 1500
+            })
+            .easing(TWEEN.Easing.Linear.None)
+            .onComplete(function()
+        {
+            tweenIn.start();
 
-function AnimateKeyframe()
-{
-    //Update while data is gathered.
-    //TODO: POP the circle into existence (.5 seconds)
-    // then DWELL for 3 seconds
-   // TWEEN.removeAll();
+            //tweenOut.stop();
+            console.log("tween out complete: ");
+        });
+        var tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
+            .to({
+                x: 2,
+                y: 2,
+                z: 2
+            },500).easing(TWEEN.Easing.Bounce.Out);
+        var tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
+            .to({
+                x: 0,
+                y: 0,
+                z: 0
+            }, 1500)
+            .easing(TWEEN.Easing.Bounce.Out);
 
-        if (!Loading) {
-            var circle = Points[0];
-            var tweenIn = new TWEEN.Tween(circle.material)
-                .to({
-                    opacity: 0.8,
-                    duration: 0.5
-                })
-                .easing(TWEEN.Easing.Exponential.In);
 
-            var tweenOut = new TWEEN.Tween(circle.material)
-                .to({
-                    opacity: 0.0,
-                    duration: 3,
-                    radius: 0
-                })
-                .easing(TWEEN.Easing.Linear.None);
-            var tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
-                .to({
-                    x: 2,
-                    y: 2,
-                    z: 2
-                }, 3000).easing(TWEEN.Easing.Bounce.In);
-            var tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
-                .to({
-                    x: 0,
-                    y: 0,
-                    z: 0
-                }, 3000).easing(TWEEN.Easing.Bounce.Out);
-            tweenAlphaSizeIn.start();
-            console.log(circle.material.opacity);
-            tweenOut.chain(tweenAlphaSizeOut);
-            tweenIn.chain(tweenAlphaSizeIn);
-          //  tweenOut.chain(tweenIn);
-         //   tweenOut.repeat(Infinity);
-            tweenOut.chain(tweenIn);
-            setTimeout(function(){tweenOut.start();},3000);
-            if(Pumping) {
+        var tweenIn = new TWEEN.Tween(circle.material)
+            .to({
+                opacity: 0.8,
+                duration: 0.5,
+                delay: 3000
+            })
+
+            .easing(TWEEN.Easing.Exponential.In)
+            .onComplete(function () {
+                console.log("tween in complete: " );
+                tweenOut.delay(3000);
+               // tweenIn.stop();
                 tweenOut.start();
-                tweenOut.repeat(1000);
-                /*if (circle.material.opacity >= 0.8) {
-                    //  tweenAlphaSizeOut.start();
-                    tweenOut.start();
-                }
-                else {
-                    tweenIn.start();
-                    //  tweenAlphaSizeIn.start();
-                }*/
-            }
+                // setTimeout(tweenOut.start(),3000);
+            });
+        tweenIn.chain(tweenAlphaSizeIn);
+        anims["start"] = tweenIn;
+        tweenOut.chain(tweenAlphaSizeOut);
+        anims["end"] = tweenOut;
 
+        if (!this.active) {
+            anims["start"].start();
+            //    setTimeout(anims["end"].start(),1000);
+            this.active = true;
         }
+    }
+}
+
+function updateData() {
 
 }
+
 
 function animate() {
     window.requestAnimFrame(animate);
@@ -581,6 +593,7 @@ function animate() {
 function update() {
     // delta = change in time since last call (in seconds)
     //var delta = clock.getDelta();
+
     controls.update();
     stats.update();
 }

@@ -69,8 +69,8 @@
       <file leaf-file-name="main.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/public/JS/main.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.8503401">
-              <caret line="535" column="50" selection-start-line="534" selection-start-column="18" selection-end-line="535" selection-end-column="50" />
+            <state vertical-scroll-proportion="0.60181">
+              <caret line="300" column="43" selection-start-line="300" selection-start-column="43" selection-end-line="300" selection-end-column="43" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -81,7 +81,7 @@
       <file leaf-file-name="OrbitControls.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/public/JS/OrbitControls.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-31.481482">
+            <state vertical-scroll-proportion="0.0">
               <caret line="56" column="28" selection-start-line="56" selection-start-column="28" selection-end-line="56" selection-end-column="28" />
               <folding />
             </state>
@@ -91,7 +91,7 @@
       <file leaf-file-name="package.json" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/package.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.5384617">
+            <state vertical-scroll-proportion="0.0">
               <caret line="10" column="10" selection-start-line="10" selection-start-column="10" selection-end-line="10" selection-end-column="10" />
               <folding />
             </state>
@@ -101,17 +101,20 @@
       <file leaf-file-name="FloorPlan.csv" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/FloorPlan.csv">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="747.37036">
+            <state vertical-scroll-proportion="0.0">
               <caret line="5" column="40756" selection-start-line="5" selection-start-column="40756" selection-end-line="5" selection-end-column="40756" />
               <folding />
             </state>
+          </provider>
+          <provider editor-type-id="com.intellij.database.editor.CsvTableFileEditorProvider">
+            <state />
           </provider>
         </entry>
       </file>
       <file leaf-file-name="config.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/public/config.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.5384617">
+            <state vertical-scroll-proportion="0.0">
               <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
               <folding />
             </state>
@@ -210,7 +213,6 @@
     <panes>
       <pane id="Scratches" />
       <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -291,6 +293,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -593,12 +596,13 @@
       <workItem from="1437489392569" duration="4742000" />
       <workItem from="1437494534175" duration="2456000" />
       <workItem from="1437497538541" duration="39000" />
-      <workItem from="1437497632601" duration="41827000" />
+      <workItem from="1437497632601" duration="41948000" />
+      <workItem from="1437665403831" duration="6954000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="101439000" />
+    <option name="totallyTimeSpent" value="108514000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1600" height="860" extended-state="0" />
@@ -611,10 +615,10 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33688414" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3355526" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.14583333" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.14520203" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -851,13 +855,13 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/public/Assets/Data/signals.csv">
-      <provider editor-type-id="com.intellij.database.editor.CsvTableFileEditorProvider">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-3.0357144">
           <caret line="10" column="14" selection-start-line="10" selection-start-column="14" selection-end-line="10" selection-end-column="14" />
         </state>
+      </provider>
+      <provider editor-type-id="com.intellij.database.editor.CsvTableFileEditorProvider">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/views/error.ejs">
@@ -942,7 +946,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="163" column="5" selection-start-line="163" selection-start-column="5" selection-end-line="163" selection-end-column="5" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -966,7 +969,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="9" column="0" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -990,7 +992,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/package.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.5384617">
+        <state vertical-scroll-proportion="0.0">
           <caret line="10" column="10" selection-start-line="10" selection-start-column="10" selection-end-line="10" selection-end-column="10" />
           <folding />
         </state>
@@ -1006,7 +1008,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/public/config.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.5384617">
+        <state vertical-scroll-proportion="0.0">
           <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
           <folding />
         </state>
@@ -1022,7 +1024,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/public/JS/OrbitControls.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-31.481482">
+        <state vertical-scroll-proportion="0.0">
           <caret line="56" column="28" selection-start-line="56" selection-start-column="28" selection-end-line="56" selection-end-column="28" />
           <folding />
         </state>
@@ -1030,10 +1032,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/FloorPlan.csv">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="747.37036">
+        <state vertical-scroll-proportion="0.0">
           <caret line="5" column="40756" selection-start-line="5" selection-start-column="40756" selection-end-line="5" selection-end-column="40756" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="com.intellij.database.editor.CsvTableFileEditorProvider">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/routes/config.js">
@@ -1062,8 +1067,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/public/JS/main.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.8503401">
-          <caret line="535" column="50" selection-start-line="534" selection-start-column="18" selection-end-line="535" selection-end-column="50" />
+        <state vertical-scroll-proportion="0.60181">
+          <caret line="300" column="43" selection-start-line="300" selection-start-column="43" selection-end-line="300" selection-end-column="43" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>
