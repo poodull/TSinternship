@@ -4,13 +4,11 @@
 var dataset = [];
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
-var clock = new THREE.Clock();
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
     INTERSECTED, SELECTED;
 ;
 var raycaster = new THREE.Raycaster();
 var Points = [], Remove = false;
-var Removed = [];
 var Pumping = false;
 var Loading = true;
 window.requestAnimFrame = (function () {
@@ -26,7 +24,6 @@ window.requestAnimFrame = (function () {
 // initialization
 init();
 // animation loop
-//animate();
 animate();
 
 //necessary functions
@@ -38,7 +35,7 @@ function init() {
     // var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
     var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
     // camera attributes
-    var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 80000;
+    var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 10, FAR = 80000;
     // set up camera
     camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
     // add the camera to the scene
@@ -147,7 +144,9 @@ function OnKeyDown(event) {
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
-            AnimationHandler();
+            for (var i = 0; i < Points.length; i++) {
+                new AnimationHandler(Points, i);
+            }
             break;
 
     }
@@ -171,12 +170,12 @@ function CreateFloor(dataset, FloorNumber) {
         //blending: THREE.AdditiveBlending,//THREE.AdditiveAlpha,
         transparent: true,
         depthWrite: false,
+        frustumCulled: false
         //   depthTest:false
     });
     var ImageHeight = 1985, ImageWidth = 995;
     var floorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1);
     var Floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    DrawPoints(Floor, dataset);
     var baseFloor = dataset[0];
     //console.log(baseFloor);
     Floor.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
@@ -199,7 +198,7 @@ function CreateFloor(dataset, FloorNumber) {
     Floor.position.x = base_origin_x + origin_x;//CurrentFloor.building_offset_x + CurrentFloor.origin_x;
     Floor.position.z = base_origin_y + origin_y;
     Floor.position.y = altitude;// + b_offset_z;
-    //Keep the plane flat against the camera!
+    //Keep the plane flat on XZ axis!
     Floor.rotation.x = Math.PI / 2;
 
     var origin = new THREE.AxisHelper(200);
@@ -209,9 +208,10 @@ function CreateFloor(dataset, FloorNumber) {
 
     var hex = 0xff0000;
     var CurrentFloorDimensions = [];
-    var fbox = new THREE.BoundingBoxHelper(Floor, hex);
-    Floor.geometry.computeBoundingBox();
+    // var fbox = new THREE.BoundingBoxHelper(Floor, hex);
     var FloorGeometry = Floor.geometry;
+    FloorGeometry.computeBoundingBox();
+
     //var width =
     // var height = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
     //   var depth = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
@@ -250,9 +250,10 @@ function CreateFloor(dataset, FloorNumber) {
     // console.log("X: (" + relative_min_x + "," + relative_max_x + ")");
     //  console.log("Y: (" + relative_min_y + "," + relative_max_y + ")");
     // console.log("Z: (" + f_geo.boundingBox.min.z + "," + f_geo.boundingBox.max.z + ")");
+    var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
 
-    EventPublisher(min_x, max_x, min_y, max_y, Floor);
-   // fbox.update();
+    EventPublisher(min_x, max_x, min_y, max_y, Floor, CurrentFloor, inputCircles);
+    // fbox.update();
     //scene.add(fbox);
     var light1 = new THREE.PointLight(0xffffff);
     light1.position.set(base_origin_x + origin_x, Floor.position.y + 250, base_origin_y + origin_y);
@@ -282,16 +283,17 @@ function LoadData() {
         //  CreateFloor(result);
     });
 }
-//turn this into a class
-function EventPublisher(min_x, max_x, min_y, max_y, Floor) {
-    var RandomCubes = true;
-    if (RandomCubes) {
+//TODO: turn this into a class
+function EventPublisher(min_x, max_x, min_y, max_y, Floor, FloorData, numCircles) {
+    var RandomCircles = true;
+    if (RandomCircles) {
         var randomX;
-        var randomY;
-        for (var i = 0; i < 2; i++) {
+        var randomZ;
+        var fixedY = Floor.position.y + (1 * FloorData.scale);
+        for (var i = 0; i < numCircles; i++) {
             randomX = Math.floor(Math.random() * (max_x - min_x) + min_x);
-            randomY = Math.floor(Math.random() * (max_y - min_y) + min_y);
-            scene.add(GenerateCircle(randomX, Floor.position.y + 3, randomY));
+            randomZ = Math.floor(Math.random() * (max_y - min_y) + min_y);
+            scene.add(GenerateCircle(randomX, fixedY + 1, randomZ));
         }
     }
 }
@@ -318,7 +320,7 @@ function FindIntersects() {
                 }
             }
 
-
+            //Reset the color back to normal when we select a different object
             INTERSECTED = intersects[0].object;
             material = INTERSECTED.material;
             console.log(INTERSECTED);
@@ -347,60 +349,25 @@ function FindIntersects() {
         INTERSECTED = null;
     }
 }
-function tweenAlphaOut(mesh) {
-    TWEEN.removeAll();
-    new TWEEN.Tween(mesh.material).to({
-        opacity: 0
-    }, 3000).easing(TWEEN.Easing.Elastic.Out).start();
-    /*new TWEEN.Tween( IntersectedPoint.scale ).to( {
-     x:1,
-     y:1,
-     z:1
-     }, 3000 ).easing( TWEEN.Easing.Elastic.Out).start();*/
-}
 
-function tweenAlphaIn(mesh) {
-    new TWEEN.Tween(mesh.scale).to({
-        x: 2,
-        y: 2,
-        z: 2
-    }, 3000).easing(TWEEN.Easing.Elastic.Out).start();
-}
 //Add a single point to the plane.
-//TODO: Take input or load new json file with data and render
-//Need cube data input
-function GenerateCube(cubeNum) {
-    var CubeW = 20, CubeH = 20, CubeL = 20;
-    var geo_Cube = new THREE.BoxGeometry(CubeW, CubeH, CubeL);
-    var mat_Cube = new THREE.MeshLambertMaterial({
-        color: Math.random() * 0xffffff,
-        transparent: true,
-        opacity: 0.8
-    });
-
-    var mesh_NewPoint = new THREE.Mesh(geo_Cube, mat_Cube);
-
-    mesh_NewPoint.position.x = Math.random() * 800 - 400;
-    mesh_NewPoint.position.y = 1000 + CubeH; //+ geo_Cube.height;
-    mesh_NewPoint.position.z = 10 * cubeNum;//Math.random() * 800 - 400;
-
-    return mesh_NewPoint;
-}
 function GenerateCircle(pos_x, pos_y, pos_z) {
     // var CubeW = 20, CubeH = 20, CubeL = 20;
-    var geo_Circle = new THREE.CircleGeometry(100, 32);
+    var geo_Circle = new THREE.CircleGeometry(100, 50);
     var mat_Circle = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
         transparent: true,
         opacity: 0.8,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        frustumCulled: false,
+        depthWrite: false
         //blending: THREE.AdditiveBlending
     });
 
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
 
     Circle.position.x = pos_x;
-    Circle.position.y = pos_y + 1; //+ geo_Cube.height;
+    Circle.position.y = pos_y; //+ geo_Cube.height;
     Circle.position.z = pos_z;//Math.random() * 800 - 400;
     Circle.rotation.x = Math.PI / 2;
     // Circle.rotation.x = Math.PI / 2;
@@ -414,46 +381,34 @@ function GenerateCircle(pos_x, pos_y, pos_z) {
     return Circle;
 }
 
-function AddPoint(cubeNum, floor) {
+/*function AddPoint(cubeNum, floor) {
 
-    var mesh_Cube = GenerateCube(cubeNum);
-    scene.add(mesh_Cube);
-    tweenAlphaIn(mesh_Cube);
-    Points.push(mesh_Cube);
-//   CubeIndices.push(dataset[cubeNum].id);
-    //  CubeTLW.push(dataset
-}
-function DrawPoints(plane, floor_data) {
-    // most objects displayed are a "mesh":
-    //  a collection of points ("geometry") and
-    //  a set of surface parameters ("material")
-    var numPoints = 0;
-    var mesh_Box;
-    for (var i = 0; i < numPoints; i++) {
-        AddPoint(i, plane);
-    }
-    //Floor 2
-    var f_scale = floor_data[1].scale;
-    //console.log(f_scale);
-    var cubeW = 1 * f_scale, cubeH = 1 * f_scale, cubeL = 1 * f_scale;
+ var mesh_Cube = GenerateCircle(cubeNum);
+ scene.add(mesh_Cube);
+ Points.push(mesh_Cube);
+ //   CubeIndices.push(dataset[cubeNum].id);
+ //  CubeTLW.push(dataset
+ }
+ function DrawPoints(plane, floor_data) {
+ // most objects displayed are a "mesh":
+ //  a collection of points ("geometry") and
+ //  a set of surface parameters ("material")
+ var numPoints = 0;
+ var mesh_Box;
+ for (var i = 0; i < numPoints; i++) {
+ AddPoint(i, plane);
+ }
+ //Floor 2
+ var f_scale = floor_data[1].scale;
+ //console.log(f_scale);
+ var cubeW = 1 * f_scale, cubeH = 1 * f_scale, cubeL = 1 * f_scale;
 
+ //2nd floor scale
+ //c1.geometry.scale.multiplyScalar(f_scale,f_scale,f_scale);
+ //c1.geometry.applyMatrix( new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y ) );
 
-    //2nd floor scale
-    //c1.geometry.scale.multiplyScalar(f_scale,f_scale,f_scale);
-    //c1.geometry.applyMatrix( new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y ) );
+ }*/
 
-    //  c1.geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0,0, 0 ) );
-    // c2.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( floor_data[2].origin_x,0, floor_data[2].origin_y ) );
-    //var basis2 = new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y );
-    //  var basis3 = new THREE.Matrix4().makeBasis( floor_data[2].origin_x,0, floor_data[2].origin_y );
-
-    // c2.geometry.applyMatrix(basis2);
-    //c2.geometry.applyMatrix(basis2);
-
-    // c3.geometry.applyMatrix(basis3);
-    // console.log(floor_data[1].origin_x);
-}
-//Remove selected point on click
 function RemovePoint() {
     var deleted = [];
     raycaster.setFromCamera(mouse, camera);
@@ -502,23 +457,35 @@ function RemovePoint() {
         }
     }
 }
-function FakeData() {
-
-}
-function AnimationHandler() {
+//Main animation class
+//Instantiate one for each point, allowing control of the sequences of animations
+function AnimationHandler(Objects, Index) {
     this.queue = [];
     this.active = false;
-    this.timer = null;
-    this.createTween = function ( object,startTime,endTime ) {
+    this.queueHash = [];
+    //console.log(this.queue);
+    //var timer = new THREE.Clock();
+
+    this.createTween = function (object) {
         // return array of tween coordinate data (start->end)
         type = type || 'default';
         var tween = [start];
         var tmp = start;
         var diff = end - start;
     };
+    this.enqueue = function (Object) {
+        self.queue.push(o);
+        o.active = true;
+    };
+
+    //Check if we're finished loading the floor plans
     if (!Loading) {
-        this.timer = Date.now();
-        var circle = Points[0];
+        // this.timer =
+        // this.timer.start();
+        //   console.log(this.timer);
+
+        var circle = Objects[Index];
+        // this.enqueue(circle);
         var anims = [];
         var tweenOut = new TWEEN.Tween(circle.material)
             .to({
@@ -528,19 +495,17 @@ function AnimationHandler() {
                 delay: 1500
             })
             .easing(TWEEN.Easing.Linear.None)
-            .onComplete(function()
-        {
-            tweenIn.start();
-
-            //tweenOut.stop();
-            console.log("tween out complete: ");
-        });
+            .onComplete(function () {
+                tweenIn.start();
+                //tweenOut.stop();
+                //console.log("tween out complete: ");
+            });
         var tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
             .to({
-                x: 2,
-                y: 2,
-                z: 2
-            },500).easing(TWEEN.Easing.Bounce.Out);
+                x: 1,
+                y: 1,
+                z: 1
+            }, 500).easing(TWEEN.Easing.Bounce.Out);
         var tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
             .to({
                 x: 0,
@@ -559,9 +524,9 @@ function AnimationHandler() {
 
             .easing(TWEEN.Easing.Exponential.In)
             .onComplete(function () {
-                console.log("tween in complete: " );
+                // console.log("tween in complete: ");
                 tweenOut.delay(3000);
-               // tweenIn.stop();
+                // DWELL PERIOD //
                 tweenOut.start();
                 // setTimeout(tweenOut.start(),3000);
             });
@@ -575,13 +540,32 @@ function AnimationHandler() {
             //    setTimeout(anims["end"].start(),1000);
             this.active = true;
         }
+        this.animate = function () {
+            var active = 0;
+            for (var i = 0, j = self.queue.length; i < j; i++) {
+                if (self.queue[i].active) {
+                    self.queue[i].animate();
+                    active++;
+                }
+            }
+            if (active == 0 && self.timer) {
+                self.stop();
+            }
+        };
+        this.start = function () {
+            if (self.timer || self.active) {
+                return false;
+            }
+            self.active = true;
+        };
+        this.stop = function () {
+            clearInterval(self.timer);
+            self.timer = null;
+            self.active = false;
+            self.queue = [];
+        }
     }
 }
-
-function updateData() {
-
-}
-
 
 function animate() {
     window.requestAnimFrame(animate);
@@ -593,7 +577,6 @@ function animate() {
 function update() {
     // delta = change in time since last call (in seconds)
     //var delta = clock.getDelta();
-
     controls.update();
     stats.update();
 }

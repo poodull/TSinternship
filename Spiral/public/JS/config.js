@@ -1,5 +1,3 @@
-var dataset = [];
-
 function LoadFloorPlan(dataset, callback){
     var result = [];
     $.ajax({
