@@ -77,8 +77,8 @@ function init() {
     container.appendChild(stats.domElement);
 
 
-    // var ambientLight = new THREE.AmbientLight(0x111111);
-    // scene.add(ambientLight);
+    var ambientLight = new THREE.AmbientLight(0x111111);
+    scene.add(ambientLight);
     // create a set of coordinate axes to help orient user
     //    specify length in pixels in each direction
 
@@ -144,9 +144,10 @@ function OnKeyDown(event) {
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
-            for (var i = 0; i < Points.length; i++) {
-                new AnimationHandler(Points, i);
-            }
+            // for (var i = 0; i < Points.length; i++) {
+            //       new AnimationHandler(Points, i);
+            //  }
+            testAnimationFunction(Points);
             break;
 
     }
@@ -156,7 +157,7 @@ function ImportFloorImage(floor_data, floor_id) {
     return floor_data[floor_id].image;
 }
 
-function CreateFloor(dataset, FloorNumber) {
+function CreateFloor(dataset, FloorNumber, FloorDimensions) {
 
 
     var CurrentFloor = dataset[FloorNumber];
@@ -186,8 +187,7 @@ function CreateFloor(dataset, FloorNumber) {
     var origin_y = parseInt(CurrentFloor.origin_y);
     var base_origin_x = parseInt(baseFloor.origin_x);
     var base_origin_y = parseInt(baseFloor.origin_y);
-    //console.log("The Base Origin: " + base_origin_x +"," + base_origin_y);
-    //console.log("The Current Floor Origin: " + origin_x + "," + origin_y);
+
     //Check if this is the base floor, so we don't move it too much
     //should add a check to see if we are in the same building and if we are, figure which one is the base floor
     //then move the other floors relative to the base floor.
@@ -212,10 +212,6 @@ function CreateFloor(dataset, FloorNumber) {
     var FloorGeometry = Floor.geometry;
     FloorGeometry.computeBoundingBox();
 
-    //var width =
-    // var height = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
-    //   var depth = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
-    // var min_x,max_x,min_y,max_y,min_z,max_z;
     CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
     CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
     CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
@@ -223,48 +219,26 @@ function CreateFloor(dataset, FloorNumber) {
     CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x + origin_x + base_origin_x;
     CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y + origin_y + base_origin_y;
     CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y + origin_y + base_origin_y;
-    // CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;
-    //CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;
-    // console.log("Floor Number:" + FloorNumber);
-    // console.log(Floor.position);
-
-
-    // AllFloorDimensions[FloorNumber] = (CurrentFloorDimensions);
-    // console.log(AllFloorDimensions);
-    // console.log(FloorDimensions["max_x"]);
-    // console.log(FloorDimensions["min_x"]);
-    //console.log(typeof  parseInt(dataset[FloorNumber].origin_x));
-    //console.log("The center of the bounding box is at: " + fbox.geometry.center);
-    //console.log(width + "," + height + "," + depth);
-    // console.log("The range is:");
-    // console.log(CurrentFloorDimensions);
-    var min_x = Floor.position.x + FloorGeometry.boundingBox.min.x;
-    var max_x = Floor.position.x + FloorGeometry.boundingBox.max.x;
-    var min_y = Floor.position.x + FloorGeometry.boundingBox.min.y;
-    var max_y = Floor.position.x + FloorGeometry.boundingBox.max.y;
-    // console.log(worldtoLocal(Floor.position));
-    //console.log("world: " + Floor.position.x + "," + Floor.position.y + "," + Floor.position.z );
-    //var vector = new THREE.Vector3().copy( Floor.position);
-    //console.log( Floor.worldToLocal( vector ) );
-    // console.log("local: " + vector.x + "," + vector.y + "," + vector.z);
-    // console.log("X: (" + relative_min_x + "," + relative_max_x + ")");
-    //  console.log("Y: (" + relative_min_y + "," + relative_max_y + ")");
-    // console.log("Z: (" + f_geo.boundingBox.min.z + "," + f_geo.boundingBox.max.z + ")");
+    FloorDimensions.push(CurrentFloorDimensions);
     var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
 
-    EventPublisher(min_x, max_x, min_y, max_y, Floor, CurrentFloor, inputCircles);
+    EventPublisher(CurrentFloorDimensions["min_x"], CurrentFloorDimensions["max_x"], CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"], Floor, CurrentFloor, inputCircles);
     // fbox.update();
     //scene.add(fbox);
+    //Add custom lighting function later
     var light1 = new THREE.PointLight(0xffffff);
     light1.position.set(base_origin_x + origin_x, Floor.position.y + 250, base_origin_y + origin_y);
+    // console.log(light1.position);
     scene.add(light1);
     scene.add(origin);
     scene.add(Floor);
 }
 
 function LoadFloors(data, FloorNumber) {
+    var FloorDimensions = [];
     for (var i = 0; i < FloorNumber; i++) {
-        CreateFloor(data, i);
+        CreateFloor(data, i, FloorDimensions);
+        //console.log(FloorDimensions);
     }
 }
 
@@ -323,7 +297,7 @@ function FindIntersects() {
             //Reset the color back to normal when we select a different object
             INTERSECTED = intersects[0].object;
             material = INTERSECTED.material;
-            console.log(INTERSECTED);
+            //console.log(INTERSECTED);
             if (material.emissive) {
                 INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
                 material.emissive.setHex(0xff0000);
@@ -352,8 +326,7 @@ function FindIntersects() {
 
 //Add a single point to the plane.
 function GenerateCircle(pos_x, pos_y, pos_z) {
-    // var CubeW = 20, CubeH = 20, CubeL = 20;
-    var geo_Circle = new THREE.CircleGeometry(100, 50);
+    var geo_Circle = new THREE.CylinderGeometry(30, 30, 5, 32);
     var mat_Circle = new THREE.MeshLambertMaterial({
         color: Math.random() * 0xffffff,
         transparent: true,
@@ -361,7 +334,6 @@ function GenerateCircle(pos_x, pos_y, pos_z) {
         side: THREE.DoubleSide,
         frustumCulled: false,
         depthWrite: false
-        //blending: THREE.AdditiveBlending
     });
 
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
@@ -369,45 +341,10 @@ function GenerateCircle(pos_x, pos_y, pos_z) {
     Circle.position.x = pos_x;
     Circle.position.y = pos_y; //+ geo_Cube.height;
     Circle.position.z = pos_z;//Math.random() * 800 - 400;
-    Circle.rotation.x = Math.PI / 2;
-    // Circle.rotation.x = Math.PI / 2;
-    // Circle.rotation.x = Math.PI / 2;
-
-    // console.log(cubeNum);
-    //  console.log("X: " + Cube.position.x);
-    //  console.log("Y: " + Cube.position.y);
-    //  console.log("Z: " + Cube.position.z);
+    //Circle.rotation.x = Math.PI / 2;
     Points.push(Circle);
     return Circle;
 }
-
-/*function AddPoint(cubeNum, floor) {
-
- var mesh_Cube = GenerateCircle(cubeNum);
- scene.add(mesh_Cube);
- Points.push(mesh_Cube);
- //   CubeIndices.push(dataset[cubeNum].id);
- //  CubeTLW.push(dataset
- }
- function DrawPoints(plane, floor_data) {
- // most objects displayed are a "mesh":
- //  a collection of points ("geometry") and
- //  a set of surface parameters ("material")
- var numPoints = 0;
- var mesh_Box;
- for (var i = 0; i < numPoints; i++) {
- AddPoint(i, plane);
- }
- //Floor 2
- var f_scale = floor_data[1].scale;
- //console.log(f_scale);
- var cubeW = 1 * f_scale, cubeH = 1 * f_scale, cubeL = 1 * f_scale;
-
- //2nd floor scale
- //c1.geometry.scale.multiplyScalar(f_scale,f_scale,f_scale);
- //c1.geometry.applyMatrix( new THREE.Matrix4().makeBasis( floor_data[1].origin_x,1000, floor_data[1].origin_y ) );
-
- }*/
 
 function RemovePoint() {
     var deleted = [];
@@ -463,6 +400,7 @@ function AnimationHandler(Objects, Index) {
     this.queue = [];
     this.active = false;
     this.queueHash = [];
+    var time = new THREE.Clock();
     //console.log(this.queue);
     //var timer = new THREE.Clock();
 
@@ -480,13 +418,13 @@ function AnimationHandler(Objects, Index) {
 
     //Check if we're finished loading the floor plans
     if (!Loading) {
+        // this.timer.start();
         // this.timer =
         // this.timer.start();
-        //   console.log(this.timer);
-
         var circle = Objects[Index];
         // this.enqueue(circle);
         var anims = [];
+        //TODO: Convert the tweens into class variables so we can call each animation on THIS
         var tweenOut = new TWEEN.Tween(circle.material)
             .to({
                 opacity: 0.0,
@@ -497,6 +435,8 @@ function AnimationHandler(Objects, Index) {
             .easing(TWEEN.Easing.Linear.None)
             .onComplete(function () {
                 tweenIn.start();
+                console.log(time.getDelta());
+
                 //tweenOut.stop();
                 //console.log("tween out complete: ");
             });
@@ -505,7 +445,7 @@ function AnimationHandler(Objects, Index) {
                 x: 1,
                 y: 1,
                 z: 1
-            }, 500).easing(TWEEN.Easing.Bounce.Out);
+            }, 3000).easing(TWEEN.Easing.Bounce.Out);
         var tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
             .to({
                 x: 0,
@@ -526,6 +466,8 @@ function AnimationHandler(Objects, Index) {
             .onComplete(function () {
                 // console.log("tween in complete: ");
                 tweenOut.delay(3000);
+                console.log("Tween out Time: " + time.getDelta());
+
                 // DWELL PERIOD //
                 tweenOut.start();
                 // setTimeout(tweenOut.start(),3000);
@@ -566,7 +508,80 @@ function AnimationHandler(Objects, Index) {
         }
     }
 }
+function testAnimationFunction(Points) {
+    var active = [], anims = [];
+    var animations = [];
+    var tweenOut, tweenAlphaSizeIn, tweenAlphaSizeOut, tweenIn;
+    for (var i = 0; i < Points.length; i++) {
+        var circle = Points[i];
+        active[i] = false;
+       // console.log(circle);
+        tweenOut = new TWEEN.Tween(circle.material)
+            .to({
+                opacity: 0.0,
+                duration: 3,
+                radius: 0,
+                delay: 1500
+            })
+            .easing(TWEEN.Easing.Linear.None)
+            .onComplete(function () {
+                tweenIn.start();
 
+                //tweenOut.stop();
+                //console.log("tween out complete: ");
+            });
+        tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
+            .to({
+                x: 1,
+                y: 1,
+                z: 1
+            }, 3000).easing(TWEEN.Easing.Bounce.Out);
+        tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
+            .to({
+                x: 0,
+                y: 0,
+                z: 0
+            }, 1500)
+            .easing(TWEEN.Easing.Bounce.Out);
+
+
+        tweenIn = new TWEEN.Tween(circle.material)
+            .to({
+                opacity: 0.8,
+                duration: 0.5,
+                delay: 3000
+            })
+
+            .easing(TWEEN.Easing.Exponential.In)
+            .onComplete(function () {
+                // console.log("tween in complete: ");
+                tweenOut.delay(3000);
+
+                // DWELL PERIOD //
+                tweenOut.start();
+                // setTimeout(tweenOut.start(),3000);
+            });
+        tweenIn.chain(tweenAlphaSizeIn);
+        anims["start"] = tweenIn;
+        tweenOut.chain(tweenAlphaSizeOut);
+        anims["end"] = tweenOut;
+        animations.push(anims["start"]);
+        for (var j = 0; j < animations.length; j++) {
+            if (!active[j]) {
+                console.log(active[j]);
+                animations[j].start();
+                console.log(animations[j]);
+                active[j] = true;
+                // anims["start"].start();
+                //    setTimeout(anims["end"].start(),1000);
+                //  active = true;
+            }
+        }
+
+    }
+
+
+}
 function animate() {
     window.requestAnimFrame(animate);
     render();
