@@ -5,16 +5,20 @@ var dataset = [];
 // standard global variables
 var container, scene, camera, renderer, controls, stats;
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
-    INTERSECTED, SELECTED;
-;
+    INTERSECTED;
+
 var raycaster = new THREE.Raycaster();
 var Points = [], Remove = false;
 var Loading = true;
 var que;
-// initialization
-init();
-// animation loop
-animate();
+
+$(document).ready(function () {
+    // initialization
+    init();
+    // animation loop
+    animate();
+
+});
 
 //necessary functions
 function init() {
@@ -31,15 +35,17 @@ function init() {
     // add the camera to the scene
     scene.add(camera);
     // the camera defaults to position (0,0,0)
-    // 	so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
+    // so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
     camera.position.set(0, 1500, 4000);
     camera.lookAt(scene.position);
 
     // create and start the renderer; choose antialias setting.
-    if (Detector.webgl)
+    if (Detector.webgl) {
         renderer = new THREE.WebGLRenderer({antialias: true});
-    else
+    }
+    else {
         renderer = new THREE.CanvasRenderer();
+    }
 
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -49,7 +55,6 @@ function init() {
     // alternatively: to create the div at runtime, use:
     //   container = document.createElement( 'div' );
     //    document.body.appendChild( container );
-
     // attach renderer to the container div
     container.appendChild(renderer.domElement);
 
@@ -67,20 +72,16 @@ function init() {
     container.appendChild(stats.domElement);
 
 
-    var ambientLight = new THREE.AmbientLight(0x111111);
+    var ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
-    // create a set of coordinate axes to help orient user
-    //    specify length in pixels in each direction
 
-
-    // note: Office Image/Plane Background
-    //import image and deserialize
+    //Load Necessary Data through Config.js
     LoadData();
-    // recommend either a skybox or fog effect (can't use both at the same time)
-    // without one of these, the scene's background color is determined by webpage background
+    // fog must be added to scene before first render
+    // scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
+    // without a Skybox or Fog effect of these, the scene's background color is determined by web page background
     // make sure the camera's "far" value is large enough so that it will render the skyBox!
-    var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100) //20000, 20000 );
-    // BackSide: render faces from inside of the cube, instead of from outside (default).
+    var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100);//20000, 20000 );
     var skyBoxMaterial = new THREE.MeshBasicMaterial({color: 0x9999ff, side: THREE.BackSide});
     var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
     scene.add(skyBox);
@@ -91,52 +92,6 @@ function init() {
     document.addEventListener('keydown', OnKeyDown, false);
     window.addEventListener('resize', onWindowResize, false);
 
-    // fog must be added to scene before first render
-    // scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
-}
-
-//Events(Keypresses and Mouse functions)
-function onDocumentTouchStart(event) {
-    event.preventDefault();
-    event.clientX = event.touches[0].clientX;
-    event.clientY = event.touches[0].clientY;
-    onDocumentMouseDown(event);
-}
-function onDocumentMouseDown(event) {
-    event.preventDefault();
-    mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
-    mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
-    //AddPoint();
-    RemovePoint();
-}
-function onDocumentMouseMove(event) {
-    //event.preventDefault();
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
-}
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-}
-
-function OnKeyDown(event) {
-    switch (event.keyCode) {
-        case 46: // 'DELETE' Key, Toggle delete selected point
-            Remove = !Remove;
-            break;
-        case 45: //'INSERT' Key, add one single point
-            AddPoint();
-            break;
-        case 35:
-            //
-            // RemovePoints(); //Remove point when clicked!
-            break;
-        case 76: //'l'
-            break;
-
-    }
 }
 
 function ImportFloorImage(floor_data, floor_id) {
@@ -204,10 +159,13 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
     CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
     CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
-    CurrentFloorDimensions["min_x"] = FloorGeometry.boundingBox.min.x + Origin_X + BaseOrigin_X;
-    CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x + Origin_X + BaseOrigin_X;
-    CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y + Origin_Y + BaseOrigin_Y;
-    CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y + Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["min_x"] = FloorGeometry.boundingBox.min.x;// + Origin_X + BaseOrigin_X;
+    CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x;// + Origin_X + BaseOrigin_X;
+    CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y;// + Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y ;//+ Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z ;//+ Origin_Y + BaseOrigin_Y;
+
     FloorDimensions.push(CurrentFloorDimensions);
 
     //After drawing the floors, ask for how many circles to draw.
@@ -221,8 +179,8 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     //Add custom lighting function later
     var light1 = new THREE.PointLight(0xffffff);
     light1.position.set(BaseOrigin_X + Origin_X, FloorMesh.position.y + 250, BaseOrigin_Y + Origin_Y);
-    // console.log(light1.position);
     scene.add(light1);
+    console.log(light1.position);
     scene.add(origin);
     scene.add(FloorMesh);
 }
@@ -231,7 +189,6 @@ function LoadFloors(data, FloorNumber) {
     var FloorDimensions = [];
     for (var i = 0; i < FloorNumber; i++) {
         CreateFloor(data, i, FloorDimensions);
-        //console.log(FloorDimensions);
     }
 }
 
@@ -241,19 +198,20 @@ function LoadData() {
         // console.log(result);
         var numFloors = result.length;
         var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
-        if (inputFloors <= numFloors + 1) {
+        console.log(numFloors);
+        if (inputFloors <= numFloors) {
             alert("Loading...");
             LoadFloors(result, inputFloors);
+        }
+        else {
+            alert("INVALID NUMBER");
+            LoadData();
         }
         Loading = false;
         que = new AnimationQueue();
         que.LoadQueue(Points);
-        que.Animate();
-        //console.log(que.Queue);
-        //  CreateFloor(result);
     });
 }
-//TODO: turn this into a class
 
 //Mouse hover check
 //TODO: Doesn't work atm, overlapped by mouse click function
@@ -326,7 +284,6 @@ function RemovePoint() {
                 //If the material emits light, we can change the color in hex.
                 if (material.emissive) {
                     material.emissive.setHex(INTERSECTED.currentHex);
-
                 }
                 //If not, try to change the color of the material.
                 else {
@@ -373,12 +330,18 @@ function CreateTween(Circle) {
         .to({
             opacity: 0.0,
             duration: 0.5,
-            radius: 0,
             delay: 0
         })
         .easing(TWEEN.Easing.Linear.None)
         .onComplete(function () {
             tweenIn.start();
+            if (circle.material.opacity == 0) {
+                //make a garbage collection function that adds these to an array and then delete them
+                // using //    THREE.SceneUtils.detach(circle, Floor, scene);
+
+                tweenIn.stop();
+                //.remove(circle);
+            }
             //tweenOut.stop();
             //console.log("tween out complete: ");
         });
@@ -396,7 +359,6 @@ function CreateTween(Circle) {
         }, 500)
         .easing(TWEEN.Easing.Bounce.Out);
 
-
     var tweenIn = new TWEEN.Tween(circle.material)
         .to({
             opacity: 0.8,
@@ -406,55 +368,53 @@ function CreateTween(Circle) {
 
         .easing(TWEEN.Easing.Exponential.In)
         .onComplete(function () {
-            // console.log("tween in complete: ");
-            //     tweenOut.delay(3000);
-            //  console.log("Tween out Time: " + time.getDelta());
 
             // DWELL PERIOD //
             tweenOut.start();
-            // setTimeout(tweenOut.start(),3000);
-        });
-    var tweenMoveOut = new TWEEN.Tween(circle.position)
-        .to({
-            x: GenerateRandomValue(-1500, 1500),
-            z: GenerateRandomValue(-7000, 7000),
-            duration: 0.5,
-            delay: 3000
         });
 
-    /* .onComplete(function() {
-
-     tweenMove.delay(3000);
-     tweenMove.repeat(Infinity);
-     });*/
     var tweenMove = new TWEEN.Tween(circle.position)
         .to({
-            x: GenerateRandomValue(-1500, 1500),
-            z: GenerateRandomValue(-7000, 7000),
+            x: GenerateRandomValue(-400, 400),
+            y: GenerateRandomValue(-900, 900),
+
+            //  z: GenerateRandomValue(-7000, 7000),
             duration: 0.5,
             delay: 3000
         })
-        .onComplete(function () {
-            tweenMove.repeat(Infinity);
-        });
-
+        .easing(TWEEN.Easing.Quadratic.Out);
     tweenIn.chain(tweenSizeIn);
+   /* var TweenColor = new TWEEN.Tween(circle.material.colors)
+        .to ({
+            r:Math.random(),
+            g:Math.random(),
+            b:Math.random()
+    });
+    TweenColor.start();*/
 
-    anims["start"] = tweenIn;
-    //tweenOut ;//.chain(tweenAlphaSizeOut);
-    anims["end"] = tweenOut;
-    anims["start"].start();
-    tweenMoveOut.chain(tweenMove);
-    tweenMoveOut.start();
+   // anims["start"] = tweenIn;
+    //  anims["end"] = tweenOut;
+    //anims["start"].start();
+    //tweenMove.start();
+
+    //If the 'tween type' == move, return tweenMove
+    //Else if its an insertion/update --> Tweenin.start()
+
+    anims.push(tweenIn);
+    anims.push(tweenMove);
+    console.log(anims);
+    tweenIn.chain(tweenMove);
+    tweenIn.start();
 }
 
 function AnimationQueue() {
     this.Queue = [];
     this.Actives = [];
-    this.LoadSize = 0;
-
+    this.TweenTypes = ['default','pop','fade','move'];
+    this.QueueSize = this.Queue.length;
     this.Enqueue = function (Object) {
         this.Queue.push(Object);
+        this.QueueSize++;
         this.Actives[this.Queue.indexOf(Object)] = false;
     };
 
@@ -473,18 +433,61 @@ function AnimationQueue() {
     };
 
     this.Animate = function () {
-        if (!Loading) {
-            this.QueueSize = this.Queue.length;
+        if (!Loading && this.QueueSize != 0) {
+            // this.QueueSize = this.Queue.length;
             var FirstPriority = this.Queue[this.QueueSize];
             while (!this.Actives[FirstPriority] || this.QueueSize != 0) {
-                this.QueueSize = this.Queue.length-1;
+                this.QueueSize--;
                 this.popped = this.Queue.pop();
-                CreateTween(this.popped);
+                (CreateTween(this.popped));
                 this.Actives[FirstPriority] = true;
-
             }
         }
     };
+}
+
+//Events(Keypresses and Mouse functions)
+function onDocumentTouchStart(event) {
+    event.preventDefault();
+    event.clientX = event.touches[0].clientX;
+    event.clientY = event.touches[0].clientY;
+    onDocumentMouseDown(event);
+}
+function onDocumentMouseDown(event) {
+    event.preventDefault();
+    mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
+    mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
+    //AddPoint();
+    RemovePoint();
+}
+function onDocumentMouseMove(event) {
+    //event.preventDefault();
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+}
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+}
+
+function OnKeyDown(event) {
+    switch (event.keyCode) {
+        case 46: // 'DELETE' Key, Toggle delete selected point
+            Remove = !Remove;
+            break;
+        case 45: //'INSERT' Key, add one single point
+            break;
+        case 35:
+            //
+            // RemovePoints(); //Remove point when clicked!
+            break;
+        case 76: //'l'
+            que.Animate();
+            break;
+
+    }
 }
 
 function animate() {
