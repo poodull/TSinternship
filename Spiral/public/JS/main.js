@@ -11,16 +11,7 @@ var raycaster = new THREE.Raycaster();
 var Points = [], Remove = false;
 var Pumping = false;
 var Loading = true;
-window.requestAnimFrame = (function () {
-    return window.requestAnimationFrame ||
-        window.webkitRequestAnimationFrame ||
-        window.mozRequestAnimationFrame ||
-        window.oRequestAnimationFrame ||
-        window.msRequestAnimationFrame ||
-        function (/* function */ callback, /* DOMElement */ element) {
-            window.setTimeout(callback, 1000 / 60);
-        };
-})();
+
 // initialization
 init();
 // animation loop
@@ -110,7 +101,7 @@ function onDocumentTouchStart(event) {
     event.preventDefault();
     event.clientX = event.touches[0].clientX;
     event.clientY = event.touches[0].clientY;
-    onDocumentMouseDown(eventl);
+    onDocumentMouseDown(event);
 }
 function onDocumentMouseDown(event) {
     event.preventDefault();
@@ -144,10 +135,9 @@ function OnKeyDown(event) {
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
-            // for (var i = 0; i < Points.length; i++) {
-            //       new AnimationHandler(Points, i);
-            //  }
-            testAnimationFunction(Points);
+            for (var i = 0; i < Points.length; i++) {
+                new AnimationHandler(Points, i);
+            }
             break;
 
     }
@@ -176,10 +166,10 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     });
     var ImageHeight = 1985, ImageWidth = 995;
     var floorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1);
-    var Floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    var FloorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
     var baseFloor = dataset[0];
     //console.log(baseFloor);
-    Floor.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
     //Set the position
     var altitude = parseInt(CurrentFloor.altitude);
     var b_offset_z = parseInt(CurrentFloor.building_offset_z);
@@ -195,21 +185,21 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
         origin_x = 0;
         origin_y = 0;
     }
-    Floor.position.x = base_origin_x + origin_x;//CurrentFloor.building_offset_x + CurrentFloor.origin_x;
-    Floor.position.z = base_origin_y + origin_y;
-    Floor.position.y = altitude;// + b_offset_z;
+    FloorMesh.position.x = base_origin_x + origin_x;//CurrentFloor.building_offset_x + CurrentFloor.origin_x;
+    FloorMesh.position.z = base_origin_y + origin_y;
+    FloorMesh.position.y = altitude;// + b_offset_z;
     //Keep the plane flat on XZ axis!
-    Floor.rotation.x = Math.PI / 2;
+    FloorMesh.rotation.x = Math.PI / 2;
 
     var origin = new THREE.AxisHelper(200);
     origin.position.x = base_origin_x;
-    origin.position.y = Floor.position.y;
+    origin.position.y = FloorMesh.position.y;
     origin.position.z = base_origin_y;
 
     var hex = 0xff0000;
     var CurrentFloorDimensions = [];
     // var fbox = new THREE.BoundingBoxHelper(Floor, hex);
-    var FloorGeometry = Floor.geometry;
+    var FloorGeometry = FloorMesh.geometry;
     FloorGeometry.computeBoundingBox();
 
     CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
@@ -222,16 +212,18 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     FloorDimensions.push(CurrentFloorDimensions);
     var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
 
-    EventPublisher(CurrentFloorDimensions["min_x"], CurrentFloorDimensions["max_x"], CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"], Floor, CurrentFloor, inputCircles);
+    EventPublisher(CurrentFloorDimensions["min_x"], CurrentFloorDimensions["max_x"],
+                   CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"],
+                   FloorMesh, CurrentFloor, inputCircles, scene);
     // fbox.update();
     //scene.add(fbox);
     //Add custom lighting function later
     var light1 = new THREE.PointLight(0xffffff);
-    light1.position.set(base_origin_x + origin_x, Floor.position.y + 250, base_origin_y + origin_y);
+    light1.position.set(base_origin_x + origin_x, FloorMesh.position.y + 250, base_origin_y + origin_y);
     // console.log(light1.position);
     scene.add(light1);
     scene.add(origin);
-    scene.add(Floor);
+    scene.add(FloorMesh);
 }
 
 function LoadFloors(data, FloorNumber) {
@@ -258,19 +250,7 @@ function LoadData() {
     });
 }
 //TODO: turn this into a class
-function EventPublisher(min_x, max_x, min_y, max_y, Floor, FloorData, numCircles) {
-    var RandomCircles = true;
-    if (RandomCircles) {
-        var randomX;
-        var randomZ;
-        var fixedY = Floor.position.y + (1 * FloorData.scale);
-        for (var i = 0; i < numCircles; i++) {
-            randomX = Math.floor(Math.random() * (max_x - min_x) + min_x);
-            randomZ = Math.floor(Math.random() * (max_y - min_y) + min_y);
-            scene.add(GenerateCircle(randomX, fixedY + 1, randomZ));
-        }
-    }
-}
+
 //Mouse hover check
 //TODO: Doesn't work atm, overlapped by mouse click function
 function FindIntersects() {
@@ -325,27 +305,6 @@ function FindIntersects() {
 }
 
 //Add a single point to the plane.
-function GenerateCircle(pos_x, pos_y, pos_z) {
-    var geo_Circle = new THREE.CylinderGeometry(30, 30, 5, 32);
-    var mat_Circle = new THREE.MeshLambertMaterial({
-        color: Math.random() * 0xffffff,
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.DoubleSide,
-        frustumCulled: false,
-        depthWrite: false
-    });
-
-    var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
-
-    Circle.position.x = pos_x;
-    Circle.position.y = pos_y; //+ geo_Cube.height;
-    Circle.position.z = pos_z;//Math.random() * 800 - 400;
-    //Circle.rotation.x = Math.PI / 2;
-    Points.push(Circle);
-    return Circle;
-}
-
 function RemovePoint() {
     var deleted = [];
     raycaster.setFromCamera(mouse, camera);
@@ -395,195 +354,145 @@ function RemovePoint() {
     }
 }
 //Main animation class
-//Instantiate one for each point, allowing control of the sequences of animations
-function AnimationHandler(Objects, Index) {
-    this.queue = [];
-    this.active = false;
-    this.queueHash = [];
-    var time = new THREE.Clock();
-    //console.log(this.queue);
-    //var timer = new THREE.Clock();
-
-    this.createTween = function (object) {
-        // return array of tween coordinate data (start->end)
-        type = type || 'default';
-        var tween = [start];
-        var tmp = start;
-        var diff = end - start;
-    };
-    this.enqueue = function (Object) {
-        self.queue.push(o);
-        o.active = true;
-    };
-
-    //Check if we're finished loading the floor plans
-    if (!Loading) {
-        // this.timer.start();
-        // this.timer =
-        // this.timer.start();
-        var circle = Objects[Index];
-        // this.enqueue(circle);
-        var anims = [];
-        //TODO: Convert the tweens into class variables so we can call each animation on THIS
-        var tweenOut = new TWEEN.Tween(circle.material)
-            .to({
-                opacity: 0.0,
-                duration: 3,
-                radius: 0,
-                delay: 1500
-            })
-            .easing(TWEEN.Easing.Linear.None)
-            .onComplete(function () {
-                tweenIn.start();
-                console.log(time.getDelta());
-
-                //tweenOut.stop();
-                //console.log("tween out complete: ");
-            });
-        var tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
-            .to({
-                x: 1,
-                y: 1,
-                z: 1
-            }, 3000).easing(TWEEN.Easing.Bounce.Out);
-        var tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
-            .to({
-                x: 0,
-                y: 0,
-                z: 0
-            }, 1500)
-            .easing(TWEEN.Easing.Bounce.Out);
-
-
-        var tweenIn = new TWEEN.Tween(circle.material)
-            .to({
-                opacity: 0.8,
-                duration: 0.5,
-                delay: 3000
-            })
-
-            .easing(TWEEN.Easing.Exponential.In)
-            .onComplete(function () {
-                // console.log("tween in complete: ");
-                tweenOut.delay(3000);
-                console.log("Tween out Time: " + time.getDelta());
-
-                // DWELL PERIOD //
-                tweenOut.start();
-                // setTimeout(tweenOut.start(),3000);
-            });
-        tweenIn.chain(tweenAlphaSizeIn);
-        anims["start"] = tweenIn;
-        tweenOut.chain(tweenAlphaSizeOut);
-        anims["end"] = tweenOut;
-
-        if (!this.active) {
-            anims["start"].start();
-            //    setTimeout(anims["end"].start(),1000);
-            this.active = true;
-        }
-        this.animate = function () {
-            var active = 0;
-            for (var i = 0, j = self.queue.length; i < j; i++) {
-                if (self.queue[i].active) {
-                    self.queue[i].animate();
-                    active++;
-                }
-            }
-            if (active == 0 && self.timer) {
-                self.stop();
-            }
-        };
-        this.start = function () {
-            if (self.timer || self.active) {
-                return false;
-            }
-            self.active = true;
-        };
-        this.stop = function () {
-            clearInterval(self.timer);
-            self.timer = null;
-            self.active = false;
-            self.queue = [];
-        }
-    }
+function GenerateRandomValue(min,max) {
+    var random = Math.floor(Math.random() * (max - min) + min);// * FloorScale;
+    return random;
 }
-function testAnimationFunction(Points) {
-    var active = [], anims = [];
-    var animations = [];
-    var tweenOut, tweenAlphaSizeIn, tweenAlphaSizeOut, tweenIn;
-    for (var i = 0; i < Points.length; i++) {
-        var circle = Points[i];
-        active[i] = false;
-       // console.log(circle);
-        tweenOut = new TWEEN.Tween(circle.material)
-            .to({
-                opacity: 0.0,
-                duration: 3,
-                radius: 0,
-                delay: 1500
-            })
-            .easing(TWEEN.Easing.Linear.None)
-            .onComplete(function () {
-                tweenIn.start();
+//Instantiate one for each point, allowing control of the sequences of animations
+function CreateTween(Circle) {
+    var anims = [];
+    var circle = Circle;
+    var time = new THREE.Clock();
 
-                //tweenOut.stop();
-                //console.log("tween out complete: ");
+    //TODO: Convert the tweens into class variables so we can call each animation on THIS
+    var tweenOut = new TWEEN.Tween(circle.material)
+        .to({
+            opacity: 0.0,
+            duration: 0.5,
+            radius: 0,
+            delay:0
+        })
+        .easing(TWEEN.Easing.Linear.None)
+        .onComplete(function () {
+            tweenIn.start();
+            //tweenOut.stop();
+            //console.log("tween out complete: ");
+        });
+    var tweenSizeIn = new TWEEN.Tween(circle.scale)
+        .to({
+            x: 1,
+            y: 1,
+            z: 1
+        }, 3000).easing(TWEEN.Easing.Bounce.Out);
+    var tweenSizeOut = new TWEEN.Tween(circle.scale)
+        .to({
+            x: 0,
+            y: 0,
+            z: 0
+        }, 500)
+        .easing(TWEEN.Easing.Bounce.Out);
+
+
+    var tweenIn = new TWEEN.Tween(circle.material)
+        .to({
+            opacity: 0.8,
+            duration: 5,
+            delay: 3000
+        })
+
+        .easing(TWEEN.Easing.Exponential.In)
+        .onComplete(function () {
+            // console.log("tween in complete: ");
+       //     tweenOut.delay(3000);
+          //  console.log("Tween out Time: " + time.getDelta());
+
+            // DWELL PERIOD //
+            tweenOut.start();
+            // setTimeout(tweenOut.start(),3000);
+        });
+    var tweenMoveOut = new TWEEN.Tween(circle.position)
+        .to({
+            x: GenerateRandomValue(-1500,1500),
+            z: GenerateRandomValue(-7000,7000),
+            duration: 0.5,
+            delay: 3000
             });
-        tweenAlphaSizeIn = new TWEEN.Tween(circle.scale)
-            .to({
-                x: 1,
-                y: 1,
-                z: 1
-            }, 3000).easing(TWEEN.Easing.Bounce.Out);
-        tweenAlphaSizeOut = new TWEEN.Tween(circle.scale)
-            .to({
-                x: 0,
-                y: 0,
-                z: 0
-            }, 1500)
-            .easing(TWEEN.Easing.Bounce.Out);
 
+       /* .onComplete(function() {
 
-        tweenIn = new TWEEN.Tween(circle.material)
-            .to({
-                opacity: 0.8,
-                duration: 0.5,
-                delay: 3000
-            })
+            tweenMove.delay(3000);
+            tweenMove.repeat(Infinity);
+    });*/
+    var tweenMove = new TWEEN.Tween(circle.position)
+        .to({
+            x: GenerateRandomValue(-1500,1500),
+            z: GenerateRandomValue(-7000,7000),
+            duration: 0.5,
+            delay: 3000
+        })
+        .onComplete(function() {
+            tweenMove.repeat(Infinity);
+        });
 
-            .easing(TWEEN.Easing.Exponential.In)
-            .onComplete(function () {
-                // console.log("tween in complete: ");
-                tweenOut.delay(3000);
+    tweenIn.chain(tweenSizeIn);
 
-                // DWELL PERIOD //
-                tweenOut.start();
-                // setTimeout(tweenOut.start(),3000);
-            });
-        tweenIn.chain(tweenAlphaSizeIn);
-        anims["start"] = tweenIn;
-        tweenOut.chain(tweenAlphaSizeOut);
-        anims["end"] = tweenOut;
-        animations.push(anims["start"]);
-        for (var j = 0; j < animations.length; j++) {
-            if (!active[j]) {
-                console.log(active[j]);
-                animations[j].start();
-                console.log(animations[j]);
-                active[j] = true;
-                // anims["start"].start();
-                //    setTimeout(anims["end"].start(),1000);
-                //  active = true;
-            }
+    anims["start"] = tweenIn;
+    //tweenOut ;//.chain(tweenAlphaSizeOut);
+    anims["end"] = tweenOut;
+    anims["start"].start();
+    tweenMoveOut.chain(tweenMove);
+    tweenMoveOut.start();
+}
+function AnimationQueue() {
+    this.Animations = [];
+    this.Queue = [];
+    this.Actives = [];
+    // this.GetTween = function(Animation) {
+    //     this.Animations.push(Animation);
+    //create  };
+    this.Enqueue = function (Object) {
+        // this.tween = (CreateTween(Object));
+        this.Animations.push(this.tween);
+        this.Queue.push(Object);
+        this.Actives[this.Queue.indexOf(Object)] = false;
+    };
+    this.UpdateQueue = function () {
+        return this.Queue;
+    };
+    this.Animate = function () {
+        var FirstPriority = this.Queue[this.Queue.length-1];
+        if (!this.Actives[FirstPriority]) {
+            //this.Actives[FirstPriority] = true;
+           // FirstPriority -= 1;
+            console.log(this.Queue);
+            this.popped = this.Queue.pop();
+            CreateTween(this.popped);
+            console.log(this.Queue);
         }
-
+      /*  for (var i = 0; i < this.Actives.length; i++) {
+            if (!this.Actives[i]) {
+                console.log(this.Actives[i]);
+                CreateTween(this.Queue[i]);
+                this.Actives[i] = true;
+            }
+        }*/
     }
 
+}
+function AnimateAll() {
+    //While updating
+
+    //Take the queue
+
+    //Loop through the que
+
+    //Create a tween for each object
+
+    //Animate Tween
 
 }
 function animate() {
-    window.requestAnimFrame(animate);
+    requestAnimationFrame(animate);
     render();
     update();
 
