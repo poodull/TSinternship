@@ -40,18 +40,13 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius) {
     Circle.position.x = pos_x;
     Circle.position.y = pos_y; //+ geo_Cube.height;
     Circle.position.z = pos_z;//Math.random() * 800 - 400;
-    //Circle.rotation.x = Math.PI / 2;
     Points.push(Circle);
     return Circle;
 }
 
 function EventPublisher(min_x, max_x, min_z, max_z, Floor, FloorData, numCircles, scene) {
     var RandomCircles = true;
-    var QueueTest = true;
     if (RandomCircles) {
-        if (QueueTest) {
-            var que = new AnimationQueue();
-        }
         var randomX;
         var randomZ;
         var randomR;
@@ -65,10 +60,6 @@ function EventPublisher(min_x, max_x, min_z, max_z, Floor, FloorData, numCircles
             randomZ = Math.floor(Math.random() * (max_z - min_z) + min_z);// * FloorScale;
             Circle = GenerateCircle(randomX, fixedY + 1, randomZ, randomR);
 
-            if (QueueTest) {
-                que.Enqueue(Circle);
-                que.Animate(Circle);
-            }
             scene.add(Circle);
         }
     }
