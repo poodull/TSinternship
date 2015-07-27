@@ -489,7 +489,7 @@ function AnimationQueue() {
             .onComplete(function () {
                 //  Put object in a deletion array and remove it after each animate looooop.
                 circle.userData.active = false;
-                tweenOut.stop();
+               // tweenOut.stop();
             });
         var tweenSizeIn = new TWEEN.Tween(circle.scale)
             .to({
@@ -513,7 +513,13 @@ function AnimationQueue() {
                 delay: 3000
             })
             .easing(TWEEN.Easing.Exponential.In);
-
+        var tweenColor = new TWEEN.Tween(circle.material)
+            .to({
+                r: 1,//Math.random() * (1.000 - 0.0000 ).toFixed(4),
+                g: 1,//Math.random() * (1.000 - 0.0000 ).toFixed(4),
+                b: 1//Math.random() * (1.000 - 0.0000 ).toFixed(4)
+            })
+            .easing(TWEEN.Easing.Exponential.In);
 
         var tweenMove = new TWEEN.Tween(circle.position)
             .to({
@@ -530,6 +536,7 @@ function AnimationQueue() {
         Animations["pop"] = tweenIn;
         Animations["fade"] = tweenOut;
         Animations["move"] = tweenMove;
+        Animations["color"] = tweenColor;
         // Circle.userData.animations = anims;
         //tweenIn.start();
         return Animations;
@@ -550,21 +557,29 @@ function AnimationQueue() {
             while (this.QueueSize != 0) {
                 this.QueueSize--;
                 this.popped = this.Queue.pop();
-                if (this.popped != null && !this.active) {
-                    this.key = this.popped.userData.id;
+                if (this.popped != null) {
+                    this.key = this.popped.material.id;
+                    console.log(this.key);
                     this.Actives[this.key] = (this.popped.userData.active);
 
-                    this.ObjectAnimations = this.popped.userData.animations;
-                    this.ObjectAnimations = this.CreateTween(this.popped);
-                    this.timer.start();
-                    this.ObjectAnimations["pop"].start();
-                    this.ObjectAnimations["fade"].delay(2000);
-                    this.timer.getElapsedTime();
-                    this.ObjectAnimations["fade"].start();
+                    //this.ObjectAnimations = this.popped.userData.animations;
+                    if (!this.Actives[this.key]) {
+                        this.ObjectAnimations = this.CreateTween(this.popped);
+                        this.timer.start();
 
-                    // this.test = this.ObjectAnimations["pop"].chain(this.ObjectAnimations["fade"]);
-                    //   this.test.start();
-                    console.log(this.Actives.length);
+                        this.ObjectAnimations["pop"].start();
+                        this.ObjectAnimations["move"].start();
+                        this.ObjectAnimations["color"].start();
+                        this.ObjectAnimations["fade"].delay(2000);
+
+                        this.ObjectAnimations["fade"].start();
+                        console.log(this.Actives);
+                        this.timer.getElapsedTime();
+
+                        // this.test = this.ObjectAnimations["pop"].chain(this.ObjectAnimations["fade"]);
+                        //   this.test.start();
+                       // console.log(this.Actives.length);
+                    }
                     //this.popped.userData.animations["pop"].start();
                 }
 
