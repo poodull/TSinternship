@@ -8,7 +8,7 @@ var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
     INTERSECTED;
 
 var raycaster = new THREE.Raycaster();
-var Points = [], Remove = false;
+var Points = [], Floors = [], Remove = false;
 var Loading = true;
 var que;
 
@@ -148,11 +148,7 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     origin.position.z = BaseOrigin_Y;
 
 
-    var hex = 0xff0000;
     var CurrentFloorDimensions = [];
-    // var fbox = new THREE.BoundingBoxHelper(Floor, hex);
-    // fbox.update();
-    //scene.add(fbox);
 
     FloorGeometry.computeBoundingBox();
 
@@ -162,25 +158,26 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     CurrentFloorDimensions["min_x"] = FloorGeometry.boundingBox.min.x;// + Origin_X + BaseOrigin_X;
     CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x;// + Origin_X + BaseOrigin_X;
     CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y;// + Origin_Y + BaseOrigin_Y;
-    CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y ;//+ Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y;//+ Origin_Y + BaseOrigin_Y;
     CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
-    CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z ;//+ Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;//+ Origin_Y + BaseOrigin_Y;
 
     FloorDimensions.push(CurrentFloorDimensions);
+    Floors.push(FloorMesh);
+    // console.log(FloorDimensions);
 
-    //After drawing the floors, ask for how many circles to draw.
-    var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
+    /*  //After drawing the floors, ask for how many circles to draw.
+     var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
 
-    //Config.js function sends us circle data and we draw them depending on the boundaries of floor.
-    EventPublisher(CurrentFloorDimensions["min_x"], CurrentFloorDimensions["max_x"],
-        CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"],
-        FloorMesh, CurrentFloor, inputCircles, scene);
-
+     //Config.js function sends us circle data and we draw them depending on the boundaries of floor.
+     EventPublisher(CurrentFloorDimensions["min_x"], CurrentFloorDimensions["max_x"],
+     CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"],
+     FloorMesh, CurrentFloor, inputCircles, scene);*/
     //Add custom lighting function later
     var light1 = new THREE.PointLight(0xffffff);
     light1.position.set(BaseOrigin_X + Origin_X, FloorMesh.position.y + 250, BaseOrigin_Y + Origin_Y);
     scene.add(light1);
-    console.log(light1.position);
+    //console.log(light1.position);
     scene.add(origin);
     scene.add(FloorMesh);
 }
@@ -194,22 +191,28 @@ function LoadFloors(data, FloorNumber) {
 
 function LoadData() {
     //Grab the data from the ajax call started in config.js
-    LoadFloorPlan(dataset, function (result) {
-        // console.log(result);
-        var numFloors = result.length;
-        var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
-        console.log(numFloors);
-        if (inputFloors <= numFloors) {
-            alert("Loading...");
-            LoadFloors(result, inputFloors);
-        }
-        else {
-            alert("INVALID NUMBER");
-            LoadData();
-        }
-        Loading = false;
+    LoadCSV(dataset, function (result) {
+        var FloorData = result[0];
+        var SignalData = result[1];
+        var numFloors = FloorData.length;
+        // var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
+        //console.log(numFloors);
+        //  if (inputFloors <= numFloors) {
+        alert("Loading...");
+        LoadFloors(FloorData, 1);
+        /*   }
+
+         else {
+         alert("INVALID NUMBER");
+         LoadData();
+         }*/
+
         que = new AnimationQueue();
-        que.LoadQueue(Points);
+        Loading = false;
+        //Test data pump function goes here
+        if (!Loading) {
+            setInterval(DataPump(SignalData, 3000));
+        }
     });
 }
 
@@ -319,13 +322,16 @@ function GenerateRandomValue(min, max) {
     var random = Math.floor(Math.random() * (max - min) + min);// * FloorScale;
     return random;
 }
-//Instantiate tween for each point, allowing control of the sequences of animations
-function CreateTween(Circle) {
+
+function CreateTween(Circle, Flag) {
     var anims = [];
     var circle = Circle;
+    circle.userData.active = true;
     var time = new THREE.Clock();
-    //Split up tweens into class functions.
-    //TODO: Convert the tweens into class variables so we can call each animation on THIS
+
+    //TODO: Split up tweens into class functions.
+    //Instantiate tween for each point, allowing control of the sequences of animations
+
     var tweenOut = new TWEEN.Tween(circle.material)
         .to({
             opacity: 0.0,
@@ -334,16 +340,8 @@ function CreateTween(Circle) {
         })
         .easing(TWEEN.Easing.Linear.None)
         .onComplete(function () {
-            tweenIn.start();
-            if (circle.material.opacity == 0) {
-                //make a garbage collection function that adds these to an array and then delete them
-                // using //    THREE.SceneUtils.detach(circle, Floor, scene);
-
-                tweenIn.stop();
-                //.remove(circle);
-            }
-            //tweenOut.stop();
-            //console.log("tween out complete: ");
+            //  tweenIn.start();
+            circle.userData.active = false;
         });
     var tweenSizeIn = new TWEEN.Tween(circle.scale)
         .to({
@@ -351,25 +349,17 @@ function CreateTween(Circle) {
             y: 1,
             z: 1
         }, 3000).easing(TWEEN.Easing.Bounce.Out);
-    var tweenSizeOut = new TWEEN.Tween(circle.scale)
-        .to({
-            x: 0,
-            y: 0,
-            z: 0
-        }, 500)
-        .easing(TWEEN.Easing.Bounce.Out);
-
     var tweenIn = new TWEEN.Tween(circle.material)
         .to({
             opacity: 0.8,
             duration: 5,
+            // DWELL PERIOD //
             delay: 3000
         })
 
         .easing(TWEEN.Easing.Exponential.In)
         .onComplete(function () {
 
-            // DWELL PERIOD //
             tweenOut.start();
         });
 
@@ -378,44 +368,25 @@ function CreateTween(Circle) {
             x: GenerateRandomValue(-400, 400),
             y: GenerateRandomValue(-900, 900),
 
-            //  z: GenerateRandomValue(-7000, 7000),
             duration: 0.5,
             delay: 3000
         })
         .easing(TWEEN.Easing.Quadratic.Out);
+
     tweenIn.chain(tweenSizeIn);
-   /* var TweenColor = new TWEEN.Tween(circle.material.colors)
-        .to ({
-            r:Math.random(),
-            g:Math.random(),
-            b:Math.random()
-    });
-    TweenColor.start();*/
-
-   // anims["start"] = tweenIn;
-    //  anims["end"] = tweenOut;
-    //anims["start"].start();
-    //tweenMove.start();
-
-    //If the 'tween type' == move, return tweenMove
-    //Else if its an insertion/update --> Tweenin.start()
-
+    //tweenIn.start();
     anims.push(tweenIn);
     anims.push(tweenMove);
-    console.log(anims);
-    tweenIn.chain(tweenMove);
-    tweenIn.start();
 }
-
 function AnimationQueue() {
     this.Queue = [];
     this.Actives = [];
-    this.TweenTypes = ['default','pop','fade','move'];
+    this.TweenTypes = ['default', 'pop', 'fade', 'move'];
     this.QueueSize = this.Queue.length;
     this.Enqueue = function (Object) {
         this.Queue.push(Object);
         this.QueueSize++;
-        this.Actives[this.Queue.indexOf(Object)] = false;
+        //console.log(Object.userData.id);
     };
 
     this.LoadQueue = function (Points) {
@@ -432,15 +403,123 @@ function AnimationQueue() {
         return this.Queue;
     };
 
+    //Probably need to split this function up into specific class functions for each tween.
+    this.CreateTween = function (Circle) {
+        //Create Animation sequence for circle in queue
+        var Animations = [];
+        var circle = Circle;
+        //Set the circles active flag to true
+        circle.userData.active = true;
+        var time = new THREE.Clock();
+        time.start();
+        var r_size = GenerateRandomValue(1, 4);
+        //Split up tweens into class functions.
+        //TODO: Convert the tweens into class variables so we can call each animation on THIS
+        var tweenOut = new TWEEN.Tween(circle.material)
+            .to({
+                opacity: 0.0,
+                duration: 0.5,
+                delay: 0
+            })
+            .easing(TWEEN.Easing.Linear.None)
+            .onComplete(function () {
+                //  Put object in a deletion array and remove it after each animate looooop.
+                circle.userData.active = false;
+                // tweenOut.stop();
+            });
+        var tweenSizeIn = new TWEEN.Tween(circle.scale)
+            .to({
+                x: r_size,
+                y: r_size,
+                z: r_size
+            }, 3000)
+            .easing(TWEEN.Easing.Bounce.Out);
+        var tweenSizeOut = new TWEEN.Tween(circle.scale)
+            .to({
+                x: 1,
+                y: 1,
+                z: 1
+            }, 3000)
+            .easing(TWEEN.Easing.Bounce.Out);
+        var tweenIn = new TWEEN.Tween(circle.material)
+            .to({
+                opacity: 0.8,
+                duration: 5,
+                // DWELL PERIOD //
+                delay: 3000
+            })
+            .easing(TWEEN.Easing.Exponential.In);
+        var tweenColor = new TWEEN.Tween(circle.material)
+            .to({
+                r: 1,//Math.random() * (1.000 - 0.0000 ).toFixed(4),
+                g: 1,//Math.random() * (1.000 - 0.0000 ).toFixed(4),
+                b: 1//Math.random() * (1.000 - 0.0000 ).toFixed(4)
+            })
+            .easing(TWEEN.Easing.Exponential.In);
+
+        var tweenMove = new TWEEN.Tween(circle.position)
+            .to({
+                x: GenerateRandomValue(-400, 400),
+                y: GenerateRandomValue(-900, 900),
+
+                duration: 0.5,
+                delay: 3000
+            })
+            .easing(TWEEN.Easing.Quadratic.Out);
+
+        tweenIn.chain(tweenSizeIn);
+        tweenOut.chain(tweenSizeOut);
+        Animations["pop"] = tweenIn;
+        Animations["fade"] = tweenOut;
+        Animations["move"] = tweenMove;
+        Animations["color"] = tweenColor;
+        // Circle.userData.animations = anims;
+        //tweenIn.start();
+        return Animations;
+
+    };
     this.Animate = function () {
+        //Check the Queue
+        //See if item is active already
+        //If active --> Update tween
+        //If not --> create Tween
+        //Remove from queue
+        this.timer = new THREE.Clock();
         if (!Loading && this.QueueSize != 0) {
-            // this.QueueSize = this.Queue.length;
-            var FirstPriority = this.Queue[this.QueueSize];
-            while (!this.Actives[FirstPriority] || this.QueueSize != 0) {
+            //this.Queue.reverse();
+            TWEEN.removeAll();
+            var FirstPriority = this.Queue[this.Queue.length - 1];
+            // console.log(this.key);
+            // console.log(this.Actives);
+            while (this.QueueSize != 0) {
                 this.QueueSize--;
-                this.popped = this.Queue.pop();
-                (CreateTween(this.popped));
-                this.Actives[FirstPriority] = true;
+                this.popped = this.Queue.shift();
+                if (this.popped != null) {
+                    this.key = this.popped.userData.id;
+                    //console.log(this.key);//
+                    this.Actives[this.key] = (this.popped.userData.active);
+
+                    //this.ObjectAnimations = this.popped.userData.animations;
+                    if (!this.Actives[this.key]) {
+                        this.ObjectAnimations = this.CreateTween(this.popped);
+                        this.timer.start();
+                        //Animation logic goes here//
+                        this.ObjectAnimations["pop"].start();
+                        //this.ObjectAnimations["move"].start();
+                        //this.ObjectAnimations["color"].start();
+                        //this.ObjectAnimations["fade"].delay(2000);
+
+                        // this.ObjectAnimations["fade"].start();
+                        console.log(this.Actives);
+                        this.timer.getElapsedTime();
+
+                        // this.test = this.ObjectAnimations["pop"].chain(this.ObjectAnimations["fade"]);
+                        //   this.test.start();
+                        // console.log(this.Actives.length);
+                    }
+                    //this.popped.userData.animations["pop"].start();
+                }
+
             }
         }
     };
@@ -484,7 +563,13 @@ function OnKeyDown(event) {
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'l'
-            que.Animate();
+            event.preventDefault();
+            //Going to use setInterval until I can understand/figure out a better way to do this
+            //Might need data first before I move on, so I can understand the larger scope of the issue
+
+            //Instead of a data pump function, later use an UpdateQueue function that gets called every X seconds
+            //and updates the positioning of the signals.
+
             break;
 
     }
