@@ -11,7 +11,7 @@ var raycaster = new THREE.Raycaster();
 var Points = [], Floors = [], Remove = false;
 var Loading = true;
 var AnimationQueue;
-
+var SignalData;
 $(document).ready(function () {
     // initialization
     init();
@@ -191,15 +191,19 @@ function LoadFloors(data, FloorNumber) {
 
 function LoadData() {
     //Grab the data from the ajax call started in config.js
+    var UpdateSignal = true;
     LoadCSV(dataset, function (result) {
         var FloorData = result[0];
-        var SignalData = result[1];
+        if (UpdateSignal) {
+            SignalData = result[1];
+        }
         console.log(SignalData);
         var numFloors = FloorData.length;
         // var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
         //console.log(numFloors);
         //  if (inputFloors <= numFloors) {
         alert("Loading...");
+
         LoadFloors(FloorData, 1);
         /*   }
 
@@ -211,9 +215,9 @@ function LoadData() {
         AnimationQueue = new AnimationHandler();
         Loading = false;
         //Test data pump function goes here
-        if (!Loading) {
-            DataPump(SignalData);
-        }
+        /* if (!Loading) {
+         DataPump(SignalData);
+         }*/
     });
 }
 
@@ -352,12 +356,13 @@ function AnimationHandler() {
         return new TWEEN.Tween(Signal.material)
             .to({
                 opacity: 0.0,
-                duration: 0.5,
+                duration: 1.5,
                 delay: 0
             })
             .easing(TWEEN.Easing.Exponential.In)
             .onComplete(function () {
                 Signal.active = false;
+                Floors[0].remove(Signal);
                 Points.splice(Points.indexOf(Signal), 1);
             });
     };
@@ -400,6 +405,7 @@ function AnimationHandler() {
         //If active --> Update tween
         //If not --> create Tween
         //Remove from queue
+        var test = true;
         this.timer = new THREE.Clock();
         if (!Loading && this.QueueSize != 0) {
             //this.Queue.reverse();
@@ -407,7 +413,7 @@ function AnimationHandler() {
             var FirstPriority = this.Queue[this.Queue.length - 1];
             // console.log(this.key);
             // console.log(this.Actives);
-            if (this.QueueSize != 0) {
+            while (this.QueueSize != 0) {
                 this.QueueSize--;
                 this.popped = this.Queue.pop();
 
@@ -416,12 +422,11 @@ function AnimationHandler() {
                 if (this.popped != null) {
                     this.key = this.popped.userData.id;
                     //console.log(this.key);//
-                    this.Actives[this.key] = (this.popped.userData.active);
+                    this.Actives[this.key] = this.popped.userData.active;
 
 
                     //this.ObjectAnimations = this.popped.userData.animations;
                     if (!this.Actives[this.key]) {
-                        console.log(this.Actives[this.key]);
                         this.ObjectAnimations = this.popped.userData.animations;
                         this.timer.start();
                         //Animation logic goes here//
@@ -436,23 +441,6 @@ function AnimationHandler() {
                             this.ObjectAnimations["move"].start();
 
                         }
-                        // console.log("testing..");
-
-                        /*  if (this.popped.userData.newPosition) {
-                         // console.log("testing..");
-                         //this.ObjectAnimations["pop"].start();
-                         this.ObjectAnimations["move"].start();
-                         }*/
-                        //this.ObjectAnimations["move"].start();
-                        //this.ObjectAnimations["color"].start();
-                        //this.ObjectAnimations["fade"].delay(2000);
-
-                        // this.ObjectAnimations["fade"].start();
-                        // console.log(this.Actives);
-
-                        // this.test = this.ObjectAnimations["pop"].chain(this.ObjectAnimations["fade"]);
-                        //   this.test.start();
-                        // console.log(this.Actives.length);
                     }
                     //this.popped.userData.animations["pop"].start();
                 }
@@ -501,6 +489,12 @@ function OnKeyDown(event) {
             break;
         case 76: //'l'
             event.preventDefault();
+            if (!Loading) {
+                setInterval(function () {
+                    DataPump(SignalData);
+                }, 2100);
+
+            }
             //Going to use setInterval until I can understand/figure out a better way to do this
             //Might need data first before I move on, so I can understand the larger scope of the issue
 
@@ -511,8 +505,48 @@ function OnKeyDown(event) {
 
     }
 }
+
+function GenerateCircle(pos_x, pos_y, pos_z, radius, Floor, id, ColorScale) {
+    //var colorScale = d3.scale.category10();
+    /* var scale =  d3.scale.linear()
+     .domain([0, 50, 100])
+     .range(['green', 'yellow', 'red']);*/
+
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 2, 32);
+    var mat_Circle = new THREE.MeshLambertMaterial({
+        color: ColorScale(getRandomInt(0, 100)),//Math.random() * 0xffffff,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        frustumCulled: false,
+        depthWrite: false,
+        depthTest: false
+    });
+
+    var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
+    Circle.position.x = pos_x;
+    Circle.position.y = pos_y; //+ geo_Cube.height;
+    Circle.position.z = pos_z;//Math.random() * 800 - 400;
+    Circle.rotation.x = Math.PI / 2;
+    Circle.userData = {id: id, active: false, animations: [], lastUpdated: null, newPosition: false};
+    Points.push(Circle);
+    Floor.add(Circle);
+    return Circle;
+}
+function ConvertSignalToCircle(SignalPoint, Floor) {
+    var pos_x = parseInt(SignalPoint.Px);
+    var pos_y = parseInt(SignalPoint.Py);
+    var id = parseInt(SignalPoint.TxID);
+    var height = parseInt(SignalPoint.Height);
+    var ColorScale = d3.scale.linear().domain([0, 100]);
+    ColorScale.domain([0, 0.5, 1].map(ColorScale.invert));
+    ColorScale.range(["green", "yellow", "red"]);
+    return GenerateCircle(pos_x, pos_y, height + 1, 5, Floor, id, ColorScale);
+}
 function DataPump(SignalData) {
     if (!Loading) {
+        console.log("TEST");
+
         var QueueCount = 0;
         var Signal, SignalObject, id;
         // var percentLength = Math.floor(parseFloat(Points.length * 0.8));
@@ -527,28 +561,25 @@ function DataPump(SignalData) {
                 //If we haven't, create it and push it to the queue. "Pop"
                 Points[id] = ConvertSignalToCircle(Signal, Floors[0]);
                 AnimationQueue.Enqueue(Points[id]);
-                QueueCount++;
+                console.log(AnimationQueue);
             }
 
             else {
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
-                QueueCount++;
                 var new_pos_x = Signal.Px, new_pos_y = Signal.Py;
                 var last_pos_x = SignalObject.position.x, last_pos_y = SignalObject.position.y;
 
                 if (new_pos_x != last_pos_x || new_pos_y != last_pos_y) {
                     Points[id].userData.newPosition = true;
-                    console.log("Last: (" + last_pos_y + "," + last_pos_y + ")");
-
-                    console.log("New: (" + new_pos_x + "," + new_pos_y + ")");
+                    //console.log("Last: (" + last_pos_y + "," + last_pos_y + ")");
+                    //console.log("New: (" + new_pos_x + "," + new_pos_y + ")");
                     last_pos_x = new_pos_x;
                     last_pos_y = new_pos_y;
 
                     //console.log(Points[id]);
                     Points[id].userData.animations["move"] = (AnimationQueue.Move(Points[id], new_pos_x, new_pos_y));
                     AnimationQueue.Enqueue(Points[id]);
-                    AnimationQueue.Animate();
 
                     //  AnimationQueue.PopIn(Points[id]);
                     //Points[id].userData.animations["move"].start();
@@ -560,16 +591,12 @@ function DataPump(SignalData) {
                 }
                 else {
                     Points[id].userData.newPosition = false;
-
                 }
-
             }
         }
-        console.log(QueueCount);
         if (AnimationQueue.Queue.length != 0) {
-
+            AnimationQueue.Animate();
         }
-
     }
 }
 function animate() {
