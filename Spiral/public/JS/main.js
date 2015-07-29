@@ -11,7 +11,7 @@ var raycaster = new THREE.Raycaster();
 var Points = [], Floors = [], Remove = false;
 var Loading = true;
 var AnimationQueue;
-var SignalData;
+var SignalData, FloorData;
 $(document).ready(function () {
     // initialization
     init();
@@ -24,6 +24,7 @@ $(document).ready(function () {
 function init() {
     //Create the scene
     scene = new THREE.Scene();
+    AnimationQueue = new AnimationHandler();
 
     // set the view size in pixels (custom or according to window size)
     // var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
@@ -193,32 +194,34 @@ function LoadData() {
     //Grab the data from the ajax call started in config.js
     var UpdateSignal = true;
     LoadCSV(dataset, function (result) {
-        var FloorData = result[0];
-        if (UpdateSignal) {
-            SignalData = result[1];
-        }
-        console.log(SignalData);
-        var numFloors = FloorData.length;
+        FloorData = result[0];
+        SignalData = result[1];
+        //console.log(SignalData);
+        //console.
+
+        //var numFloors = FloorData.length;
         // var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
         //console.log(numFloors);
         //  if (inputFloors <= numFloors) {
-        alert("Loading...");
+        // LoadFloors(FloorData, 1);
 
-        LoadFloors(FloorData, 1);
         /*   }
 
          else {
          alert("INVALID NUMBER");
          LoadData();
          }*/
-
-        AnimationQueue = new AnimationHandler();
+        if (Loading) {
+            LoadFloors(FloorData, 1);
+        }
+        //AnimationQueue = new AnimationHandler();
         Loading = false;
         //Test data pump function goes here
         /* if (!Loading) {
          DataPump(SignalData);
          }*/
     });
+
 }
 
 //Mouse hover check
@@ -362,6 +365,7 @@ function AnimationHandler() {
             .easing(TWEEN.Easing.Exponential.In)
             .onComplete(function () {
                 Signal.active = false;
+                Signal.opacity = 0;
                 Floors[0].remove(Signal);
                 Points.splice(Points.indexOf(Signal), 1);
             });
@@ -490,8 +494,10 @@ function OnKeyDown(event) {
         case 76: //'l'
             event.preventDefault();
             if (!Loading) {
+                var test = CSVHelper(SignalData);
+                //console.log(test);
                 setInterval(function () {
-                    DataPump(SignalData);
+                    DataPump(test);
                 }, 2100);
 
             }
@@ -545,23 +551,22 @@ function ConvertSignalToCircle(SignalPoint, Floor) {
 }
 function DataPump(SignalData) {
     if (!Loading) {
-        console.log("TEST");
-
-        var QueueCount = 0;
         var Signal, SignalObject, id;
         // var percentLength = Math.floor(parseFloat(Points.length * 0.8));
         //console.log(percentLength);
-        for (var S = 0; S < SignalData.length; S++) {
+        for (var S = 0; S < SignalData[t2_ptr].length; S++) {
             //console.log(SignalData.length);
-            Signal = SignalData[S];
+            Signal = SignalData[t2_ptr][S];
             id = parseInt(Signal.TxID);
+            //console.log(Signal);
             SignalObject = Points[id];
             //Check if we've created an object for this specific signal.
             if (SignalObject == null) {
                 //If we haven't, create it and push it to the queue. "Pop"
                 Points[id] = ConvertSignalToCircle(Signal, Floors[0]);
                 AnimationQueue.Enqueue(Points[id]);
-                console.log(AnimationQueue);
+                //console.log(t2_ptr);
+                //console.log(AnimationQueue);
             }
 
             else {
@@ -580,6 +585,7 @@ function DataPump(SignalData) {
                     //console.log(Points[id]);
                     Points[id].userData.animations["move"] = (AnimationQueue.Move(Points[id], new_pos_x, new_pos_y));
                     AnimationQueue.Enqueue(Points[id]);
+                    //console.log(Points[id]);
 
                     //  AnimationQueue.PopIn(Points[id]);
                     //Points[id].userData.animations["move"].start();
@@ -596,6 +602,13 @@ function DataPump(SignalData) {
         }
         if (AnimationQueue.Queue.length != 0) {
             AnimationQueue.Animate();
+        }
+        if (AnimationQueue.Queue.length == 0 && t2_ptr != t_ptr) {
+            t2_ptr++;
+
+        }
+         else if (t2_ptr == t_ptr) {
+            t2_ptr = 0;
         }
     }
 }
