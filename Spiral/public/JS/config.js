@@ -34,7 +34,7 @@ function LoadCSV(dataset, callback) {
                 result[0] = CSV_ARRAY[0]; // Floor Data
                 result[1] = CSV_ARRAY[1];//SignalTimeArray[t2_ptr]; //Signal Data seperated by time;
                 //setTimeout(LoadCSV, 2000);
-                setTimeout(LoadCSV(dataset,callback), 20000);
+                //setTimeout(LoadCSV(dataset,callback), 20000);
                 // result[1] = SignalTimeArray;
             }
             //Callback returns the csv files for usage in main.js
@@ -43,6 +43,39 @@ function LoadCSV(dataset, callback) {
         //do NOT return data in this function without checking for success
         //asynchronous threads will cause it to overwrite data that was pushed in SUCCESS
         //Or it will attempt to return the data before it was written
+    });
+
+}
+function LoadData() {
+    //Grab the data from the ajax call started in config.js
+    var UpdateSignal = true;
+    LoadCSV(dataset, function (result) {
+        FloorData = result[0];
+        SignalData = result[1];
+        //console.log(SignalData);
+        //console.
+
+        //var numFloors = FloorData.length;
+        // var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
+        //console.log(numFloors);
+        //  if (inputFloors <= numFloors) {
+        // LoadFloors(FloorData, 1);
+
+        /*   }
+
+         else {
+         alert("INVALID NUMBER");
+         LoadData();
+         }*/
+        if (Loading) {
+            LoadFloors(FloorData, 1);
+        }
+        //AnimationQueue = new AnimationHandler();
+        Loading = false;
+        //Test data pump function goes here
+        /* if (!Loading) {
+         DataPump(SignalData);
+         }*/
     });
 
 }

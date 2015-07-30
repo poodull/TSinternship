@@ -190,39 +190,7 @@ function LoadFloors(data, FloorNumber) {
     }
 }
 
-function LoadData() {
-    //Grab the data from the ajax call started in config.js
-    var UpdateSignal = true;
-    LoadCSV(dataset, function (result) {
-        FloorData = result[0];
-        SignalData = result[1];
-        //console.log(SignalData);
-        //console.
 
-        //var numFloors = FloorData.length;
-        // var inputFloors = prompt("There are " + numFloors + " floor maps available, how many would you like to load?");
-        //console.log(numFloors);
-        //  if (inputFloors <= numFloors) {
-        // LoadFloors(FloorData, 1);
-
-        /*   }
-
-         else {
-         alert("INVALID NUMBER");
-         LoadData();
-         }*/
-        if (Loading) {
-            LoadFloors(FloorData, 1);
-        }
-        //AnimationQueue = new AnimationHandler();
-        Loading = false;
-        //Test data pump function goes here
-        /* if (!Loading) {
-         DataPump(SignalData);
-         }*/
-    });
-
-}
 
 //Mouse hover check
 //TODO: Doesn't work atm, overlapped by mouse click function
@@ -331,6 +299,103 @@ function GenerateRandomValue(min, max) {
     return random;
 }
 
+
+
+//Events(Keypresses and Mouse functions)
+function onDocumentTouchStart(event) {
+    event.preventDefault();
+    event.clientX = event.touches[0].clientX;
+    event.clientY = event.touches[0].clientY;
+    onDocumentMouseDown(event);
+}
+function onDocumentMouseDown(event) {
+    event.preventDefault();
+    mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
+    mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
+    //AddPoint();
+    RemovePoint();
+}
+function onDocumentMouseMove(event) {
+    //event.preventDefault();
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+}
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+}
+
+function OnKeyDown(event) {
+    switch (event.keyCode) {
+        case 46: // 'DELETE' Key, Toggle delete selected point
+            Remove = !Remove;
+            break;
+        case 45: //'INSERT' Key, add one single point
+            break;
+        case 35:
+            //
+            // RemovePoints(); //Remove point when clicked!
+            break;
+        case 76: //'l'
+            event.preventDefault();
+            if (!Loading) {
+                var test = CSVHelper(SignalData);
+                //console.log(test);
+                setInterval(function () {
+                    DataPump(test);
+                }, 2100);
+
+            }
+            //Going to use setInterval until I can understand/figure out a better way to do this
+            //Might need data first before I move on, so I can understand the larger scope of the issue
+
+            //Instead of a data pump function, later use an UpdateQueue function that gets called every X seconds
+            //and updates the positioning of the signals.
+
+            break;
+
+    }
+}
+
+function GenerateCircle(pos_x, pos_y, pos_z, radius, Floor, id, ColorScale) {
+    //var colorScale = d3.scale.category10();
+    /* var scale =  d3.scale.linear()
+     .domain([0, 50, 100])
+     .range(['green', 'yellow', 'red']);*/
+
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 2, 32);
+    var mat_Circle = new THREE.MeshLambertMaterial({
+        color: ColorScale(getRandomInt(0, 100)),//Math.random() * 0xffffff,
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide,
+        frustumCulled: false,
+        depthWrite: false,
+        depthTest: false
+    });
+
+    var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
+    Circle.position.x = pos_x;
+    Circle.position.y = pos_y; //+ geo_Cube.height;
+    Circle.position.z = pos_z;//Math.random() * 800 - 400;
+    Circle.rotation.x = Math.PI / 2;
+    Circle.userData = {id: id, active: false, animations: [], lastUpdated: null, newPosition: false};
+    Points.push(Circle);
+    Floor.add(Circle);
+    return Circle;
+}
+function ConvertSignalToCircle(SignalPoint, Floor) {
+    var pos_x = parseInt(SignalPoint.Px);
+    var pos_y = parseInt(SignalPoint.Py);
+    var id = parseInt(SignalPoint.TxID);
+    var height = parseInt(SignalPoint.Height);
+    var ColorScale = d3.scale.linear().domain([0, 100]);
+    ColorScale.domain([0, 0.5, 1].map(ColorScale.invert));
+    ColorScale.range(["green", "yellow", "red"]);
+    return GenerateCircle(pos_x, pos_y, height + 1, 5, Floor, id, ColorScale);
+}
 function AnimationHandler() {
     this.Queue = [];
     this.Actives = [];
@@ -448,106 +513,9 @@ function AnimationHandler() {
                     }
                     //this.popped.userData.animations["pop"].start();
                 }
-
             }
         }
     };
-}
-
-//Events(Keypresses and Mouse functions)
-function onDocumentTouchStart(event) {
-    event.preventDefault();
-    event.clientX = event.touches[0].clientX;
-    event.clientY = event.touches[0].clientY;
-    onDocumentMouseDown(event);
-}
-function onDocumentMouseDown(event) {
-    event.preventDefault();
-    mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
-    mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
-    //AddPoint();
-    RemovePoint();
-}
-function onDocumentMouseMove(event) {
-    //event.preventDefault();
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
-}
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-}
-
-function OnKeyDown(event) {
-    switch (event.keyCode) {
-        case 46: // 'DELETE' Key, Toggle delete selected point
-            Remove = !Remove;
-            break;
-        case 45: //'INSERT' Key, add one single point
-            break;
-        case 35:
-            //
-            // RemovePoints(); //Remove point when clicked!
-            break;
-        case 76: //'l'
-            event.preventDefault();
-            if (!Loading) {
-                var test = CSVHelper(SignalData);
-                //console.log(test);
-                setInterval(function () {
-                    DataPump(test);
-                }, 2100);
-
-            }
-            //Going to use setInterval until I can understand/figure out a better way to do this
-            //Might need data first before I move on, so I can understand the larger scope of the issue
-
-            //Instead of a data pump function, later use an UpdateQueue function that gets called every X seconds
-            //and updates the positioning of the signals.
-
-            break;
-
-    }
-}
-
-function GenerateCircle(pos_x, pos_y, pos_z, radius, Floor, id, ColorScale) {
-    //var colorScale = d3.scale.category10();
-    /* var scale =  d3.scale.linear()
-     .domain([0, 50, 100])
-     .range(['green', 'yellow', 'red']);*/
-
-    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 2, 32);
-    var mat_Circle = new THREE.MeshLambertMaterial({
-        color: ColorScale(getRandomInt(0, 100)),//Math.random() * 0xffffff,
-        transparent: true,
-        opacity: 0,
-        side: THREE.DoubleSide,
-        frustumCulled: false,
-        depthWrite: false,
-        depthTest: false
-    });
-
-    var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
-    Circle.position.x = pos_x;
-    Circle.position.y = pos_y; //+ geo_Cube.height;
-    Circle.position.z = pos_z;//Math.random() * 800 - 400;
-    Circle.rotation.x = Math.PI / 2;
-    Circle.userData = {id: id, active: false, animations: [], lastUpdated: null, newPosition: false};
-    Points.push(Circle);
-    Floor.add(Circle);
-    return Circle;
-}
-function ConvertSignalToCircle(SignalPoint, Floor) {
-    var pos_x = parseInt(SignalPoint.Px);
-    var pos_y = parseInt(SignalPoint.Py);
-    var id = parseInt(SignalPoint.TxID);
-    var height = parseInt(SignalPoint.Height);
-    var ColorScale = d3.scale.linear().domain([0, 100]);
-    ColorScale.domain([0, 0.5, 1].map(ColorScale.invert));
-    ColorScale.range(["green", "yellow", "red"]);
-    return GenerateCircle(pos_x, pos_y, height + 1, 5, Floor, id, ColorScale);
 }
 function DataPump(SignalData) {
     if (!Loading) {
@@ -583,7 +551,9 @@ function DataPump(SignalData) {
                     last_pos_y = new_pos_y;
 
                     //console.log(Points[id]);
+
                     Points[id].userData.animations["move"] = (AnimationQueue.Move(Points[id], new_pos_x, new_pos_y));
+                    Points[id].userData.animations["move"].start();
                     AnimationQueue.Enqueue(Points[id]);
                     //console.log(Points[id]);
 
@@ -600,9 +570,8 @@ function DataPump(SignalData) {
                 }
             }
         }
-        if (AnimationQueue.Queue.length != 0) {
-            AnimationQueue.Animate();
-        }
+        AnimationQueue.Animate();
+
         if (AnimationQueue.Queue.length == 0 && t2_ptr != t_ptr) {
             t2_ptr++;
 
