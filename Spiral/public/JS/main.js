@@ -10,7 +10,8 @@ var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
 var raycaster = new THREE.Raycaster();
 var Points = [], Floors = [], Remove = false;
 var Loading = true;
-var AnimationQueue;
+var Animator;
+var done = false;
 var SignalData, FloorData;
 $(document).ready(function () {
     // initialization
@@ -24,7 +25,7 @@ $(document).ready(function () {
 function init() {
     //Create the scene
     scene = new THREE.Scene();
-    AnimationQueue = new AnimationHandler();
+    Animator = new AnimationHandler();
 
     // set the view size in pixels (custom or according to window size)
     // var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
@@ -191,7 +192,6 @@ function LoadFloors(data, FloorNumber) {
 }
 
 
-
 //Mouse hover check
 //TODO: Doesn't work atm, overlapped by mouse click function
 function FindIntersects() {
@@ -300,7 +300,6 @@ function GenerateRandomValue(min, max) {
 }
 
 
-
 //Events(Keypresses and Mouse functions)
 function onDocumentTouchStart(event) {
     event.preventDefault();
@@ -341,11 +340,11 @@ function OnKeyDown(event) {
         case 76: //'l'
             event.preventDefault();
             if (!Loading) {
-                var test = CSVHelper(SignalData);
+                var data = CSVHelper(SignalData);
                 //console.log(test);
                 setInterval(function () {
-                    DataPump(test);
-                }, 2100);
+                    DataPump(data[t2_ptr]);
+                }, 3000);
 
             }
             //Going to use setInterval until I can understand/figure out a better way to do this
@@ -381,7 +380,7 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, Floor, id, ColorScale) {
     Circle.position.y = pos_y; //+ geo_Cube.height;
     Circle.position.z = pos_z;//Math.random() * 800 - 400;
     Circle.rotation.x = Math.PI / 2;
-    Circle.userData = {id: id, active: false, animations: [], lastUpdated: null, newPosition: false};
+    Circle.userData = {id: id, active: false, animations: [], done: false, t_ptr_end: 0};
     Points.push(Circle);
     Floor.add(Circle);
     return Circle;
@@ -397,29 +396,12 @@ function ConvertSignalToCircle(SignalPoint, Floor) {
     return GenerateCircle(pos_x, pos_y, height + 1, 5, Floor, id, ColorScale);
 }
 function AnimationHandler() {
-    this.Queue = [];
-    this.Actives = [];
-    this.TweenTypes = ['default', 'pop', 'fade', 'move'];
-    this.QueueSize = this.Queue.length;
-    this.Enqueue = function (Object) {
-        this.Queue.push(Object);
-        this.QueueSize++;
-        //console.log(Object.userData.id);
-    };
-
-    this.LoadQueue = function (Points) {
-        if (!Loading) {
-            //I'm just loading the array of all objects drawn for now.
-            this.LoadSize = Points.length;
-            for (var i = 0; i < this.LoadSize; i++) {
-                this.Enqueue(Points[i]);
-            }
-        }
-    };
-
-    this.UpdateQueue = function () {
-        return this.Queue;
-    };
+    /*    this.Queue = [];
+     this.Actives = [];
+     this.Enqueue = function (Object) {
+     this.Queue.push(Object);
+     //console.log(Object.userData.id);
+     };*/
     var FadeOut = function (Signal) {
         return new TWEEN.Tween(Signal.material)
             .to({
@@ -436,150 +418,127 @@ function AnimationHandler() {
             });
     };
     this.Move = function (Signal, pos_x, pos_y) {
+        // console.log("Position: " + pos_x + "," + pos_y);
         // var signal = Signal;
         return new TWEEN.Tween(Signal.position)
             .to({
                 x: pos_x,
                 y: pos_y,
-                duration: 5,
-                delay: 1000
+                duration: 5
+                //delay: 1000
             })
             .easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(function () {
-                Signal.active = false;
-                FadeOut(Signal).start();
+                if (Signal.done) {
+                    FadeOut(Signal).start();
+                }
+                //FadeOut(Signal).start();
             });
-        //return tween_Move;
     };
     this.PopIn = function (Signal) {
         return new TWEEN.Tween(Signal.material)
             .to({
                 opacity: 0.8,
                 duration: 5,
-                // DWELL PERIOD //
                 delay: 3000
             })
-            .easing(TWEEN.Easing.Exponential.In)
+            .easing(TWEEN.Easing.Bounce.In)
             .onComplete(function () {
-                Signal.active = false;
-                FadeOut(Signal).start();
+                if (Signal.done) {
+                    FadeOut(Signal).start();
+                }
+                //Signal.active = false;
+                /*if (!Signal.active) {
+                 FadeOut(Signal).start();
+                 }*/
             });
         //return tween_In;
     };
 
     //Probably need to split this function up into specific class functions for each tween.
-    this.Animate = function () {
-        //Check the Queue
-        //See if item is active already
-        //If active --> Update tween
-        //If not --> create Tween
-        //Remove from queue
-        var test = true;
-        this.timer = new THREE.Clock();
-        if (!Loading && this.QueueSize != 0) {
-            //this.Queue.reverse();
-            TWEEN.removeAll();
-            var FirstPriority = this.Queue[this.Queue.length - 1];
-            // console.log(this.key);
-            // console.log(this.Actives);
-            while (this.QueueSize != 0) {
-                this.QueueSize--;
-                this.popped = this.Queue.pop();
+    /*    this.Animate = function (Signal) {
+     if (!Loading) {
+     //this.popped = this.Queue.pop();
+     if (Signal != null) {
+     this.key = Signal.userData.id;
+     //console.log(this.key);//
+     this.Actives[this.key] = Signal.userData.active;
 
-                //console.log(this.popped);
+     if (!this.Actives[this.key]) {
+     this.ObjectAnimations = Signal.userData.animations;
+     //Animation logic goes here//
+     this.ObjectAnimations["pop"] = this.PopIn(this.popped);
+     this.ObjectAnimations["pop"].start();
 
-                if (this.popped != null) {
-                    this.key = this.popped.userData.id;
-                    //console.log(this.key);//
-                    this.Actives[this.key] = this.popped.userData.active;
+     if (this.ObjectAnimations["move"] != null) {
+     this.ObjectAnimations["move"].delay(1000);
+     this.ObjectAnimations["move"].start();
+     }
+     }
+     //this.popped.userData.animations["pop"].start();
+     }
 
-
-                    //this.ObjectAnimations = this.popped.userData.animations;
-                    if (!this.Actives[this.key]) {
-                        this.ObjectAnimations = this.popped.userData.animations;
-                        this.timer.start();
-                        //Animation logic goes here//
-                        this.ObjectAnimations["pop"] = this.PopIn(this.popped);
-                        this.ObjectAnimations["pop"].start();
-                        // this.ObjectAnimations["move"].delay(5000);
-
-                        //this.ObjectAnimations["move"].start();
-
-                        if (this.ObjectAnimations["move"] != null) {
-                            this.ObjectAnimations["move"].delay(1000);
-                            this.ObjectAnimations["move"].start();
-
-                        }
-                    }
-                    //this.popped.userData.animations["pop"].start();
-                }
-            }
-        }
-    };
+     }
+     };*/
 }
 function DataPump(SignalData) {
     if (!Loading) {
+        done = false;
         var Signal, SignalObject, id;
         // var percentLength = Math.floor(parseFloat(Points.length * 0.8));
         //console.log(percentLength);
-        for (var S = 0; S < SignalData[t2_ptr].length; S++) {
+        for (var S = 0; S < SignalData.length; S++) {
             //console.log(SignalData.length);
-            Signal = SignalData[t2_ptr][S];
+            Signal = SignalData[S];
             id = parseInt(Signal.TxID);
             //console.log(Signal);
             SignalObject = Points[id];
             //Check if we've created an object for this specific signal.
-            if (SignalObject == null) {
+            if (Points[id] == null) {
                 //If we haven't, create it and push it to the queue. "Pop"
                 Points[id] = ConvertSignalToCircle(Signal, Floors[0]);
-                AnimationQueue.Enqueue(Points[id]);
+                Animator.PopIn(Points[id]).start();
+                //Animator.Enqueue(Points[id]);
                 //console.log(t2_ptr);
-                //console.log(AnimationQueue);
+                //console.log(Animator);
             }
 
             else {
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
                 var new_pos_x = Signal.Px, new_pos_y = Signal.Py;
-                var last_pos_x = SignalObject.position.x, last_pos_y = SignalObject.position.y;
+                var last_pos_x = Points[id].position.x, last_pos_y = Points[id].position.y;
 
                 if (new_pos_x != last_pos_x || new_pos_y != last_pos_y) {
-                    Points[id].userData.newPosition = true;
-                    //console.log("Last: (" + last_pos_y + "," + last_pos_y + ")");
-                    //console.log("New: (" + new_pos_x + "," + new_pos_y + ")");
-                    last_pos_x = new_pos_x;
-                    last_pos_y = new_pos_y;
-
-                    //console.log(Points[id]);
-
-                    Points[id].userData.animations["move"] = (AnimationQueue.Move(Points[id], new_pos_x, new_pos_y));
-                    Points[id].userData.animations["move"].start();
-                    AnimationQueue.Enqueue(Points[id]);
-                    //console.log(Points[id]);
-
-                    //  AnimationQueue.PopIn(Points[id]);
-                    //Points[id].userData.animations["move"].start();
-                    //AnimationQueue.Enqueue(SignalObject);
-
-                    //Check when last updated. if recent update, dwell stage and move.
-
-                    //else pop in and move
+                    if (new_pos_x == last_pos_x && new_pos_y != last_pos_y) {
+                        new_pos_x = last_pos_x;
+                        if (new_pos_y - last_pos_y < 0) {
+                            new_pos_y = -new_pos_y;
+                        }
+                    }
+                    if (new_pos_y == last_pos_y && new_pos_x != last_pos_x) {
+                        new_pos_y = last_pos_y;
+                        if (new_pos_x - last_pos_x < 0) {
+                            new_pos_x = -new_pos_x;
+                        }
+                    }
                 }
-                else {
-                    Points[id].userData.newPosition = false;
+
+                Points[id].userData.animations["move"] = (Animator.Move(Points[id], new_pos_x, new_pos_y));
+                Points[id].userData.animations["move"].start();
+                if (t2_ptr == t_ptr) {
+                    Points[id].done = true;
                 }
             }
         }
-        AnimationQueue.Animate();
-
-        if (AnimationQueue.Queue.length == 0 && t2_ptr != t_ptr) {
-            t2_ptr++;
-
-        }
-         else if (t2_ptr == t_ptr) {
-            t2_ptr = 0;
-        }
     }
+    if (t2_ptr == t_ptr) {
+        t2_ptr = 0;
+    }
+    else if (t2_ptr != t_ptr) {
+        t2_ptr++;
+    }
+
 }
 function animate() {
 

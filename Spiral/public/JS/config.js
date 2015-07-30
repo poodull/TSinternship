@@ -88,6 +88,8 @@ function CSVHelper(Signals) {
                 SignalTimeArray[t_ptr] = [];
             }
             else if (Signals[t].Time == t_ptr) {
+                //.t_ptr_end = Signals[t].Time;
+
                 SignalTimeArray[t_ptr].push(Signals[t]);
                 t++;
             }
