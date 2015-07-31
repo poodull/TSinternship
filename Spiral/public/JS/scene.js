@@ -1,7 +1,8 @@
 /**
  * Created by tfang on 7/31/2015.
  */
-var container, scene, camera, renderer, controls, stats;
+var container, scene, camera, renderer,
+    controls, stats, Animator, FloorData;
 
 function init() {
     //Create the scene
@@ -18,7 +19,7 @@ function init() {
     // add the camera to the scene
     scene.add(camera);
     // the camera defaults to position (0,0,0)
-    // so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
+    // so pull it back (z = 1500) and up (y = 4000) and set the angle towards the scene origin
     camera.position.set(0, 1500, 4000);
     camera.lookAt(scene.position);
 
@@ -77,18 +78,22 @@ function init() {
 
 }
 
-function ImportFloorImage(floor_data, floor_id) {
+/*function ImportFloorImage(floor_data, floor_id) {
     return floor_data[floor_id].image;
-}
+}*/
 
 function CreateFloor(dataset, FloorNumber, FloorDimensions) {
 
-
+    //Create each floor depending on user request.
     var CurrentFloor = dataset[FloorNumber];
-    var image = ImportFloorImage(dataset, FloorNumber);
 
+
+    var image = dataset[FloorNumber].image;//ImportFloorImage(dataset, FloorNumber);
+    //Deserialize the floor image, which is originally converted into a base64 byte array
     var FloorPlan = "data:image/png;base64," + image; //'Assets/Images/NewOfficeTS.png';
+    //Load the floorplan as a texture.
     var FloorTexture = new THREE.ImageUtils.loadTexture(FloorPlan);
+    //Set up the properties of the floor plan.
     var FloorMaterial = new THREE.MeshBasicMaterial({
         map: FloorTexture,
         side: THREE.DoubleSide,
@@ -97,13 +102,17 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
         frustumCulled: false
     });
     var ImageHeight = 1985, ImageWidth = 995;
+    //Create the geometry of the floor/mesh and adjust using the floor properties given in the CSV file.
     var FloorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1);
     var FloorMesh = new THREE.Mesh(FloorGeometry, FloorMaterial);
     FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    //Set the floor that acts as a basis for all floors.
     var BaseFloor = dataset[0];
     //Set the position
     var Altitude = parseInt(CurrentFloor.altitude);
     var b_offset_z = parseInt(CurrentFloor.building_offset_z);
+    //Calculate a common origin between all the floors in the same building.
+    //Will need to make this more dynamic later, if we are planning to incorporate multiple buildings in the same floor.
     var Origin_X = parseInt(CurrentFloor.origin_x);
     var Origin_Y = parseInt(CurrentFloor.origin_y);
     var BaseOrigin_X = parseInt(BaseFloor.origin_x);
@@ -134,7 +143,7 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     var CurrentFloorDimensions = [];
 
     FloorGeometry.computeBoundingBox();
-
+    //We will need this floor data later when we confine the position of signals to the bounding box of the floor.
     CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
     CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
     CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
@@ -153,7 +162,6 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
      var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
 
      //Config.js function sends us circle data and we draw them depending on the boundaries of floor.
-     EventPublisher(CurrentFloorDimensions["min_x"], CurrentFloorDimensions["max_x"],
      CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"],
      FloorMesh, CurrentFloor, inputCircles, scene);*/
     //Add custom lighting function later
@@ -164,87 +172,63 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     scene.add(FloorMesh);
 }
 
-/*
-function RemovePoint() {
-    raycaster.setFromCamera(mouse, camera);
-    //The intersects are the points we are checking if the mouse  hovers over.
-    var intersects = raycaster.intersectObjects(Points), material;
-    //If there are points to check, then we can animate them.
-    var intersects_length = intersects.length;
-    if (intersects_length > 0) {
-        //Intersected is the current mouse selection.
-        if (INTERSECTED != intersects[0].object) {
-            //If we have an intersection, we check if we can change the color or light
-            if (INTERSECTED) {
-                material = INTERSECTED.material;
-                //scene.remove(INTERSECTED);
-                //If the material emits light, we can change the color in hex.
-                if (material.emissive) {
-                    material.emissive.setHex(INTERSECTED.currentHex);
-                }
-                //If not, try to change the color of the material.
-                else {
-                    material.color.setHex(INTERSECTED.currentHex);
-
-                }
-            }
-
-            INTERSECTED = intersects[0].object;
-            material = INTERSECTED.material;
-
-            if (Remove) {
-                tweenAlphaOut(INTERSECTED);
-            } //Ease out on clock, not completely functional
-              //TODO:figure out how to render as opacity changes
-            // Removed.push(INTERSECTED);    //Add to vector of deleted nodes.
-
-
-            if (material.emissive) {
-                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-                material.emissive.setHex(0xff0000);
-
-            }
-            else {
-                INTERSECTED.currentHex = material.color.getHex();
-                material.color.setHex(0xff0000);
-            }
-        }
+function LoadFloors(data, FloorNumber) {
+    var FloorDimensions = [];
+    for (var i = 0; i < FloorNumber; i++) {
+        CreateFloor(data, i, FloorDimensions);
     }
 }
-*/
 
+function LoadData() {
+    //Grab the data from the ajax call started in config.js
+    var UpdateSignal = true;
+    LoadCSV(dataset, function (result) {
+        FloorData = result[0];
+        RawSignalData = result[1];
+        if (Loading) {
+            LoadFloors(FloorData, 1);
+        }
+        Loading = false;
 
+    });
 
-
-function GenerateCircle(pos_x, pos_y, pos_z, radius, Floor, id, ColorScale) {
-    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 2, 32);
+}
+//Create the circle
+function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale) {
+    //Set up a cylinder geometry with args:
+    // (CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded, thetaStart, thetaLength))
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32);
     var mat_Circle = new THREE.MeshLambertMaterial({
-        color: ColorScale(getRandomInt(0, 100)),//Math.random() * 0xffffff,
+        color: ColorScale(getRandomInt(0, 100)), //Set this color using a d3 scale depending on arg
         transparent: true,
         opacity: 1,
         side: THREE.DoubleSide,
         frustumCulled: false,
-        depthWrite: false,
+        depthWrite: false, //Prevents z-fighting
         depthTest: false
     });
-
+    //Combine the mesh and material
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
+    //Set the position based on input
     Circle.position.x = pos_x;
-    Circle.position.y = pos_y; //+ geo_Cube.height;
-    Circle.position.z = pos_z;//Math.random() * 800 - 400;
-    Circle.rotation.x = Math.PI / 2;
-    Circle.userData = {id: id, active: false, animations: [], done: false, lastUpdated: 0};
-    Floor.add(Circle);
+    Circle.position.y = pos_y;
+    Circle.position.z = pos_z;
+    //Builtin vars to help with tweening.
+    //ID: TxID, active: if we are in a tween state, animations: current animation
+    Circle.userData = {id: id, active: false, animations: [],lastUpdated: 0};
+    //Draw the circle to the scene.
+    scene.add(Circle);
     return Circle;
 }
-
-function ConvertSignalToCircle(SignalPoint, Floor) {
+//Parse the signal data
+function ConvertSignalToCircle(SignalPoint) {
     var pos_x = parseInt(SignalPoint.Px);
     var pos_y = parseInt(SignalPoint.Py);
     var id = parseInt(SignalPoint.TxID);
     var height = parseInt(SignalPoint.Height);
-    var ColorScale = d3.scale.linear().domain([0, 100]);
+    var ColorScale = d3.scale.linear().domain([0, 100]); //Dependent on domain, output the according color <--may need to be constantly updated.
     ColorScale.domain([0, 0.5, 1].map(ColorScale.invert));
     ColorScale.range(["green", "yellow", "red"]);
-    return GenerateCircle(pos_x, pos_y, height + 1, 5, Floor, id, ColorScale);
+    //Generate circle using signal data.
+    return GenerateCircle(pos_x, height + 1,pos_y , 40, id, ColorScale);
 }

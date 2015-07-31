@@ -6,7 +6,7 @@ var currentTimeIndex = 0;
 var Floors = [], dataset = [];
 var Loading = true;
 var SignalDictionary = {};
-var RawSignalData, FloorData, Animator;
+var RawSignalData;
 
 $(document).ready(function () {
     // initialization
@@ -15,40 +15,54 @@ $(document).ready(function () {
     animate();
 
 });
-
+//Pumps signal data to the animation handler.
 function DataPump(SignalData) {
     if (!Loading) {
-        done = false;
+        //necessary local variables
         var Signal, id;
+        //Signal data is an array of the current time slice that we are observing.
         for (var i = 0; i < SignalData.length; i++) {
-
+            //Loop through this time slice
             Signal = SignalData[i];
             id = parseInt(Signal.TxID);
-
+            //If this Signal Object does NOT exist:
             if (SignalDictionary[id] == null) {
-                var currentPoint = ConvertSignalToCircle(Signal, Floors[0]);
+                //Convert it to an object
+                var currentPoint = ConvertSignalToCircle(Signal);//, Floors[0]);
+                //Flag its active state
                 currentPoint.userData.active = true;
+                //Keep track of the time it was last updated.
                 currentPoint.userData.lastUpdated = Date.now();
+                //Set the index key in the dictionary to this object value.
                 SignalDictionary[id] = currentPoint;
+                //Set the current animation of the object to "pop" and start.
                 currentPoint.userData.animations["anim"] = Animator.PopSizeIn(currentPoint).start();
 
             }
+            //else if the signal object already exists in the dictionary.
             else {
                 SignalDictionary[id].userData.lastUpdated = Date.now();
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
-                var newX = Signal.Px, newY = Signal.Py;
-                var currentX = SignalDictionary[id].position.x, currentY = SignalDictionary[id].position.y;
-
-                newX = Signal.Px - currentX;
-                newY = Signal.Py - currentY;
-
+                //newX,newZ are part of the new signal data that we recieve.
+                var newX = Signal.Px, newZ = Signal.Py,
+                    currentX = SignalDictionary[id].position.x, currentZ = SignalDictionary[id].position.z;
+                //Because we are adding the point to the three.js scene. the Y axis is up.
+                //As of 7/31/2015, SignalData gives us a pixel position(x,y)
+                //We will have to adjust to that.
+                newX = (Signal.Px - currentX);
+                newZ = (Signal.Py - currentZ);
+                console.log(newX + "," + newZ);
+                //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations["anim"].stop();
-                SignalDictionary[id].userData.animations["anim"] = Animator.Move(SignalDictionary[id], newX, newY).start();
+                //Set the current animation to move.
+                SignalDictionary[id].userData.animations["anim"] = Animator.Move(SignalDictionary[id], newX, newZ).start();
+                //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
+                //                 else --> move --> dwell --> fade
+                // If the object receives an update in between these stages, it will either go back to pop or move.
 
             }
         }
-        console.log("updated: " + SignalData.length + " total: " + SignalDictionary.length);
     }
 }
 

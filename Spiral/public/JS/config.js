@@ -24,29 +24,7 @@ function LoadCSV(dataset, callback) {
     });
 
 }
-function LoadFloors(data, FloorNumber) {
-    var FloorDimensions = [];
-    for (var i = 0; i < FloorNumber; i++) {
-        CreateFloor(data, i, FloorDimensions);
-    }
-}
-
-function LoadData() {
-    //Grab the data from the ajax call started in config.js
-    var UpdateSignal = true;
-    LoadCSV(dataset, function (result) {
-        FloorData = result[0];
-        RawSignalData = result[1];
-
-        if (Loading) {
-            LoadFloors(FloorData, 1);
-        }
-        //AnimationQueue = new AnimationHandler();
-        Loading = false;
-
-    });
-
-}//RawSignalArray is the CSV in [] form.  Each line is a single Signal in time.
+//RawSignalArray is the CSV in [] form.  Each line is a single Signal in time.
 function CSVHelper(RawSignalArray) {
     if (RawSignalArray != null) {
         var allTimeCodes = []; //this is all signals, grouped by timecode.
@@ -74,7 +52,7 @@ function CSVHelper(RawSignalArray) {
         return allTimeCodes;
     }
 }
-
+//Helper function to produce random integers.
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
