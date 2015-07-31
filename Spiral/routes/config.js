@@ -8,35 +8,8 @@ var SignalData = './SignalData.csv';
 var FloorCSV = loader(FloorPlan);
 var SignalCSV = loader(SignalData);
 var fs = require('fs');
-var result = [];
-var csv = require("fast-csv");
-csv
-    .fromPath(SignalData,{headers:true})
-    .on("data", function(data){
-        //console.log(data);
-        result.push(data);
-       // console.log(data);
 
-    })
-    .on("end", function(){
-        console.log("done");
-        console.log(result);
 
-    });// All of these arguments are optional.
-/*
-
-var csv = require("fast-csv");
-var test;
-csv
-    .fromPath(SignalData)
-    .on("data", function(data){
-        console.log(data[6]);
-
-    })
-    .on("end", function(){
-        console.log("done");
-    });
-*/
 
 router.get('/', function(req, res) {
     res.sendfile('./public/config.html');
