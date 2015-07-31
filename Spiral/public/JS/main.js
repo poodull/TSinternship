@@ -50,9 +50,17 @@ function DataPump(SignalData) {
                 //Because we are adding the point to the three.js scene. the Y axis is up.
                 //As of 7/31/2015, SignalData gives us a pixel position(x,y)
                 //We will have to adjust to that.
-                newX = (Signal.Px - currentX);
-                newZ = (Signal.Py - currentZ);
-                console.log(newX + "," + newZ);
+                if (newX != 0) {
+                    newX = (Signal.Px - currentX);
+
+                }
+                if (newZ != 0)
+                {
+                    newZ = (Signal.Py - currentZ);
+                }
+                console.log("new values:" + newX + "," + newZ);
+                console.log("current: " + currentX + "," + currentZ);
+
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations["anim"].stop();
                 //Set the current animation to move.
@@ -80,5 +88,14 @@ function update() {
 
 function render() {
     TWEEN.update();
+
+    var left   = Math.floor( window.innerWidth  * 0.15 );
+    var bottom = 0;
+    var width  = Math.floor( window.innerWidth );
+    var height = Math.floor( window.innerHeight  * 0.8 );
+    renderer.setViewport( left, bottom, width, height );
+    renderer.setScissor( left, bottom, width, height );
+    renderer.enableScissorTest ( true );
+    //renderer.setClearColor( new THREE.Color().setRGB( 0.5, 0.5, 0.7 ) );
     renderer.render(scene, camera);
 }

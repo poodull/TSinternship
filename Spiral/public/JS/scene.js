@@ -62,13 +62,13 @@ function init() {
     //Load Necessary Data through Config.js
     LoadData();
     // fog must be added to scene before first render
-    // scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
+    scene.fog = new THREE.FogExp2(0x9999ff, 0);
     // without a Skybox or Fog effect of these, the scene's background color is determined by web page background
     // make sure the camera's "far" value is large enough so that it will render the skyBox!
-    var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100);//20000, 20000 );
+   /* var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100);//20000, 20000 );
     var skyBoxMaterial = new THREE.MeshBasicMaterial({color: 0x9999ff, side: THREE.BackSide});
     var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
-    scene.add(skyBox);
+    scene.add(skyBox);*/
 
     document.addEventListener('mousemove', onDocumentMouseMove, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);
