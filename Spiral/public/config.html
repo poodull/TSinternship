@@ -92,7 +92,7 @@
     }
 
     #frequency-chart {
-        width: 260px;
+        width: 300px;
     }
 
     #bandwidth-chart {
@@ -117,12 +117,15 @@
         margin-bottom: .4em;
     }
     #signal-list .label {
-        text-decoration: underline;
+        background: #eee;
+        width: 720px;
+        margin-bottom: 5px;
+
     }
     #signal-list .signal {
         line-height: 1.5em;
         background: #eee;
-        width: 640px;
+        width: 720px;
         margin-bottom: 1px;
     }
 
@@ -131,11 +134,13 @@
     }
     #signal-list .TXID-label {
         padding-left: 100px;
+        word-spacing:10px;
     }
 
     #signal-list .signal div {
         display: inline-block;
         width: 100px;
+
     }
 
     /*#signal-list div.AMPLITUDE,
@@ -179,7 +184,7 @@
 
     <div id="lists">
         <div id="signal-list" class="list">
-            <div class = "label" style = "word-spacing:45pt;">Time TXID FREQ BW AMP DEVCNT</div>
+            <div class = "label" style = "word-spacing:45pt;">Time TXID Freq. BW Amp. #Devices TCode</div>
 
         </div>
     </div>
@@ -210,6 +215,9 @@
             d.bw = +d.BW;
             d.freq = +d.FREQ;
             d.amp = +d.AMP;
+            d.tcode = +d.TCODE;
+            d.txid = +d.TXID;
+            d.devcnt = +d.DEVCNT;
         });
 
         // Create the crossfilter for the relevant dimensions and groups.
@@ -326,7 +334,7 @@
                         .attr("class", "date")
                         .append("div")
                         .attr("class", "day")
-                        .text(function(d) { return formatDate(d.values[0].date); })
+                        .text(function(d) { return formatDate(d.values[0].date); });
 
                 date.exit().remove();
 
@@ -342,22 +350,23 @@
 
                 signalEnter.append("div")
                         .attr("class", "TXID")
-                        .text(function(d) { return d.TXID; });
+                        .text(function(d) { return d.txid; });
 
                 signalEnter.append("div")
                         .attr("class", "FREQUENCY")
-                        .text(function(d) { return d.FREQ; });
+                        .text(function(d) { return d.freq; });
                 signalEnter.append("div")
                         .attr("class", "BANDWIDTH")
-                    //.classed("early", function(d) { return d.delay < 0; })
-                        .text(function(d) { return d.BW; });
+                        .text(function(d) { return d.bw; });
                 signalEnter.append("div")
                         .attr("class", "AMPLITUDE")
-                        .text(function(d) { return d.AMP; });
+                        .text(function(d) { return d.amp; });
                 signalEnter.append("div")
                         .attr("class", "DEVICECOUNT")
-                        .text(function(d) { return d.DEVCNT; });
-
+                        .text(function(d) { return d.devcnt; });
+                signalEnter.append("div")
+                        .attr("class", "TCODE")
+                        .text(function(d) { return d.tcode; });
                 signal.exit().remove();
 
                 signal.order();
