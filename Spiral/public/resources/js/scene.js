@@ -215,7 +215,7 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale) {
     Circle.position.z = pos_z;
     //Builtin vars to help with tweening.
     //ID: TxID, active: if we are in a tween state, animations: current animation
-    Circle.userData = {id: id, active: false, animations: [],lastUpdated: 0};
+    Circle.userData = {id: id, active: false, animations: [],lastUpdated: 0,x:0,z:0};
     //Draw the circle to the scene.
     scene.add(Circle);
     return Circle;

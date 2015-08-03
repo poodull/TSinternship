@@ -50,19 +50,36 @@ function DataPump(SignalData) {
                 //Because we are adding the point to the three.js scene. the Y axis is up.
                 //As of 7/31/2015, SignalData gives us a pixel position(x,y)
                 //We will have to adjust to that.
-                if (newX != 0) {
-                    newX = (Signal.Px - currentX);
 
-                }
-                if (newZ != 0)
-                {
-                    newZ = (Signal.Py - currentZ);
-                }
-                console.log("new values:" + newX + "," + newZ);
+                //console.log("new values:" + newX + "," + newZ);
+                //console.log("current: " + currentX + "," + currentZ);
                 console.log("current: " + currentX + "," + currentZ);
+                console.log("before new values:" + newX + "," + newZ);
 
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations["anim"].stop();
+
+              /* if (newX == currentX && newZ != currentZ) {
+                    newX = 0;
+                    newZ = (Signal.Py - currentZ);
+
+               }
+               else if (newX == 0) {
+
+               }
+               /!* else if (newZ == currentZ && newX != currentX || newZ == 0) {
+
+                    newZ = currentZ;
+                    newX = (Signal.Px - currentX);
+               }*!/
+                else {*/
+                   newX = (Signal.Px - currentX);
+                   newZ = (Signal.Py - currentZ);
+         //     }
+                console.log("after new values:" + "x: " + newX + ", z: " + newZ);
+
+
+
                 //Set the current animation to move.
                 SignalDictionary[id].userData.animations["anim"] = Animator.Move(SignalDictionary[id], newX, newZ).start();
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
