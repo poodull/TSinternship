@@ -1,0 +1,202 @@
+
+@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+
+body {
+    font-family: "Helvetica Neue";
+    width: 100%;
+    min-height: 100%;
+    z-index: -1;
+}
+
+#body {
+    position: relative;
+}
+
+footer {
+    padding: 2em 0 1em 0;
+    font-size: 12px;
+}
+
+h1 {
+    font-size: 96px;
+    margin-top: .3em;
+    margin-bottom: 0;
+}
+
+h1 + h2 {
+    margin-top: 0;
+}
+
+h2 {
+    font-weight: 400;
+    font-size: 28px;
+}
+
+h1, h2 {
+    font-family: "Yanone Kaffeesatz";
+    text-rendering: optimizeLegibility;
+}
+
+#body > p {
+    line-height: 1.5em;
+    width: 640px;
+    text-rendering: optimizeLegibility;
+}
+
+#charts {
+    padding: 10px 0;
+}
+
+.chart {
+    display: inline-block;
+    height: 0;
+    padding-left:36px;
+    z-index:1;
+}
+
+.reset {
+    padding-left: 1em;
+    font-size: smaller;
+    color: #ccc;
+}
+
+.background.bar {
+    fill: #ccc;
+}
+
+.foreground.bar {
+    fill: steelblue;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font: 10px sans-serif;
+    color:green;
+}
+
+.brush rect.extent {
+    fill: steelblue;
+    fill-opacity: .125;
+}
+
+.brush .resize path {
+    fill: #eee;
+    stroke: #666;
+}
+
+#frequency-chart {
+    width: 30%;
+    color:orange;
+    margin-left:60px;
+    font-weight:bold;
+
+}
+
+#bandwidth-chart {
+    width: 26%;
+    color: #ffd752;
+    margin-left:60px;
+    font-weight:bold;
+}
+
+#amplitude-chart {
+    width: 20%;
+    margin-left:100px;
+    color:blue;
+    font-weight:bold;
+
+}
+
+#date-chart {
+    width: 920px;
+}
+
+#signal-list {
+    min-height: 512px;
+    width:22%;
+    color: green;
+    position:absolute;
+    top:160px;
+    margin: 0;
+
+
+}
+
+#signal-list .label {
+    background: black;
+    margin-bottom: 5px;
+
+}
+
+#signal-list .signal {
+    background: black;
+    margin-bottom: 1px;
+}
+
+#signal-list .time {
+    color: #999;
+    width:70px;
+}
+/*change this to a signal-list id and class*/
+.label
+{
+    word-spacing:2pt;
+}
+
+#FREQUENCY
+{
+    width:10px;
+}
+
+#signal-list .TXID-label {
+    padding-left: 100px;
+    word-spacing: 10px;
+}
+#signal-list .signal div {
+    display: inline-block;
+    width: 89px;
+
+}
+
+#signal-list  .signal div.FREQUENCY {
+    width:65px;
+    margin-left:35px;
+}
+
+#signal-list  .signal div.TCODE {
+    width:25px;
+}
+
+#signal-list  .signal div.DEVICECOUNT {
+    width:15px;
+    margin-right:10px;
+}
+
+#signal-list  .signal div.TXID {
+    width:35px;
+    margin-right:10px;
+}
+
+#signal-list  .signal div.AMPLITUDE {
+    width:25px;
+}
+#signal-list  .signal div.BANDWIDTH {
+    width:55px;
+}
+
+#signal-list .early {
+    color: green;
+}
+
+aside {
+    position: absolute;
+    left: 450px;
+    font-size: smaller;
+    width: 220px;
+    color:white;
+}

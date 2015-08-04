@@ -7,14 +7,17 @@ var Floors = [], dataset = [];
 var Loading = true;
 var SignalDictionary = {};
 var RawSignalData;
-
+var selected = [];
 $(document).ready(function () {
     // initialization
     init();
     // animation loop
     animate();
-
 });
+function getCurrentSelected(){
+    //Set this to an interval that checks if the current selection has changed and rerender.
+    window.setInterval(function(){console.log(selected); }, 2000);
+}
 //Pumps signal data to the animation handler.
 function DataPump(SignalData) {
     if (!Loading) {
@@ -49,39 +52,45 @@ function DataPump(SignalData) {
                     currentX = SignalDictionary[id].position.x, currentZ = SignalDictionary[id].position.z;
                 //Because we are adding the point to the three.js scene. the Y axis is up.
                 //As of 7/31/2015, SignalData gives us a pixel position(x,y)
-                //We will have to adjust to that.
 
-                //console.log("new values:" + newX + "," + newZ);
-                //console.log("current: " + currentX + "," + currentZ);
+                //We will have to adjust to that.
                 console.log("current: " + currentX + "," + currentZ);
                 console.log("before new values:" + newX + "," + newZ);
-
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations["anim"].stop();
+             /*   if (newX == currentX && currentZ != newZ){
+                   newX = currentX;
+                    newZ = Signal.Py - currentZ;
 
-              /* if (newX == currentX && newZ != currentZ) {
-                    newX = 0;
+                }
+               else  if (newX !=  currentX && currentZ == newZ){
+                    newZ = currentZ;
+                    newX = Signal.Px - currentX;
+
+                }
+                else {*/
+
+                //}
+                newX = currentX;
+                newZ = currentZ;
+
+                if ( Signal.Py != 0 || Signal.Py != currentZ ){
                     newZ = (Signal.Py - currentZ);
 
-               }
-               else if (newX == 0) {
-
-               }
-               /!* else if (newZ == currentZ && newX != currentX || newZ == 0) {
-
-                    newZ = currentZ;
+                }
+                if ( Signal.Px != 0 || Signal.Px != currentX) {
                     newX = (Signal.Px - currentX);
-               }*!/
-                else {*/
-                   newX = (Signal.Px - currentX);
-                   newZ = (Signal.Py - currentZ);
-         //     }
+
+                }
                 console.log("after new values:" + "x: " + newX + ", z: " + newZ);
 
 
 
                 //Set the current animation to move.
                 SignalDictionary[id].userData.animations["anim"] = Animator.Move(SignalDictionary[id], newX, newZ).start();
+                SignalDictionary[id].position.x = newX;
+                SignalDictionary[id].position.z = newZ;
+
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
                 //                 else --> move --> dwell --> fade
                 // If the object receives an update in between these stages, it will either go back to pop or move.
@@ -109,7 +118,7 @@ function render() {
     var left   = Math.floor( window.innerWidth  * 0.15 );
     var bottom = 0;
     var width  = Math.floor( window.innerWidth );
-    var height = Math.floor( window.innerHeight  * 0.8 );
+    var height = Math.floor( window.innerHeight );
     renderer.setViewport( left, bottom, width, height );
     renderer.setScissor( left, bottom, width, height );
     renderer.enableScissorTest ( true );
