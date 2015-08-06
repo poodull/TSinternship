@@ -4,7 +4,7 @@
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
     INTERSECTED;
 var raycaster = new THREE.Raycaster();
-
+var testDict = {};
 //Events(Keypresses and Mouse functions)
 function onDocumentTouchStart(event) {
     event.preventDefault();
@@ -44,9 +44,10 @@ function OnKeyDown(event) {
         case 76: //'l'
             event.preventDefault();
             if (!Loading) {
-                var OrderedTimeSignals = CSVHelper(RawSignalData);
+                var OrderedTimeSignals = TCodeArrayHelper(RawSignalData);
                 //console.log(test);
                 //console.log(OrderedTimeSignals);
+               // getCurrentSelected();
                 setInterval(function () {
 
                     DataPump(OrderedTimeSignals[currentTimeIndex]);

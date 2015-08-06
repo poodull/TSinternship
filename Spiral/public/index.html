@@ -1,13 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
     <title>Proof of Concept</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
-<body>
-<link rel = "stylesheet" type="text/css" href = "resources/css/charts.css">
-<link rel = "stylesheet" type="text/css" href = "resources/css/three.css">
+<link rel="stylesheet" type="text/css" href="resources/css/charts.css">
+<link rel="stylesheet" type="text/css" href="resources/css/three.css">
 <script src="vendors/jquery.min.js"></script>
 <script src="vendors/three.js"></script>
 <script src="vendors/Detector.js"></script>
@@ -21,31 +20,34 @@
 <script src="resources/js/animations.js"></script>
 <script src="resources/js/charts.js"></script>
 <script src="vendors/crossfilter.js"></script>
-<div id = "background" style = "background:rgba(0, 0, 0, 0.73);z-index:-1;>
-<div id= "charts">
-
-    <div id="frequency-chart" class="chart">
-        <div class="title">Frequency</div>
-    </div>
-    <div id="bandwidth-chart" class="chart">
-        <div class="title">Bandwidth</div>
-        <!--delay-->
-    </div>
-    <div id="amplitude-chart" class="chart">
-        <div class="title">Amplitude</div>
-        <!--distance-->
+<body>
+<div id="background" style="background:rgba(0, 0, 0, 0.73);z-index:-1;">
+    <div class="charts">
+        <div id="frequency-chart" class="chart">
+            <div class="title">Frequency</div>
+        </div>
+        <div id="bandwidth-chart" class="chart">
+            <div class="title">Bandwidth</div>
+            <!--delay-->
+        </div>
+        <div id="amplitude-chart" class="chart">
+            <div class="title">Amplitude</div>
+            <!--distance-->
+        </div>
     </div>
 </div>
 <aside id="totals"><span id="active">-</span> of <span id="total">-</span> signals selected.</aside>
 
 
-
 <div id="ThreeJS">
 </div>
-    <div id="signal-list" class="list">
-            <div class="label">Time TXID Freq. BW Amp. #Devices TCode</div>
-        </div>
+<div id="signal-list" class="list">
+    <div class="label">Time TXID Freq. BW Amp. #Devices TCode</div>
+</div>
 <script src="resources/js/main.js"></script>
+<div id="date-chart" class="chart">
+    <div class="title">Date</div>
+</div>
 
 </body>
 </html>

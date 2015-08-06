@@ -16,18 +16,40 @@ $(document).ready(function () {
 });
 function getCurrentSelected(){
     //Set this to an interval that checks if the current selection has changed and rerender.
-    window.setInterval(function(){console.log(selected); }, 2000);
+    window.setInterval(function(){ console.log(selected); }, 2000);
 }
 //Pumps signal data to the animation handler.
 function DataPump(SignalData) {
     if (!Loading) {
         //necessary local variables
         var Signal, id;
+      //  var counter = 0;
+      var chart = d3.selectAll(".chart").select("#date-chart")
+          .each(function(d){
+              console.log(d);
+          });
+   //     d3.selectAll(".chart").select("#date-chart").f
+        //d3.selectAll(".signal-list").filter([4, 20]);
+       // console.log(charts);
+
         //Signal data is an array of the current time slice that we are observing.
         for (var i = 0; i < SignalData.length; i++) {
             //Loop through this time slice
             Signal = SignalData[i];
             id = parseInt(Signal.TxID);
+              /*      each(function(data,i){
+                    console.log(data);
+                });*/
+                    //.filter([0, parseInt(Signal.Time)]);
+
+            //d3.selectAll(".signal").filter(function(d){return 2});
+              /*  .each(function (data) {
+                    console.log(data.TXID);
+                    counter++;
+                    console.log(counter);
+                });*/
+
+
             //If this Signal Object does NOT exist:
             if (SignalDictionary[id] == null) {
                 //Convert it to an object
@@ -58,33 +80,11 @@ function DataPump(SignalData) {
                 console.log("before new values:" + newX + "," + newZ);
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations["anim"].stop();
-             /*   if (newX == currentX && currentZ != newZ){
-                   newX = currentX;
-                    newZ = Signal.Py - currentZ;
 
-                }
-               else  if (newX !=  currentX && currentZ == newZ){
-                    newZ = currentZ;
-                    newX = Signal.Px - currentX;
+                newX = (Signal.Px - currentX);
+                newZ = (Signal.Py - currentZ);
 
-                }
-                else {*/
-
-                //}
-                newX = currentX;
-                newZ = currentZ;
-
-                if ( Signal.Py != 0 || Signal.Py != currentZ ){
-                    newZ = (Signal.Py - currentZ);
-
-                }
-                if ( Signal.Px != 0 || Signal.Px != currentX) {
-                    newX = (Signal.Px - currentX);
-
-                }
                 console.log("after new values:" + "x: " + newX + ", z: " + newZ);
-
-
 
                 //Set the current animation to move.
                 SignalDictionary[id].userData.animations["anim"] = Animator.Move(SignalDictionary[id], newX, newZ).start();

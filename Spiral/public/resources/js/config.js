@@ -14,6 +14,7 @@ function LoadCSV(dataset, callback) {
             if (dataset != null) {
                 result[0] = CSV_ARRAY[0];
                 result[1] = CSV_ARRAY[1];
+                result[2] = CSV_ARRAY[2];
             }
             //Callback returns the csv files for usage in main.js
             callback(result);
@@ -25,7 +26,7 @@ function LoadCSV(dataset, callback) {
 
 }
 //RawSignalArray is the CSV in [] form.  Each line is a single Signal in time.
-function CSVHelper(RawSignalArray) {
+function TCodeArrayHelper(RawSignalArray) {
     if (RawSignalArray != null) {
         var allTimeCodes = []; //this is all signals, grouped by timecode.
         var index = 0; //current line of CSV array

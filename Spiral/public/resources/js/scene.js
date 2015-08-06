@@ -185,8 +185,10 @@ function LoadData() {
     LoadCSV(dataset, function (result) {
         FloorData = result[0];
         RawSignalData = result[1];
+        console.log(result);
         if (Loading) {
             LoadFloors(FloorData, 1);
+            filterCharts(result[2]);
         }
         Loading = false;
 
