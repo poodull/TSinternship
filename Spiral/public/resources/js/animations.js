@@ -14,7 +14,7 @@ function AnimationHandler() {
             }, 500)//duration of animation in milliseconds.
             .easing(TWEEN.Easing.Bounce.In) //type of easing animation
             .onComplete(function () {
-                Signal.userData.animations["anim"] = Dwell(Signal).start();
+                Signal.userData.animations.anim = Dwell(Signal).start();
             });
     };
     //If read in signal data with an object that already exists, we move it.
@@ -29,7 +29,7 @@ function AnimationHandler() {
             .easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(function () {
                 //Chain dwell(which is an idle state), if the animation is able to finish.
-                Signal.userData.animations["anim"] = Dwell(Signal).start();
+                Signal.userData.animations.anim = Dwell(Signal).start();
             });
     };
     //idle state
@@ -39,9 +39,9 @@ function AnimationHandler() {
             .onComplete(function () {
                 //If we reach the end of the idle state, it means that there has not been any recent updates
                 //So we begin the fade out animation.
-                Signal.userData.animations["anim"] = FadeOut(Signal).start();
+                Signal.userData.animations.anim = FadeOut(Signal).start();
             });
-    };
+        };
     //Helper function to cleanly remove inactive signals.
     var DeleteSignal = function (Signal) {
         Signal.userData.active = false;

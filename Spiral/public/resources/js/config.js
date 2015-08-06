@@ -1,3 +1,6 @@
+/**
+ * Created by Tommy Fang
+ */
 var totalTimeCodes;
 
 function LoadCSV(dataset, callback) {
@@ -28,17 +31,17 @@ function LoadCSV(dataset, callback) {
 //RawSignalArray is the CSV in [] form.  Each line is a single Signal in time.
 function TCodeArrayHelper(RawSignalArray) {
     if (RawSignalArray != null) {
-        var allTimeCodes = []; //this is all signals, grouped by timecode.
-        var index = 0; //current line of CSV array
-        var currentTime = -1;
-        totalTimeCodes = 0;  //TODO:  THIS NEEDS TO BE GLOBAL
-        while (index <= RawSignalArray.length-1) {
+
+        var allTimeCodes = [], //this is all signals, grouped by timecode.
+        index = 0, currentTime = -1;  //current line of CSV array
+        totalTimeCodes = 0;
+        while (index <= RawSignalArray.length - 1) {
            // console.log(RawSignalArray[index]);
 
-            if (currentTime != RawSignalArray[index].Time) {
+            if (currentTime != RawSignalArray[index].TCODE) {
                 //new timecode, close up last SignalData[], increment currentTime
                 totalTimeCodes++;
-                currentTime = RawSignalArray[index].Time;
+                currentTime = RawSignalArray[index].TCODE;
                 //console.log("New Time Code Found!= " + currentTime);
                 //if (allTimeCodes[currentTime] == null) {
                 allTimeCodes[currentTime] = [];

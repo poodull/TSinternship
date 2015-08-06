@@ -1,3 +1,6 @@
+/**
+ * Created by Tommy Fang
+ */
 //////////
 // MAIN //
 //////////
@@ -14,40 +17,38 @@ $(document).ready(function () {
     // animation loop
     animate();
 });
-function getCurrentSelected(){
-    //Set this to an interval that checks if the current selection has changed and rerender.
-    window.setInterval(function(){ console.log(selected); }, 2000);
-}
+
 //Pumps signal data to the animation handler.
 function DataPump(SignalData) {
     if (!Loading) {
+        //console.log(currentTimeIndex);
         //necessary local variables
-        var Signal, id;
+        var Signal, id, i;
+       // var Filter = signal.dimension(function(fact) {return fact.TCODE; });
+     //   console.log(typeFilterDimension);
+        //Filter.filter([30, 50]);
+        //Filter.remove();
+       // Filter.filter(null);
+      // typeFilterDimension.filter([2, 4]);
       //  var counter = 0;
-      var chart = d3.selectAll(".chart").select("#date-chart")
-          .each(function(d){
-              console.log(d);
-          });
-   //     d3.selectAll(".chart").select("#date-chart").f
-        //d3.selectAll(".signal-list").filter([4, 20]);
+      // var c = (d3.selectAll(".chart").select("#date-chart"));
+      //  console.log(c);
+      //       d3.selectAll(".chart").select("#date-chart").f
+      // d3.selectAll(".signal-list")
        // console.log(charts);
+      //  var dim = selected.dimension(function(d){return d.TCODE;  });
+    //    console.log(dim.top(10));
+        //dim.filterFunction(function (d) {return d.TCODE == currentTimeIndex; });
 
         //Signal data is an array of the current time slice that we are observing.
-        for (var i = 0; i < SignalData.length; i++) {
+        for (i = 0; i < SignalData.length; i++) {
             //Loop through this time slice
             Signal = SignalData[i];
-            id = parseInt(Signal.TxID);
+            id = parseInt(Signal.TXID);
               /*      each(function(data,i){
                     console.log(data);
                 });*/
                     //.filter([0, parseInt(Signal.Time)]);
-
-            //d3.selectAll(".signal").filter(function(d){return 2});
-              /*  .each(function (data) {
-                    console.log(data.TXID);
-                    counter++;
-                    console.log(counter);
-                });*/
 
 
             //If this Signal Object does NOT exist:
@@ -61,7 +62,7 @@ function DataPump(SignalData) {
                 //Set the index key in the dictionary to this object value.
                 SignalDictionary[id] = currentPoint;
                 //Set the current animation of the object to "pop" and start.
-                currentPoint.userData.animations["anim"] = Animator.PopSizeIn(currentPoint).start();
+                currentPoint.userData.animations.anim = Animator.PopSizeIn(currentPoint).start();
 
             }
             //else if the signal object already exists in the dictionary.
@@ -70,24 +71,23 @@ function DataPump(SignalData) {
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
                 //newX,newZ are part of the new signal data that we recieve.
-                var newX = Signal.Px, newZ = Signal.Py,
+                var newX = Signal.X, newZ = Signal.Y,
                     currentX = SignalDictionary[id].position.x, currentZ = SignalDictionary[id].position.z;
                 //Because we are adding the point to the three.js scene. the Y axis is up.
                 //As of 7/31/2015, SignalData gives us a pixel position(x,y)
 
                 //We will have to adjust to that.
-                console.log("current: " + currentX + "," + currentZ);
-                console.log("before new values:" + newX + "," + newZ);
+                //console.log("current: " + currentX + "," + currentZ);
+              //  console.log("before new values:" + newX + "," + newZ);
                 //Tell the last animation to stop because we've recieved a new update.
-                SignalDictionary[id].userData.animations["anim"].stop();
+                SignalDictionary[id].userData.animations.anim.stop();
 
-                newX = (Signal.Px - currentX);
-                newZ = (Signal.Py - currentZ);
-
-                console.log("after new values:" + "x: " + newX + ", z: " + newZ);
+                newX = (Signal.X - currentX);
+                newZ = (Signal.Y - currentZ);
+                //console.log("after new values:" + "x: " + newX + ", z: " + newZ);
 
                 //Set the current animation to move.
-                SignalDictionary[id].userData.animations["anim"] = Animator.Move(SignalDictionary[id], newX, newZ).start();
+                SignalDictionary[id].userData.animations.anim = Animator.Move(SignalDictionary[id], newX, newZ).start();
                 SignalDictionary[id].position.x = newX;
                 SignalDictionary[id].position.z = newZ;
 

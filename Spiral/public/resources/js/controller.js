@@ -4,7 +4,6 @@
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
     INTERSECTED;
 var raycaster = new THREE.Raycaster();
-var testDict = {};
 //Events(Keypresses and Mouse functions)
 function onDocumentTouchStart(event) {
     event.preventDefault();
@@ -30,6 +29,10 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
+function getCurrentSelected() {
+    //Set this to an interval that checks if the current selection has changed and rerender.
+    window.setInterval(function () { console.log(selected[0].values); }, 2000);
+}
 function OnKeyDown(event) {
     switch (event.keyCode) {
         case 46: // 'DELETE' Key, Toggle delete selected point
@@ -44,10 +47,15 @@ function OnKeyDown(event) {
         case 76: //'l'
             event.preventDefault();
             if (!Loading) {
-                var OrderedTimeSignals = TCodeArrayHelper(RawSignalData);
-                //console.log(test);
-                //console.log(OrderedTimeSignals);
-               // getCurrentSelected();
+               // var OrderedTimeSignals = TCodeArrayHelper(RawSignalData);
+                // getCurrentSelected();
+                //On apply filter:
+                //window.clearInterval(intervalId);
+                //remove all tweens
+                //get new selection
+                //play interval
+                var OrderedTimeSignals = TCodeArrayHelper(selected[0].values); //current selection of points
+                console.log(charts[3].filter([0, 1]));
                 setInterval(function () {
 
                     DataPump(OrderedTimeSignals[currentTimeIndex]);

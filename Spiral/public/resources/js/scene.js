@@ -1,5 +1,5 @@
 /**
- * Created by tfang on 7/31/2015.
+ * Created by Tommy Fang on 7/31/2015.
  */
 var container, scene, camera, renderer,
     controls, stats, Animator, FloorData;
@@ -184,8 +184,7 @@ function LoadData() {
     var UpdateSignal = true;
     LoadCSV(dataset, function (result) {
         FloorData = result[0];
-        RawSignalData = result[1];
-        console.log(result);
+        RawSignalData = result[2];
         if (Loading) {
             LoadFloors(FloorData, 1);
             filterCharts(result[2]);
@@ -199,8 +198,8 @@ function LoadData() {
 function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale) {
     //Set up a cylinder geometry with args:
     // (CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded, thetaStart, thetaLength))
-    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32);
-    var mat_Circle = new THREE.MeshLambertMaterial({
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32),
+        mat_Circle = new THREE.MeshLambertMaterial({
         color: ColorScale(getRandomInt(0, 100)), //Set this color using a d3 scale depending on arg
         transparent: true,
         opacity: 1,
@@ -224,13 +223,13 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale) {
 }
 //Parse the signal data
 function ConvertSignalToCircle(SignalPoint) {
-    var pos_x = parseInt(SignalPoint.Px);
-    var pos_y = parseInt(SignalPoint.Py);
-    var id = parseInt(SignalPoint.TxID);
-    var height = parseInt(SignalPoint.Height);
+    var pos_x = parseInt(SignalPoint.X);
+    var pos_y = parseInt(SignalPoint.Y);
+    var id = parseInt(SignalPoint.TXID);
+    var pos_z = parseInt(SignalPoint.Z);
     var ColorScale = d3.scale.linear().domain([0, 100]); //Dependent on domain, output the according color <--may need to be constantly updated.
     ColorScale.domain([0, 0.5, 1].map(ColorScale.invert));
     ColorScale.range(["green", "yellow", "red"]);
     //Generate circle using signal data.
-    return GenerateCircle(pos_x, height + 1,pos_y , 40, id, ColorScale);
+    return GenerateCircle(pos_x, pos_z, pos_y , 40, id, ColorScale);
 }
