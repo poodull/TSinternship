@@ -3,7 +3,7 @@
  */
 var container, scene, camera, renderer,
     controls, stats, Animator, FloorData;
-
+var CrossFilter;
 function init() {
     //Create the scene
     scene = new THREE.Scene();
@@ -184,10 +184,10 @@ function LoadData() {
     var UpdateSignal = true;
     LoadCSV(dataset, function (result) {
         FloorData = result[0];
-        RawSignalData = result[2];
+        RawSignalData = result[1];
         if (Loading) {
             LoadFloors(FloorData, 1);
-            filterCharts(result[2]);
+            CrossFilter = new FilterCharts(result[1]);
         }
         Loading = false;
 

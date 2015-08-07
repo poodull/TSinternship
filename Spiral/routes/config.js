@@ -20,7 +20,6 @@ router.get('/', function (req, res) {
 router.put('/', function (req, res) {
     var data = [];
     data.push(FloorCSV);
-    data.push(SignalCSV);
     fs.readFile(T2Signals, "utf8", function(error, csvdata) {
         csvdata = d3.csv.parse(csvdata);
         data.push(csvdata);

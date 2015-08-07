@@ -2,7 +2,7 @@
  * Created by Tommy Fang
  */
 var charts;
-function filterCharts(signals) {
+function FilterCharts(signals) {
     // Various formatters.
     var formatNumber = d3.format(",d"),
         formatChange = d3.format("+,d"),
@@ -116,8 +116,7 @@ function filterCharts(signals) {
             .x(d3.scale.linear()
                 .domain([tcMin, tcMax])
                 .rangeRound([0, 100 * 8]))
-            //.filter([currentTimeIndex, currentTimeIndex++])
-
+            .filter(null)
 
         /*      barChart()
          .dimension(date)
@@ -130,6 +129,12 @@ function filterCharts(signals) {
 
          */
     ];
+    this.updateFilter = function (min, max) {
+        //charts[3] is the time chart
+        charts[3].filter([min, max]);
+       // console.log(d3.selectAll(".chart").select("#tcode-chart").data(d));
+        renderAll();
+    };
 
     // Given our array of charts, which we assume are in the same order as the
     // .chart elements in the DOM, bind the charts to the DOM and render them.
@@ -186,8 +191,9 @@ function filterCharts(signals) {
 
     function signalList(div) {
         var signalsByDate = nestByDate.entries(timecode.bottom(50));
-
-        selected = nestByDate.entries(timecode.bottom(Infinity));
+        if (signalsByDate != null) {
+            selected = nestByDate.entries(timecode.bottom(Infinity));
+        }
         div.each(function () {
             var date = d3.select(this).selectAll(".date")
                 .data(signalsByDate, function (d) {

@@ -24,37 +24,21 @@ function DataPump(SignalData) {
         //console.log(currentTimeIndex);
         //necessary local variables
         var Signal, id, i;
-       // var Filter = signal.dimension(function(fact) {return fact.TCODE; });
-     //   console.log(typeFilterDimension);
-        //Filter.filter([30, 50]);
-        //Filter.remove();
-       // Filter.filter(null);
-      // typeFilterDimension.filter([2, 4]);
-      //  var counter = 0;
-      // var c = (d3.selectAll(".chart").select("#date-chart"));
-      //  console.log(c);
-      //       d3.selectAll(".chart").select("#date-chart").f
-      // d3.selectAll(".signal-list")
-       // console.log(charts);
-      //  var dim = selected.dimension(function(d){return d.TCODE;  });
-    //    console.log(dim.top(10));
-        //dim.filterFunction(function (d) {return d.TCODE == currentTimeIndex; });
+       // console.log(selected);
+       // console.log(SignalData[0].TCODE);
+       //var filteredTimeIndex = SignalData[0].tcode;
+        CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
 
         //Signal data is an array of the current time slice that we are observing.
         for (i = 0; i < SignalData.length; i++) {
             //Loop through this time slice
             Signal = SignalData[i];
             id = parseInt(Signal.TXID);
-              /*      each(function(data,i){
-                    console.log(data);
-                });*/
-                    //.filter([0, parseInt(Signal.Time)]);
-
 
             //If this Signal Object does NOT exist:
             if (SignalDictionary[id] == null) {
                 //Convert it to an object
-                var currentPoint = ConvertSignalToCircle(Signal);//, Floors[0]);
+                var currentPoint = ConvertSignalToCircle(Signal);
                 //Flag its active state
                 currentPoint.userData.active = true;
                 //Keep track of the time it was last updated.
