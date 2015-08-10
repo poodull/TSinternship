@@ -65,10 +65,10 @@ function init() {
     scene.fog = new THREE.FogExp2(0x9999ff, 0);
     // without a Skybox or Fog effect of these, the scene's background color is determined by web page background
     // make sure the camera's "far" value is large enough so that it will render the skyBox!
-   /* var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100);//20000, 20000 );
-    var skyBoxMaterial = new THREE.MeshBasicMaterial({color: 0x9999ff, side: THREE.BackSide});
-    var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
-    scene.add(skyBox);*/
+    /* var skyBoxGeometry = new THREE.SphereGeometry(20000, 100, 100);//20000, 20000 );
+     var skyBoxMaterial = new THREE.MeshBasicMaterial({color: 0x9999ff, side: THREE.BackSide});
+     var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
+     scene.add(skyBox);*/
 
     document.addEventListener('mousemove', onDocumentMouseMove, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);
@@ -79,8 +79,8 @@ function init() {
 }
 
 /*function ImportFloorImage(floor_data, floor_id) {
-    return floor_data[floor_id].image;
-}*/
+ return floor_data[floor_id].image;
+ }*/
 
 function CreateFloor(dataset, FloorNumber, FloorDimensions) {
 
@@ -195,19 +195,40 @@ function LoadData() {
 
 }
 //Create the circle
-function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale) {
+function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale, frequency, bandwidth) {
     //Set up a cylinder geometry with args:
+    var signalColor;
+    if (freqToggle) {
+        var freqScale = d3.scale.linear().domain([freqColorMin, freqColorMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+        freqScale
+            .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+                .map(freqScale.invert))
+            .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
+        frequency = (frequency / 100000).toFixed(1);
+        signalColor = freqScale(frequency);
+    }
+    else if (bwToggle) {
+        var bwScale = d3.scale.linear().domain([bwColorMin, bwColorMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+        bwScale
+            .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+                .map(bwScale.invert))
+            .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
+        signalColor = bwScale(bandwidth);
+    }
+    else {
+        signalColor = 0x0000;
+    }
     // (CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded, thetaStart, thetaLength))
     var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32),
         mat_Circle = new THREE.MeshLambertMaterial({
-        color: ColorScale(getRandomInt(0, 100)), //Set this color using a d3 scale depending on arg
-        transparent: true,
-        opacity: 1,
-        side: THREE.DoubleSide,
-        frustumCulled: false,
-        depthWrite: false, //Prevents z-fighting
-        depthTest: false
-    });
+            color: signalColor, //Set this color using a d3 scale depending on arg
+            transparent: true,
+            opacity: 1,
+            side: THREE.DoubleSide,
+            frustumCulled: false,
+            depthWrite: false, //Prevents z-fighting
+            depthTest: false
+        });
     //Combine the mesh and material
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
     //Set the position based on input
@@ -216,9 +237,13 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, ColorScale) {
     Circle.position.z = pos_z;
     //Builtin vars to help with tweening.
     //ID: TxID, active: if we are in a tween state, animations: current animation
-    Circle.userData = {id: id, active: false, animations: [],lastUpdated: 0,x:0,z:0};
+    Circle.userData = {
+        id: id, active: false, animations: [],
+        lastUpdated: 0, viewable: false, freq: (frequency/100000).toFixed(1), bw: bandwidth
+    };
     //Draw the circle to the scene.
     scene.add(Circle);
+    Points.push(Circle);
     return Circle;
 }
 //Parse the signal data
@@ -226,10 +251,15 @@ function ConvertSignalToCircle(SignalPoint) {
     var pos_x = parseInt(SignalPoint.X);
     var pos_y = parseInt(SignalPoint.Y);
     var id = parseInt(SignalPoint.TXID);
+    var frequency = parseInt(SignalPoint.FREQ);
+    var bandwidth = parseInt(SignalPoint.BW);
+
+    //size scale uses d3 to calculate the min and max found in the csv and outputs a size for the radius.
+    var sizeScale = d3.scale.linear().domain([minSize, maxSize]).range([30, 60]);
+    var radius = sizeScale(SignalPoint.AMP);
     var pos_z = parseInt(SignalPoint.Z);
-    var ColorScale = d3.scale.linear().domain([0, 100]); //Dependent on domain, output the according color <--may need to be constantly updated.
-    ColorScale.domain([0, 0.5, 1].map(ColorScale.invert));
-    ColorScale.range(["green", "yellow", "red"]);
+    var colorScale = d3.scale.linear().domain([0, 100]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    colorScale.domain([0, 0.5, 1].map(colorScale.invert)).range(["green", "yellow", "red"]);
     //Generate circle using signal data.
-    return GenerateCircle(pos_x, pos_z, pos_y , 40, id, ColorScale);
+    return GenerateCircle(pos_x, pos_z + 1, pos_y, radius, id, colorScale, frequency, bandwidth);
 }

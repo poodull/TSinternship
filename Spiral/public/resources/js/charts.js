@@ -2,6 +2,10 @@
  * Created by Tommy Fang
  */
 var charts;
+var maxSize, minSize;
+var freqToggle = false, bwToggle = false;
+var freqColorMax, freqColorMin; //frequency color ranges
+var bwColorMax, bwColorMin; //bandwidth color ranges
 function FilterCharts(signals) {
     // Various formatters.
     var formatNumber = d3.format(",d"),
@@ -44,77 +48,79 @@ function FilterCharts(signals) {
         }),
     //frequencies = frequency.group(Math.floor),
         frequencies = frequency.group(function (d) {
-            return Math.floor(d);// 5) * 5;
+            return Math.floor(d / 10) * 10;// 5) * 5;
         }),
         bandwidth = signal.dimension(function (d) {
             return d.bw;
         }),
         bandwidths = bandwidth.group(function (d) {
-            return Math.floor(d);// 5) * 5;
+            return Math.floor(d / 1000) * 1000;// 5) * 5;
         }),
         amplitude = signal.dimension(function (d) {
             return d.amp;
         }),
         amplitudes = amplitude.group(function (d) {
-            return Math.floor(d / 50) * 50;
+            return Math.floor(d / 10) * 10;
+        }),
+        ampMax = d3.max(signals, function (d) {
+            return d.amp;
+        }),
+        ampMin = d3.min(signals, function (d) {
+            return d.amp;
+        }),
+        freqMax = d3.max(signals, function (d) {
+            return d.freq;
+        }),
+        freqMin = d3.min(signals, function (d) {
+            return d.freq;
+        }),
+        bwMax = d3.max(signals, function (d) {
+            return d.bw;
+        }),
+        bwMin = d3.min(signals, function (d) {
+            return d.bw;
+        }),
+        tcMax = d3.max(signals, function (d) {
+            return d.tcode;
+        }),
+        tcMin = d3.min(signals, function (d) {
+            return d.tcode;
         });
-    var ampMax = d3.max(signals, function (d) {
-        return d.amp;
-    });
-    var ampMin = d3.min(signals, function (d) {
-        return d.amp;
-    });
-    var freqMax = d3.max(signals, function (d) {
-        return d.freq;
-    });
-    var freqMin = d3.min(signals, function (d) {
-        return d.freq;
-    });
-    var bwMax = d3.max(signals, function (d) {
-        return d.bw;
-    });
-    var bwMin = d3.min(signals, function (d) {
-        return d.bw;
-    });
-    var tcMax = d3.max(signals, function (d) {
-        return d.tcode;
-    });
-    var tcMin = d3.min(signals, function (d) {
-        return d.tcode;
-    });
-    //Increase the range because the values at the end are
-    freqMax += 200;
-    bwMax += 2000;
-    tcMax += 10;
+    //Increase the range because the values at the end are buggy.
+    maxSize = ampMax;
+    minSize = ampMin;
+    freqColorMin = freqMin;
+    freqColorMax = freqMax;
+    bwColorMax = bwMax;
+    bwColorMin = bwMin;
+
     charts = [
         barChart()
             .dimension(frequency)
             .group(frequencies)
             .x(d3.scale.linear()
-                .domain([freqMin, freqMax])
+                .domain([freqMin, freqMax + 200])
                 .rangeRound([0, 2 * 130])),
-        // .ticks(5),
-        //.map(x.tickFormat(5, "+%")),
 
         barChart()
             .dimension(bandwidth)
             .group(bandwidths)
             .x(d3.scale.linear()
-                .domain([bwMin, bwMax])
+                .domain([bwMin - 1000, bwMax + 2000])
                 .rangeRound([0, 10 * 30])),
 
         barChart()
             .dimension(amplitude)
             .group(amplitudes)
             .x(d3.scale.linear()
-                .domain([ampMin, ampMax])
-                .rangeRound([0, 10 * 25])),
+                .domain([ampMin - 10, ampMax + 17])
+                .rangeRound([0, 115])),
 
         barChart()
             .dimension(timecode)
             .group(timecodes)
             .x(d3.scale.linear()
-                .domain([tcMin, tcMax])
+                .domain([tcMin, tcMax + 10])
                 .rangeRound([0, 100 * 8]))
             .filter(null)
 
@@ -132,7 +138,7 @@ function FilterCharts(signals) {
     this.updateFilter = function (min, max) {
         //charts[3] is the time chart
         charts[3].filter([min, max]);
-       // console.log(d3.selectAll(".chart").select("#tcode-chart").data(d));
+        // console.log(d3.selectAll(".chart").select("#tcode-chart").data(d));
         renderAll();
     };
 
@@ -140,14 +146,14 @@ function FilterCharts(signals) {
     // .chart elements in the DOM, bind the charts to the DOM and render them.
     // We also listen to the chart's brush events to update the display.
     var chart = d3.selectAll(".chart")
-        .data(charts)
-        .each(function (chart) {
-            chart.on("brush", renderAll).on("brushend", renderAll);
-        });
+            .data(charts)
+            .each(function (chart) {
+                chart.on("brush", renderAll).on("brushend", renderAll);
+            }),
 
     // Render the initial lists.
-    var list = d3.selectAll(".list")
-        .data([signalList]);
+        list = d3.selectAll(".list")
+            .data([signalList]);
     // Render the total.
     d3.selectAll("#total")
         .text(formatNumber(signal.size()));
@@ -183,14 +189,50 @@ function FilterCharts(signals) {
         });
         renderAll();
     };
-
+    window.toggleColor = function () {
+        var color;
+        //Should probably separate these two.
+        if (!freqToggle) {
+            var SignalFreq;
+            var freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+            freqScale
+                .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+                    .map(freqScale.invert))
+                .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
+            for (var id in SignalDictionary) {
+                SignalFreq = ((SignalDictionary[id].userData.freq));
+                console.log(SignalFreq);
+                color = new THREE.Color(freqScale(SignalFreq));
+                console.log(color);
+                SignalDictionary[id].material.color = color;
+            }
+            bwToggle = false;
+            freqToggle = true;
+        }
+        else if (!bwToggle) {
+            var bandwidth;
+            var bwScale = d3.scale.linear().domain([bwMin, bwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+            bwScale
+                .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+                    .map(bwScale.invert))
+                .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
+            for (var id in SignalDictionary) {
+                bandwidth = ((SignalDictionary[id].userData.bw));
+                color = new THREE.Color(bwScale(bandwidth));
+                console.log(color);
+                SignalDictionary[id].material.color = color;
+            }
+            bwToggle = true;
+            freqToggle = false;
+        }
+    };
     window.reset = function (i) {
         charts[i].filter(null);
         renderAll();
     };
 
     function signalList(div) {
-        var signalsByDate = nestByDate.entries(timecode.bottom(50));
+        var signalsByDate = nestByDate.entries(timecode.bottom(20));
         if (signalsByDate != null) {
             selected = nestByDate.entries(timecode.bottom(Infinity));
         }
@@ -199,8 +241,6 @@ function FilterCharts(signals) {
                 .data(signalsByDate, function (d) {
                     return d.key;
                 });
-
-
             date.enter().append("div")
                 .attr("class", "date")
                 .append("div")
@@ -217,6 +257,7 @@ function FilterCharts(signals) {
                 }, function (d) {
                     return d.index;
                 });
+
 
             var signalEnter = signal.enter().append("div")
                 .attr("class", "signal");
@@ -258,6 +299,10 @@ function FilterCharts(signals) {
                 .text(function (d) {
                     return d.tcode;
                 });
+            signal.on("click", function (d) {
+                console.log("testing");
+                d3.select(this).style("background", "magenta");
+            });
             signal.exit().remove();
 
             signal.order();
@@ -290,23 +335,27 @@ function FilterCharts(signals) {
 
                 // Create the skeletal chart.
                 if (g.empty()) {
-                    div.select(".title").append("a")
+                    div.select(".title")
+                        .append("a")
                         .attr("href", "javascript:reset(" + id + ")")
                         .attr("class", "reset")
                         .text("reset")
                         .style("display", "none");
 
+
                     g = div.append("svg")
                         .attr("width", width + margin.left + margin.right)
                         .attr("height", height + margin.top + margin.bottom)
+                        .attr("fill", "green")
                         .append("g")
                         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                     g.append("clipPath")
                         .attr("id", "clip-" + id)
                         .append("rect")
-                        .attr("width", width)
-                        .attr("height", height);
+                        .attr("width", Math.abs(width))
+                        .attr("height", Math.abs(height));
+
 
                     g.selectAll(".bar")
                         .data(["background", "foreground"])
@@ -314,6 +363,8 @@ function FilterCharts(signals) {
                         .attr("class", function (d) {
                             return d + " bar";
                         })
+
+
                         .datum(group.all());
 
                     g.selectAll(".foreground.bar")
@@ -338,12 +389,13 @@ function FilterCharts(signals) {
                     if (brush.empty()) {
                         g.selectAll("#clip-" + id + " rect")
                             .attr("x", 0)
-                            .attr("width", width);
+                            .attr("width", Math.abs(width));
                     } else {
                         var extent = brush.extent();
                         g.selectAll("#clip-" + id + " rect")
                             .attr("x", x(extent[0]))
                             .attr("width", x(extent[1]) - x(extent[0]));
+
                     }
                 }
 

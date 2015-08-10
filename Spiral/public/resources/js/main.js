@@ -11,30 +11,38 @@ var Loading = true;
 var SignalDictionary = {};
 var RawSignalData;
 var selected = [];
+var Points = [];
 $(document).ready(function () {
     // initialization
     init();
     // animation loop
     animate();
 });
-
+function checkSignals(){
+    Points = [];
+    for (var key in SignalDictionary) {
+        Points.push(SignalDictionary[key]);
+    }
+}
 //Pumps signal data to the animation handler.
 function DataPump(SignalData) {
     if (!Loading) {
-        //console.log(currentTimeIndex);
         //necessary local variables
         var Signal, id, i;
-       // console.log(selected);
-       // console.log(SignalData[0].TCODE);
-       //var filteredTimeIndex = SignalData[0].tcode;
+      //  checkSignals();
         CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
+      //  console.log(selected[0].values);
+        //console.log(SignalData[0].TCODE);
+        //TODO: do something when selected length is 0
+
+        //current works as intended.
+        var currentFilter = selected[0].values;//SignalData.length
 
         //Signal data is an array of the current time slice that we are observing.
-        for (i = 0; i < SignalData.length; i++) {
+        for (i = 0; i < currentFilter.length; i++) {
             //Loop through this time slice
-            Signal = SignalData[i];
+            Signal = currentFilter[i];
             id = parseInt(Signal.TXID);
-
             //If this Signal Object does NOT exist:
             if (SignalDictionary[id] == null) {
                 //Convert it to an object
@@ -75,6 +83,7 @@ function DataPump(SignalData) {
                 SignalDictionary[id].position.x = newX;
                 SignalDictionary[id].position.z = newZ;
 
+
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
                 //                 else --> move --> dwell --> fade
                 // If the object receives an update in between these stages, it will either go back to pop or move.
@@ -98,7 +107,6 @@ function update() {
 
 function render() {
     TWEEN.update();
-
     var left   = Math.floor( window.innerWidth  * 0.15 );
     var bottom = 0;
     var width  = Math.floor( window.innerWidth );

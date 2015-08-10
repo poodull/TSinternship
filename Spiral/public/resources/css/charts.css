@@ -5,7 +5,6 @@ body {
     font-family: "Helvetica Neue";
     width: 100%;
     min-height: 100%;
-    z-index: -1;
 }
 
 #body {
@@ -183,7 +182,7 @@ h1, h2 {
 }
 
 #signal-list  .signal div.AMPLITUDE {
-    width:25px;
+    width:70px;
 }
 #signal-list  .signal div.BANDWIDTH {
     width:55px;

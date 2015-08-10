@@ -3,8 +3,26 @@
  */
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
     INTERSECTED;
-var raycaster = new THREE.Raycaster();
+var raycaster = new THREE.Raycaster(), Playing = true;
 //Events(Keypresses and Mouse functions)
+function FindIntersects() {
+    raycaster.setFromCamera(mouse, camera);
+    checkSignals();
+   // scene.updateMatrixWorld();
+    //TODO: figure out how to select object while tweening
+    //The raycaster is unable to remember the current position of the object because
+    //it is always moving.
+    //The intersects are the points we are checking if the mouse  hovers over.
+    var intersects = raycaster.intersectObjects(Points);
+
+    //If there are points to check, then we can animate them.
+    if (intersects.length > 0) {
+        intersects[ 0 ].object.material.color.setHex( Math.random() * 0xffffff );
+        console.log(intersects[0].object.position);
+    }
+}
+
+
 function onDocumentTouchStart(event) {
     event.preventDefault();
     event.clientX = event.touches[0].clientX;
@@ -15,6 +33,8 @@ function onDocumentMouseDown(event) {
     event.preventDefault();
     mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
     mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
+    FindIntersects();
+
 }
 function onDocumentMouseMove(event) {
     //event.preventDefault();
@@ -34,8 +54,10 @@ function getCurrentSelected() {
 function OnKeyDown(event) {
     switch (event.keyCode) {
         case 46: // 'DELETE' Key, Toggle delete selected point
+            Playing = !Playing;
             break;
         case 45: //'INSERT' Key, add one single point
+            FilteredTCodeArray([selected[0].values]);
             break;
         case 35:
             // RemovePoints(); //Remove point when clicked!
@@ -43,24 +65,18 @@ function OnKeyDown(event) {
         case 76: //'l'
             event.preventDefault();
             if (!Loading) {
-                // var OrderedTimeSignals = TCodeArrayHelper(RawSignalData);
-                // getCurrentSelected();
-                //On apply filter:
-                //window.clearInterval(intervalId);
-                //remove all tweens
-                //get new selection
-                //play interval
-                getCurrentSelected();
+                if (Playing) {
                     var OrderedTimeSignals = TCodeArrayHelper(selected[0].values); //current selection of points
 
-                    setInterval(function () {
-
+                    window.setInterval(function () {
                         DataPump(OrderedTimeSignals[currentTimeIndex]);
+                        // console.log(OrderedTimeSignals[currentTimeIndex]);
                         currentTimeIndex++;
                         if (currentTimeIndex >= totalTimeCodes) {
                             currentTimeIndex = 0;
                         }
                     }, 1250);
+                }
 
             }
             break;
