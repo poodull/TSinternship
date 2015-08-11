@@ -69,20 +69,18 @@ function DataPump(SignalData) {
                 //As of 7/31/2015, SignalData gives us a pixel position(x,y)
 
                 //We will have to adjust to that.
-                //console.log("current: " + currentX + "," + currentZ);
-              //  console.log("before new values:" + newX + "," + newZ);
+                console.log("current: " + currentX + "," + currentZ);
+                console.log("before new values:" + newX + "," + newZ);
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations.anim.stop();
 
-                newX = (Signal.X - currentX);
-                newZ = (Signal.Y - currentZ);
-                //console.log("after new values:" + "x: " + newX + ", z: " + newZ);
+               // newX = (Signal.X - currentX);
+               // newZ = (Signal.Y - currentZ);
+                newX *= 8;
+                newZ *= 8;
 
                 //Set the current animation to move.
                 SignalDictionary[id].userData.animations.anim = Animator.Move(SignalDictionary[id], newX, newZ).start();
-                SignalDictionary[id].position.x = newX;
-                SignalDictionary[id].position.z = newZ;
-
 
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
                 //                 else --> move --> dwell --> fade

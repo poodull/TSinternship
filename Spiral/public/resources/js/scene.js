@@ -99,6 +99,7 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     //Create the geometry of the floor/mesh and adjust using the floor properties given in the CSV file.
         FloorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1), FloorMesh = new THREE.Mesh(FloorGeometry, FloorMaterial);
     FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+   // console.log(FloorMesh);
     //Set the floor that acts as a basis for all floors.
     var BaseFloor = dataset[0],
     //Set the position
@@ -128,7 +129,7 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     origin.position.x = BaseOrigin_X;
     origin.position.y = FloorMesh.position.y;
     origin.position.z = BaseOrigin_Y;
-    /*    var CurrentFloorDimensions = [];
+    var CurrentFloorDimensions = [];
 
      FloorGeometry.computeBoundingBox();
      //We will need this floor data later when we confine the position of signals to the bounding box of the floor.
@@ -141,7 +142,8 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
      CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y;//+ Origin_Y + BaseOrigin_Y;
      CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
      CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;//+ Origin_Y + BaseOrigin_Y;
-     FloorDimensions.push(CurrentFloorDimensions);*/
+     FloorDimensions.push(CurrentFloorDimensions);
+    console.log(CurrentFloorDimensions);
     Floors.push(FloorMesh);
     // console.log(FloorDimensions);
     /*  //After drawing the floors, ask for how many circles to draw.
@@ -220,8 +222,8 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth) {
 }
 //Parse the signal data
 function ConvertSignalToCircle(SignalPoint) {
-    var pos_x = parseInt(SignalPoint.X) * 8,
-        pos_y = parseInt(SignalPoint.Y) * 8,
+    var pos_x = parseInt(SignalPoint.X),
+        pos_y = parseInt(SignalPoint.Y),
         id = parseInt(SignalPoint.TXID),
         frequency = parseInt(SignalPoint.FREQ),
         bandwidth = parseInt(SignalPoint.BW),

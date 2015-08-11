@@ -34,13 +34,8 @@ function onDocumentTouchStart(event) {
 function onDocumentMouseDown(event) {
     event.preventDefault();
     var offset = $('#ThreeJS').offset();
-    console.log(offset);
-    //console.log(renderer.domElement.width);
-    //console.log(renderer.domElement.height);
     var left =  Math.floor( window.innerWidth  * 0.15 );
-   // console.log(event.clientX +  " - " + offset.left + " = ");
-
-    mouse.x = ((event.clientX - left - offset.left) / renderer.domElement.width ) * 2 - 1;
+    mouse.x = ((event.clientX - left) / renderer.domElement.width ) * 2 - 1;
     mouse.y = -((event.clientY - offset.top) / renderer.domElement.height) * 2 + 1;
     //console.log(mouse.x + " , " + mouse.y);
     FindIntersects();

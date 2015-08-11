@@ -22,8 +22,8 @@ function AnimationHandler() {
         return new TWEEN.Tween(Signal.position)
             .to({
                 //These are relative positions
-                x: pos_x, //Moves Signal's current x value by "+pos_x"
-                z: pos_y, //Moves Signal's current y value by "+pos_y"
+                x: parseInt(pos_x), //Moves Signal's current x value by "+pos_x"
+                z: parseInt(pos_y), //Moves Signal's current y value by "+pos_y"
                 duration: 5
             }, 1000)
             .easing(TWEEN.Easing.Quadratic.Out)
