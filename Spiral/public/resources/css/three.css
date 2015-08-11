@@ -1,5 +1,6 @@
-#Three-JS
+#ThreeJS
 {
     z-index: 1;
-    position: absolute;
+    position: static;
+    padding:0;
 }

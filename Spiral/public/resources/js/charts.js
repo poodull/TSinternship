@@ -2,10 +2,8 @@
  * Created by Tommy Fang
  */
 var charts;
-var maxSize, minSize;
-var freqToggle = false, bwToggle = false;
-var freqColorMax, freqColorMin; //frequency color ranges
-var bwColorMax, bwColorMin; //bandwidth color ranges
+var freqToggle = true, bwToggle = false;
+var freqScale, bwScale, sizeScale;
 function FilterCharts(signals) {
     // Various formatters.
     var formatNumber = d3.format(",d"),
@@ -87,12 +85,18 @@ function FilterCharts(signals) {
             return d.tcode;
         });
     //Increase the range because the values at the end are buggy.
-    maxSize = ampMax;
-    minSize = ampMin;
-    freqColorMin = freqMin;
-    freqColorMax = freqMax;
-    bwColorMax = bwMax;
-    bwColorMin = bwMin;
+
+    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([30, 60]);
+    freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+        .map(freqScale.invert))
+        .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
+
+    bwScale = d3.scale.linear().domain([bwMin, bwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    bwScale
+        .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+            .map(bwScale.invert))
+        .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
 
     charts = [
         barChart()
@@ -189,41 +193,32 @@ function FilterCharts(signals) {
         });
         renderAll();
     };
-    window.toggleColor = function () {
-        var color;
-        //Should probably separate these two.
-        if (!freqToggle) {
-            var SignalFreq;
-            var freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
-            freqScale
-                .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
-                    .map(freqScale.invert))
-                .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
+    window.toggleFrequency = function () {
+        if (!freqToggle && SignalDictionary.length != 0) {
+            var SignalFreq, color;
             for (var id in SignalDictionary) {
-                SignalFreq = ((SignalDictionary[id].userData.freq));
-                console.log(SignalFreq);
-                color = new THREE.Color(freqScale(SignalFreq));
-                console.log(color);
-                SignalDictionary[id].material.color = color;
+                if (SignalDictionary.hasOwnProperty(id)) {
+                    SignalFreq = ((SignalDictionary[id].userData.freq));
+                    color = new THREE.Color(freqScale(SignalFreq));
+                    SignalDictionary[id].material.color = color;
+                }
             }
             bwToggle = false;
             freqToggle = true;
         }
-        else if (!bwToggle) {
-            var bandwidth;
-            var bwScale = d3.scale.linear().domain([bwMin, bwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
-            bwScale
-                .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
-                    .map(bwScale.invert))
-                .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
-            for (var id in SignalDictionary) {
-                bandwidth = ((SignalDictionary[id].userData.bw));
-                color = new THREE.Color(bwScale(bandwidth));
-                console.log(color);
-                SignalDictionary[id].material.color = color;
-            }
+    };
+    window.toggleBandwidth = function () {
+        if (!bwToggle && SignalDictionary.length != 0) {
             bwToggle = true;
             freqToggle = false;
+            var bandwidth, color;
+            for (var id in SignalDictionary) {
+                if (SignalDictionary.hasOwnProperty(id)) {
+                    bandwidth = ((SignalDictionary[id].userData.bw));
+                    color = new THREE.Color(bwScale(bandwidth));
+                    SignalDictionary[id].material.color = color;
+                }
+            }
         }
     };
     window.reset = function (i) {
@@ -300,8 +295,27 @@ function FilterCharts(signals) {
                     return d.tcode;
                 });
             signal.on("click", function (d) {
-                console.log("testing");
-                d3.select(this).style("background", "magenta");
+                SignalDictionary[d.txid].userData.selected = !SignalDictionary[d.txid].userData.selected;
+                if (SignalDictionary[d.txid].userData.selected) {
+                    d3.select(this).style("background", "magenta");
+                }
+                else {
+                    d3.select(this).style("background", "black");
+                }
+            });
+            signal.each(function (d) {
+                if (SignalDictionary[d.txid] != null) {
+                    if (SignalDictionary[d.txid].userData.selected) {
+                        d3.select(this).style("background", "magenta");
+                        if (SignalDictionary[d.txid].material.opacity != 0.8)
+                            SignalDictionary[d.txid].material.opacity = 0.8;
+                    }
+                    else {
+                        if (SignalDictionary[d.txid].material.opacity != 0.2) {
+                            SignalDictionary[d.txid].material.opacity = 0.2;
+                        }
+                    }
+                }
             });
             signal.exit().remove();
 

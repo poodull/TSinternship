@@ -1,17 +1,36 @@
-<!DOCTYPE html>
-<!--THIS PAGE IS FOR TESTING INDIVIDUAL FUNCTIONS-->
-<meta charset="utf-8">
+<!doctype html>
 <html>
-<title>Crossfilter</title>
-<link rel = "stylesheet" type="text/css" href = "resources/css/charts.css">
+<head>
+    <title>Proof of Concept</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<link rel="stylesheet" type="text/css" href="resources/css/charts.css">
+<link rel="stylesheet" type="text/css" href="resources/css/three.css">
+<script src="vendors/jquery.min.js"></script>
+<script src="vendors/three.js"></script>
+<script src="vendors/Detector.js"></script>
+<script src="vendors/stats.js"></script>
+<script src="vendors/OrbitControls.js"></script>
+<script src="vendors/tween.js"></script>
 <script src="vendors/d3.js"></script>
-<script src ="resources/js/charts.js"></script>
+<script src="resources/js/config.js"></script>
+<script src="resources/js/scene.js"></script>
+<script src="resources/js/controller.js"></script>
+<script src="resources/js/animations.js"></script>
+<script src="resources/js/charts.js"></script>
 <script src="vendors/crossfilter.js"></script>
 
-<body>
-<div>
-    <div>
-        </div>
+<div id="signal-list" class="list">
+    <div class="label">Time TXID Freq. BW Amp. #Devices TCode</div>
 </div>
-</body>
+
+
+<div id="ThreeJS">
+</div>
+<script src="resources/js/main.js"></script>
+<div id="date-chart" class="chart">
+    <div class="title">Date</div>
+</div>
+
 </html>

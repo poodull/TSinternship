@@ -13,7 +13,6 @@ function LoadCSV(dataset, callback) {
         //CSV ARRAY CONTAINS AN ARRAY OF ALL NECESSARY CSV FILES
         success: function (CSV_ARRAY) {
             //alert(data);
-            console.log('success');
             if (dataset != null) {
                 result[0] = CSV_ARRAY[0];
                 result[1] = CSV_ARRAY[1];

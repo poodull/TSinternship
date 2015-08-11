@@ -7,6 +7,7 @@ var raycaster = new THREE.Raycaster(), Playing = true;
 //Events(Keypresses and Mouse functions)
 function FindIntersects() {
     raycaster.setFromCamera(mouse, camera);
+   // console.log(mouse);
     checkSignals();
    // scene.updateMatrixWorld();
     //TODO: figure out how to select object while tweening
@@ -17,7 +18,8 @@ function FindIntersects() {
 
     //If there are points to check, then we can animate them.
     if (intersects.length > 0) {
-        intersects[ 0 ].object.material.color.setHex( Math.random() * 0xffffff );
+        //intersects[ 0 ].object.material.color.setHex( Math.random() * 0xffffff );
+        intersects[ 0 ].object.userData.selected = !intersects[ 0 ].object.userData.selected;
         console.log(intersects[0].object.position);
     }
 }
@@ -31,15 +33,25 @@ function onDocumentTouchStart(event) {
 }
 function onDocumentMouseDown(event) {
     event.preventDefault();
-    mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
-    mouse.y = -( event.clientY / renderer.domElement.height ) * 2 + 1;
+    var offset = $('#ThreeJS').offset();
+    console.log(offset);
+    //console.log(renderer.domElement.width);
+    //console.log(renderer.domElement.height);
+    var left =  Math.floor( window.innerWidth  * 0.15 );
+   // console.log(event.clientX +  " - " + offset.left + " = ");
+
+    mouse.x = ((event.clientX - left - offset.left) / renderer.domElement.width ) * 2 - 1;
+    mouse.y = -((event.clientY - offset.top) / renderer.domElement.height) * 2 + 1;
+    //console.log(mouse.x + " , " + mouse.y);
     FindIntersects();
 
 }
 function onDocumentMouseMove(event) {
-    //event.preventDefault();
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+    event.preventDefault();
+    var offset = $('#ThreeJS').offset();
+
+    mouse.x = ( (event.clientX - offset.left ) / renderer.domElement.width ) * 2 - 1;
+    mouse.y = -( (event.clientY - offset.top ) / renderer.domElement.height ) * 2 + 1;
 }
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
