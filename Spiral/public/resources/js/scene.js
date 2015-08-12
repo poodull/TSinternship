@@ -143,9 +143,7 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
      CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
      CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;//+ Origin_Y + BaseOrigin_Y;
      FloorDimensions.push(CurrentFloorDimensions);
-    console.log(CurrentFloorDimensions);
     Floors.push(FloorMesh);
-    // console.log(FloorDimensions);
     /*  //After drawing the floors, ask for how many circles to draw.
      var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
      //Config.js function sends us circle data and we draw them depending on the boundaries of floor.
@@ -172,7 +170,7 @@ function LoadData() {
         FloorData = result[0];
         RawSignalData = result[1];
         if (Loading) {
-            LoadFloors(FloorData, 1);
+            LoadFloors(FloorData, 5);
             CrossFilter = new FilterCharts(result[1]);
         }
         Loading = false;
@@ -181,11 +179,13 @@ function LoadData() {
 
 }
 //Create the circle
-function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth) {
+function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, tlw) {
     //Set up a cylinder geometry with args:
     var signalColor;
     frequency = (frequency / 100000).toFixed(1);
-
+    if (tlwToggle){
+        signalColor = tlwScale(tlw)
+    }
     if (freqToggle) {
         signalColor = freqScale(frequency);
     }
@@ -206,14 +206,14 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth) {
     //Combine the mesh and material
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
     //Set the position based on input
-    Circle.position.x = pos_x;
+    Circle.position.x = pos_x*8;
     Circle.position.y = pos_y;
-    Circle.position.z = pos_z;
+    Circle.position.z = pos_z*8;
     //Builtin vars to help with tweening.
     //ID: TxID, active: if we are in a tween state, animations: current animation
     Circle.userData = {
         id: id, active: false, animations: [], selected: false,
-        lastUpdated: 0, viewable: false, freq: frequency, bw: bandwidth
+        lastUpdated: 0, viewable: false, freq: frequency, bw: bandwidth, TLW: tlw
     };
     //Draw the circle to the scene.
     scene.add(Circle);
@@ -227,9 +227,10 @@ function ConvertSignalToCircle(SignalPoint) {
         id = parseInt(SignalPoint.TXID),
         frequency = parseInt(SignalPoint.FREQ),
         bandwidth = parseInt(SignalPoint.BW),
+        tlw = parseInt(SignalPoint.TLW),
     //size scale uses d3 to calculate the min and max found in the csv and outputs a size for the radius.
         radius = sizeScale(SignalPoint.AMP),
         pos_z = parseInt(SignalPoint.Z);
     //Generate circle using signal data.
-    return GenerateCircle(pos_x, pos_z, pos_y, radius, id, frequency, bandwidth);
+    return GenerateCircle(pos_x, pos_z, pos_y, radius, id, frequency, bandwidth, tlw);
 }

@@ -1,6 +1,3 @@
-/**
- * Created by tfang on 7/24/2015.
- */
 (function() {
     var lastTime = 0;
     var vendors = ['ms', 'moz', 'webkit', 'o'];

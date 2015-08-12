@@ -2,8 +2,8 @@
  * Created by Tommy Fang
  */
 var charts;
-var freqToggle = true, bwToggle = false;
-var freqScale, bwScale, sizeScale;
+var freqToggle = false, bwToggle = false, tlwToggle = true;
+var freqScale, bwScale, sizeScale, tlwScale;
 function FilterCharts(signals) {
     // Various formatters.
     var formatNumber = d3.format(",d"),
@@ -26,6 +26,7 @@ function FilterCharts(signals) {
         d.tcode = +d.TCODE;
         d.txid = +d.TXID;
         d.devcnt = +d.DEVCNT;
+        d.tlw = +(d.TLW);
     });
 
     // Create the crossfilter for the relevant dimensions and groups.
@@ -60,6 +61,12 @@ function FilterCharts(signals) {
         amplitudes = amplitude.group(function (d) {
             return Math.floor(d / 10) * 10;
         }),
+        TLW = signal.dimension(function (d) {
+            return d.tlw;
+        }),
+        TLWs = TLW.group(function (d) {
+            return Math.floor(d / 2) * 2;
+        }),
         ampMax = d3.max(signals, function (d) {
             return d.amp;
         }),
@@ -83,9 +90,14 @@ function FilterCharts(signals) {
         }),
         tcMin = d3.min(signals, function (d) {
             return d.tcode;
+        }),
+        tlwMax = d3.max(signals, function (d) {
+            return d.tlw;
+        }),
+        tlwMin = d3.min(signals, function (d) {
+            return d.tlw;
         });
     //Increase the range because the values at the end are buggy.
-
     sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([30, 60]);
     freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
     freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
@@ -93,11 +105,13 @@ function FilterCharts(signals) {
         .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
 
     bwScale = d3.scale.linear().domain([bwMin, bwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
-    bwScale
-        .domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
-            .map(bwScale.invert))
+    bwScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+        .map(bwScale.invert))
         .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
-
+    tlwScale = d3.scale.linear().domain([tlwMin, tlwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    tlwScale.domain([0, 0.3, 0.6, 0.9]
+        .map(tlwScale.invert))
+        .range(["green", "orangered", "orange", "red"]);
     charts = [
         barChart()
             .dimension(frequency)
@@ -105,7 +119,6 @@ function FilterCharts(signals) {
             .x(d3.scale.linear()
                 .domain([freqMin, freqMax + 200])
                 .rangeRound([0, 2 * 130])),
-
         barChart()
             .dimension(bandwidth)
             .group(bandwidths)
@@ -119,7 +132,12 @@ function FilterCharts(signals) {
             .x(d3.scale.linear()
                 .domain([ampMin - 10, ampMax + 17])
                 .rangeRound([0, 115])),
-
+        barChart()
+            .dimension(TLW)
+            .group(TLWs)
+            .x(d3.scale.linear()
+                .domain([tlwMin - 1, tlwMax + 1])
+                .rangeRound([0, 10 * 12])),
         barChart()
             .dimension(timecode)
             .group(timecodes)
@@ -127,6 +145,7 @@ function FilterCharts(signals) {
                 .domain([tcMin, tcMax + 10])
                 .rangeRound([0, 100 * 8]))
             .filter(null)
+
 
         /*      barChart()
          .dimension(date)
@@ -141,7 +160,7 @@ function FilterCharts(signals) {
     ];
     this.updateFilter = function (min, max) {
         //charts[3] is the time chart
-        charts[3].filter([min, max]);
+        charts[4].filter([min, max]);
         // console.log(d3.selectAll(".chart").select("#tcode-chart").data(d));
         renderAll();
     };
@@ -194,7 +213,11 @@ function FilterCharts(signals) {
         renderAll();
     };
     window.toggleFrequency = function () {
-        if (!freqToggle && SignalDictionary.length != 0) {
+        tlwToggle = false;
+        bwToggle = false;
+        freqToggle = true;
+        if (freqToggle && SignalDictionary.length != 0) {
+
             var SignalFreq, color;
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
@@ -203,19 +226,33 @@ function FilterCharts(signals) {
                     SignalDictionary[id].material.color = color;
                 }
             }
-            bwToggle = false;
-            freqToggle = true;
         }
     };
     window.toggleBandwidth = function () {
-        if (!bwToggle && SignalDictionary.length != 0) {
-            bwToggle = true;
-            freqToggle = false;
+        bwToggle = true;
+        freqToggle = false;
+        tlwToggle = false;
+        if (bwToggle && SignalDictionary.length != 0) {
             var bandwidth, color;
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
                     bandwidth = ((SignalDictionary[id].userData.bw));
                     color = new THREE.Color(bwScale(bandwidth));
+                    SignalDictionary[id].material.color = color;
+                }
+            }
+        }
+    };
+    window.toggleTLW = function () {
+        tlwToggle = true;
+        bwToggle = false;
+        freqToggle = false;
+        if (tlwToggle && SignalDictionary.length != 0) {
+            var tlw, color;
+            for (var id in SignalDictionary) {
+                if (SignalDictionary.hasOwnProperty(id)) {
+                    tlw = ((SignalDictionary[id].userData.TLW));
+                    color = new THREE.Color(tlwScale(tlw));
                     SignalDictionary[id].material.color = color;
                 }
             }
@@ -290,6 +327,11 @@ function FilterCharts(signals) {
                     return d.devcnt;
                 });
             signalEnter.append("div")
+                .attr("class", "TLW")
+                .text(function (d) {
+                    return d.tlw;
+                });
+            signalEnter.append("div")
                 .attr("class", "TCODE")
                 .text(function (d) {
                     return d.tcode;
@@ -303,8 +345,15 @@ function FilterCharts(signals) {
                     d3.select(this).style("background", "black");
                 }
             });
+
+            var color;
             signal.each(function (d) {
                 if (SignalDictionary[d.txid] != null) {
+                    if (tlwToggle) {
+                        TLW = d.tlw;
+                        color = new THREE.Color(tlwScale(TLW));
+                        SignalDictionary[d.txid].material.color = color;
+                    }
                     if (SignalDictionary[d.txid].userData.selected) {
                         d3.select(this).style("background", "magenta");
                         if (SignalDictionary[d.txid].material.opacity != 0.8)
@@ -354,7 +403,7 @@ function FilterCharts(signals) {
                         .attr("href", "javascript:reset(" + id + ")")
                         .attr("class", "reset")
                         .text("reset")
-                        .style("display", "none");
+                     //   .style("display", "none");
 
 
                     g = div.append("svg")
@@ -399,7 +448,7 @@ function FilterCharts(signals) {
                 if (brushDirty) {
                     brushDirty = false;
                     g.selectAll(".brush").call(brush);
-                    div.select(".title a").style("display", brush.empty() ? "none" : null);
+                  //  div.select(".title a").style("display", brush.empty() ? "none" : null);
                     if (brush.empty()) {
                         g.selectAll("#clip-" + id + " rect")
                             .attr("x", 0)
@@ -465,7 +514,7 @@ function FilterCharts(signals) {
         brush.on("brushend.chart", function () {
             if (brush.empty()) {
                 var div = d3.select(this.parentNode.parentNode.parentNode);
-                div.select(".title a").style("display", "none");
+                div.select(".title a").style("display", "null");
                 div.select("#clip-" + id + " rect").attr("x", null).attr("width", "100%");
                 dimension.filterAll();
             }

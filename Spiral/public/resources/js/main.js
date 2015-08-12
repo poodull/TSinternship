@@ -63,21 +63,13 @@ function DataPump(SignalData) {
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
                 //newX,newZ are part of the new signal data that we recieve.
-                var newX = Signal.X, newZ = Signal.Y,
-                    currentX = SignalDictionary[id].position.x, currentZ = SignalDictionary[id].position.z;
+                var newX = Signal.X, newZ = Signal.Y;
                 //Because we are adding the point to the three.js scene. the Y axis is up.
-                //As of 7/31/2015, SignalData gives us a pixel position(x,y)
-
-                //We will have to adjust to that.
-                console.log("current: " + currentX + "," + currentZ);
-                console.log("before new values:" + newX + "," + newZ);
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations.anim.stop();
 
-               // newX = (Signal.X - currentX);
-               // newZ = (Signal.Y - currentZ);
-                newX *= 8;
-                newZ *= 8;
+               newX *= 8;
+               newZ *= 8;
 
                 //Set the current animation to move.
                 SignalDictionary[id].userData.animations.anim = Animator.Move(SignalDictionary[id], newX, newZ).start();
@@ -85,7 +77,6 @@ function DataPump(SignalData) {
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
                 //                 else --> move --> dwell --> fade
                 // If the object receives an update in between these stages, it will either go back to pop or move.
-
             }
         }
     }
@@ -105,7 +96,7 @@ function update() {
 
 function render() {
     TWEEN.update();
-    var left   = Math.floor( window.innerWidth  * 0.15 );
+    var left   = Math.floor( window.innerWidth  * 0.248 );
     var bottom = 0;
     var width  = Math.floor( window.innerWidth );
     var height = Math.floor( window.innerHeight );

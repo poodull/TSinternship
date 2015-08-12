@@ -3,7 +3,7 @@
  */
 var mouse = new THREE.Vector2(), offset = new THREE.Vector3(),
     INTERSECTED;
-var raycaster = new THREE.Raycaster(), Playing = true;
+var raycaster = new THREE.Raycaster(), Playing = false;
 //Events(Keypresses and Mouse functions)
 function FindIntersects() {
     raycaster.setFromCamera(mouse, camera);
@@ -34,7 +34,7 @@ function onDocumentTouchStart(event) {
 function onDocumentMouseDown(event) {
     event.preventDefault();
     var offset = $('#ThreeJS').offset();
-    var left =  Math.floor( window.innerWidth  * 0.15 );
+    var left =  Math.floor( window.innerWidth  * 0.248 );
     mouse.x = ((event.clientX - left) / renderer.domElement.width ) * 2 - 1;
     mouse.y = -((event.clientY - offset.top) / renderer.domElement.height) * 2 + 1;
     //console.log(mouse.x + " , " + mouse.y);
@@ -72,19 +72,20 @@ function OnKeyDown(event) {
         case 76: //'l'
             event.preventDefault();
             if (!Loading) {
-                if (Playing) {
                     var OrderedTimeSignals = TCodeArrayHelper(selected[0].values); //current selection of points
-
-                    window.setInterval(function () {
+                   //Slice is used to play a current selection
+                    var slice = selected[0].values;
+                    var sliceBegin = slice[0].TCODE;
+                    var sliceEnd = slice[slice.length-1].TCODE;
+                    currentTimeIndex = sliceBegin;
+                    var start = window.setInterval(function () {
                         DataPump(OrderedTimeSignals[currentTimeIndex]);
                         // console.log(OrderedTimeSignals[currentTimeIndex]);
                         currentTimeIndex++;
-                        if (currentTimeIndex >= totalTimeCodes) {
-                            currentTimeIndex = 0;
+                        if (currentTimeIndex >= sliceEnd) {
+                            currentTimeIndex = sliceBegin;// 0;
                         }
                     }, 1250);
-                }
-
             }
             break;
     }

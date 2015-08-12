@@ -22,20 +22,22 @@
 <script src="vendors/crossfilter.js"></script>
 
 <body>
-<div id="background" style="background:rgba(0, 0, 0, 0.73);z-index:-1;">
+<div id="background" style="background:rgba(0, 0, 0, 1);z-index:-1;">
     <div class="charts">
         <div id="frequency-chart" class="chart">
             <div class="title">
-                <a href="javascript:toggleFrequency()" class="toggleColor">Frequency</a></div>
+            <a href="javascript:toggleFrequency()" class="toggleColor">Frequency</a></div>
         </div>
         <div id="bandwidth-chart" class="chart">
             <div class="title"> <a href="javascript:toggleBandwidth()" class="toggleColor">Bandwidth</a></div>
-            <!--delay-->
         </div>
         <div id="amplitude-chart" class="chart">
-            <div class="title"> Amplitude </div>
-            <!--distance-->
+            <div class="title"> Amplitude</div>
         </div>
+        <div id="tlw-chart" class="chart">
+            <div class="title"> <a href="javascript:toggleTLW()" class="toggleColor">TLW</a> </div>
+        </div>
+
     </div>
 </div>
 <aside id="totals"><span id="active">-</span> of <span id="total">-</span> signals selected.</aside>
@@ -44,12 +46,12 @@
 <div id="ThreeJS">
 </div>
 <div id="signal-list" class="list">
-    <div class="label">Time TXID Freq. BW Amp. #Devices TCode</div>
+    <div class="label">Time TXID Freq. BW Amp. #Devices TLW TCode</div>
 </div>
 <script src="resources/js/main.js"></script>
+
 <div id="date-chart" class="chart">
     <div class="title">Date</div>
 </div>
-
 </body>
 </html>

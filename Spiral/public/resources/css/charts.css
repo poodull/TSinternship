@@ -69,7 +69,7 @@ h1, h2 {
 
 .axis path, .axis line {
     fill: none;
-    stroke: #000;
+    stroke: yellow;
     shape-rendering: crispEdges;
 }
 
@@ -89,35 +89,51 @@ h1, h2 {
 }
 
 #frequency-chart {
-    width: 30%;
+    width: 9%;
     color:orange;
-    margin-left:60px;
+    margin-left:420px;
     font-weight:bold;
 
 }
 
 #bandwidth-chart {
-    width: 26%;
+    width: 9%;
     color: #ffd752;
     margin-left:60px;
     font-weight:bold;
 }
 
 #amplitude-chart {
-    width: 20%;
+    width: 5%;
     margin-left:100px;
     color:blue;
     font-weight:bold;
 
 }
 
+#tlw-chart {
+    width: 12%;
+    color: red;
+    font-weight:bold;
+}
+
+
+
 #date-chart {
     width: 920px;
 }
-
+#frequency-chart > div > a.toggleColor {
+    color: orange;
+}
+#tlw-chart > div > a.toggleColor {
+    color: red;
+}
+#bandwidth-chart > div > a.toggleColor {
+    color: green;
+}
 #signal-list {
     min-height: 512px;
-    width:22%;
+    width:25%;
     color: green;
     position:absolute;
     top:160px;
@@ -126,6 +142,10 @@ h1, h2 {
 
 
 }
+#signal-list .signal {
+    background: black;
+    margin-bottom: 1px;
+}
 
 #signal-list .label {
     background: black;
@@ -133,25 +153,17 @@ h1, h2 {
 
 }
 
-#signal-list .signal {
-    background: black;
-    margin-bottom: 1px;
-}
-
 #signal-list .time {
     color: #999;
     width:70px;
 }
+
 /*change this to a signal-list id and class*/
 .label
 {
     word-spacing:2pt;
 }
 
-#FREQUENCY
-{
-    width:10px;
-}
 
 #signal-list .TXID-label {
     padding-left: 100px;
@@ -181,6 +193,10 @@ h1, h2 {
     width:35px;
     margin-right:10px;
 }
+#signal-list  .signal div.TLW {
+    width:35px;
+    margin-right:10px;
+}
 
 #signal-list  .signal div.AMPLITUDE {
     width:70px;
@@ -189,13 +205,9 @@ h1, h2 {
     width:55px;
 }
 
-#signal-list .early {
-    color: green;
-}
-
 aside {
     position: absolute;
-    left: 450px;
+    left: 500px;
     font-size: smaller;
     width: 220px;
     color:white;
