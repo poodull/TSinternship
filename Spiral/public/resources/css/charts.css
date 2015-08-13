@@ -1,40 +1,7 @@
-
-@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
-
-body {
-    font-family: "Helvetica Neue";
-    width: 100%;
-    min-height: 100%;
-}
-
 #body {
     position: relative;
 }
 
-footer {
-    padding: 2em 0 1em 0;
-    font-size: 12px;
-}
-
-h1 {
-    font-size: 96px;
-    margin-top: .3em;
-    margin-bottom: 0;
-}
-
-h1 + h2 {
-    margin-top: 0;
-}
-
-h2 {
-    font-weight: 400;
-    font-size: 28px;
-}
-
-h1, h2 {
-    font-family: "Yanone Kaffeesatz";
-    text-rendering: optimizeLegibility;
-}
 
 #body > p {
     line-height: 1.5em;
@@ -44,6 +11,7 @@ h1, h2 {
 
 #charts {
     padding: 10px 0;
+    position: absolute;
 }
 
 .chart {
@@ -64,7 +32,7 @@ h1, h2 {
 }
 
 .foreground.bar {
-    fill: steelblue;
+    fill: green;
 }
 
 .axis path, .axis line {
@@ -91,7 +59,7 @@ h1, h2 {
 #frequency-chart {
     width: 9%;
     color:orange;
-    margin-left:420px;
+    margin-left:0px;
     font-weight:bold;
 
 }
@@ -112,7 +80,7 @@ h1, h2 {
 }
 
 #tlw-chart {
-    width: 12%;
+    width: 8%;
     color: red;
     font-weight:bold;
 }
@@ -121,6 +89,8 @@ h1, h2 {
 
 #date-chart {
     width: 920px;
+    padding-left:0px;
+    color:white;
 }
 #frequency-chart > div > a.toggleColor {
     color: orange;
@@ -136,7 +106,7 @@ h1, h2 {
     width:25%;
     color: green;
     position:absolute;
-    top:160px;
+    top:169px;
     margin: 0;
     z-index:1;
 
@@ -211,4 +181,10 @@ aside {
     font-size: smaller;
     width: 220px;
     color:white;
+}
+#ThreeJS
+{
+    z-index: 1;
+    position: static;
+    padding:0;
 }

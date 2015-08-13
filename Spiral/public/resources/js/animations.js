@@ -24,7 +24,7 @@ function AnimationHandler() {
                 //These are relative positions
                 x: parseInt(pos_x), //Moves Signal's current x value by "+pos_x"
                 z: parseInt(pos_y), //Moves Signal's current y value by "+pos_y"
-                duration: 5
+                duration: .5
             }, 1000)
             .easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(function () {
@@ -44,7 +44,6 @@ function AnimationHandler() {
         };
     //Helper function to cleanly remove inactive signals.
     var DeleteSignal = function (Signal) {
-        Signal.userData.active = false;
         scene.remove(Signal);
         delete SignalDictionary[Signal.userData.id];
     };

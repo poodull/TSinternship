@@ -30,9 +30,10 @@ function LoadCSV(dataset, callback) {
 function TCodeArrayHelper(RawSignalArray) {
     if (RawSignalArray != null) {
         var allTimeCodes = [], //this is all signals, grouped by timecode.
-            index = 0, currentTime = -1;  //current line of CSV array
-        totalTimeCodes = 0;
-        while (index <= RawSignalArray.length - 1) {
+            index = 0, currentTime = -1, //current line of CSV array
+        totalTimeCodes = 0,
+        SignalLength = RawSignalArray.length - 1;
+        while (index <= SignalLength) {
             // console.log(RawSignalArray[index]);
             if (currentTime != RawSignalArray[index].TCODE) {
                 //new timecode, close up last SignalData[], increment currentTime

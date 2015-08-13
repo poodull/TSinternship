@@ -98,7 +98,7 @@ function FilterCharts(signals) {
             return d.tlw;
         });
     //Increase the range because the values at the end are buggy.
-    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([30, 60]);
+    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([3,10]);
     freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
     freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
         .map(freqScale.invert))
@@ -161,7 +161,6 @@ function FilterCharts(signals) {
     this.updateFilter = function (min, max) {
         //charts[3] is the time chart
         charts[4].filter([min, max]);
-        // console.log(d3.selectAll(".chart").select("#tcode-chart").data(d));
         renderAll();
     };
 
@@ -216,7 +215,9 @@ function FilterCharts(signals) {
         tlwToggle = false;
         bwToggle = false;
         freqToggle = true;
-        if (freqToggle && SignalDictionary.length != 0) {
+        var SignalDictLength = SignalDictionary.length;
+
+        if (freqToggle && SignalDictLength != 0) {
 
             var SignalFreq, color;
             for (var id in SignalDictionary) {
@@ -232,7 +233,9 @@ function FilterCharts(signals) {
         bwToggle = true;
         freqToggle = false;
         tlwToggle = false;
-        if (bwToggle && SignalDictionary.length != 0) {
+        var SignalDictLength = SignalDictionary.length;
+
+        if (bwToggle && SignalDictLength != 0) {
             var bandwidth, color;
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
@@ -262,7 +265,6 @@ function FilterCharts(signals) {
         charts[i].filter(null);
         renderAll();
     };
-
     function signalList(div) {
         var signalsByDate = nestByDate.entries(timecode.bottom(20));
         if (signalsByDate != null) {
@@ -345,23 +347,25 @@ function FilterCharts(signals) {
                     d3.select(this).style("background", "black");
                 }
             });
-
-            var color;
+            var color, material;
             signal.each(function (d) {
                 if (SignalDictionary[d.txid] != null) {
+                    material = SignalDictionary[d.txid].material;
                     if (tlwToggle) {
                         TLW = d.tlw;
                         color = new THREE.Color(tlwScale(TLW));
-                        SignalDictionary[d.txid].material.color = color;
+                        if (material.color != color) {
+                            material.color = color;
+                        }
                     }
                     if (SignalDictionary[d.txid].userData.selected) {
                         d3.select(this).style("background", "magenta");
-                        if (SignalDictionary[d.txid].material.opacity != 0.8)
-                            SignalDictionary[d.txid].material.opacity = 0.8;
+                        if (material.opacity != 0.8)
+                            material.opacity = 0.8;
                     }
                     else {
-                        if (SignalDictionary[d.txid].material.opacity != 0.2) {
-                            SignalDictionary[d.txid].material.opacity = 0.2;
+                        if (material.opacity != 0.2) {
+                            material.opacity = 0.2;
                         }
                     }
                 }
@@ -426,13 +430,10 @@ function FilterCharts(signals) {
                         .attr("class", function (d) {
                             return d + " bar";
                         })
-
-
                         .datum(group.all());
 
                     g.selectAll(".foreground.bar")
                         .attr("clip-path", "url(#clip-" + id + ")");
-
                     g.append("g")
                         .attr("class", "axis")
                         .attr("transform", "translate(0," + height + ")")

@@ -2,8 +2,8 @@
  * Created by Tommy Fang on 7/31/2015.
  */
 var container, scene, camera, renderer,
-    controls, stats, Animator, FloorData;
-var CrossFilter;
+    controls, stats, Animator, FloorData, CrossFilter;
+
 function init() {
     //Create the scene
     scene = new THREE.Scene();
@@ -96,10 +96,12 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
             frustumCulled: false
         }),
         ImageHeight = 1985, ImageWidth = 995,
+    //x:242, y: 121
     //Create the geometry of the floor/mesh and adjust using the floor properties given in the CSV file.
         FloorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1), FloorMesh = new THREE.Mesh(FloorGeometry, FloorMaterial);
-    FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
-   // console.log(FloorMesh);
+   // FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    scale = CurrentFloor.scale;
+    // console.log(FloorMesh);
     //Set the floor that acts as a basis for all floors.
     var BaseFloor = dataset[0],
     //Set the position
@@ -123,26 +125,27 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     FloorMesh.position.z = BaseOrigin_Y + Origin_Y;
     FloorMesh.position.y = Altitude;// + b_offset_z;
     //Keep the plane flat on XZ axis!
-    FloorMesh.rotation.x = Math.PI / 2;
+     FloorMesh.rotation.x = -Math.PI / 2;
     //Helps us locate the origin relative to the base.
     var origin = new THREE.AxisHelper(200);
-    origin.position.x = BaseOrigin_X;
+    origin.position.x = 497.5;
     origin.position.y = FloorMesh.position.y;
-    origin.position.z = BaseOrigin_Y;
+    origin.position.z = -992.5;
     var CurrentFloorDimensions = [];
 
-     FloorGeometry.computeBoundingBox();
-     //We will need this floor data later when we confine the position of signals to the bounding box of the floor.
-     CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
-     CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
-     CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
-     CurrentFloorDimensions["min_x"] = FloorGeometry.boundingBox.min.x;// + Origin_X + BaseOrigin_X;
-     CurrentFloorDimensions["max_x"] = FloorGeometry.boundingBox.max.x;// + Origin_X + BaseOrigin_X;
-     CurrentFloorDimensions["min_y"] = FloorGeometry.boundingBox.min.y;// + Origin_Y + BaseOrigin_Y;
-     CurrentFloorDimensions["max_y"] = FloorGeometry.boundingBox.max.y;//+ Origin_Y + BaseOrigin_Y;
-     CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
-     CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;//+ Origin_Y + BaseOrigin_Y;
-     FloorDimensions.push(CurrentFloorDimensions);
+    FloorGeometry.computeBoundingBox();
+    //We will need this floor data later when we confine the position of signals to the bounding box of the floor.
+    CurrentFloorDimensions["width"] = FloorGeometry.boundingBox.max.x - FloorGeometry.boundingBox.min.x;
+    CurrentFloorDimensions["height"] = FloorGeometry.boundingBox.max.y - FloorGeometry.boundingBox.min.y;
+    CurrentFloorDimensions["depth"] = FloorGeometry.boundingBox.max.z - FloorGeometry.boundingBox.min.z;
+    CurrentFloorDimensions["min_x"] = (FloorGeometry.boundingBox.min.x)*CurrentFloor.scale;// + Origin_X + BaseOrigin_X;
+    CurrentFloorDimensions["max_x"] = (FloorGeometry.boundingBox.max.x)*CurrentFloor.scale;// + Origin_X + BaseOrigin_X;
+    CurrentFloorDimensions["min_y"] = (FloorGeometry.boundingBox.min.y)*CurrentFloor.scale;// + Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["max_y"] = (FloorGeometry.boundingBox.max.y)*CurrentFloor.scale;//+ Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;//+ Origin_Y + BaseOrigin_Y;
+    FloorDimensions.push(CurrentFloorDimensions);
+    console.log(CurrentFloorDimensions);
     Floors.push(FloorMesh);
     /*  //After drawing the floors, ask for how many circles to draw.
      var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
@@ -153,7 +156,7 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     var light1 = new THREE.PointLight(0xffff00, 1, 0);
     light1.position.set(BaseOrigin_X + Origin_X, FloorMesh.position.y + 250, BaseOrigin_Y + Origin_Y);
     scene.add(light1);
-    // scene.add(origin);
+     scene.add(origin);
     scene.add(FloorMesh);
 }
 
@@ -170,7 +173,7 @@ function LoadData() {
         FloorData = result[0];
         RawSignalData = result[1];
         if (Loading) {
-            LoadFloors(FloorData, 5);
+            LoadFloors(FloorData, 1);
             CrossFilter = new FilterCharts(result[1]);
         }
         Loading = false;
@@ -179,11 +182,12 @@ function LoadData() {
 
 }
 //Create the circle
+
 function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, tlw) {
     //Set up a cylinder geometry with args:
     var signalColor;
     frequency = (frequency / 100000).toFixed(1);
-    if (tlwToggle){
+    if (tlwToggle) {
         signalColor = tlwScale(tlw)
     }
     if (freqToggle) {
@@ -192,45 +196,49 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, t
     if (bwToggle) {
         signalColor = bwScale(bandwidth);
     }
-    // (CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments, heightSegments, openEnded, thetaStart, thetaLength))
-    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32),
-        mat_Circle = new THREE.MeshLambertMaterial({
-            color: signalColor, //Set this color using a d3 scale depending on arg
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide,
-            frustumCulled: false,
-            depthWrite: false, //Prevents z-fighting
-            depthTest: false
-        });
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32);
+    var mat_Circle = new THREE.MeshLambertMaterial({
+        color: signalColor, //Set this color using a d3 scale depending on arg
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide,
+        frustumCulled: false,
+        depthWrite: false, //Prevents z-fighting
+        depthTest: false,
+        shading: THREE.SmoothShading
+    });
     //Combine the mesh and material
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
-    //Set the position based on input
-    Circle.position.x = pos_x*8;
-    Circle.position.y = pos_y;
-    Circle.position.z = pos_z*8;
+
+    //Set the position based on input6
+    Circle.position.x = 492.5 + (pos_y*scale);
+    Circle.position.y = 0;
+    Circle.position.z = (pos_x*scale);
+    console.log(Circle.position);
+
+
     //Builtin vars to help with tweening.
     //ID: TxID, active: if we are in a tween state, animations: current animation
     Circle.userData = {
-        id: id, active: false, animations: [], selected: false,
-        lastUpdated: 0, viewable: false, freq: frequency, bw: bandwidth, TLW: tlw
+        id: id, animations: [], selected: false,
+        freq: frequency, bw: bandwidth, TLW: tlw
     };
     //Draw the circle to the scene.
     scene.add(Circle);
-    Points.push(Circle);
     return Circle;
 }
 //Parse the signal data
 function ConvertSignalToCircle(SignalPoint) {
-    var pos_x = parseInt(SignalPoint.X),
-        pos_y = parseInt(SignalPoint.Y),
+    var pos_x = parseInt(SignalPoint.Y),
+        pos_y = parseInt(SignalPoint.X),
+        pos_z = parseInt(SignalPoint.Z),
         id = parseInt(SignalPoint.TXID),
+
         frequency = parseInt(SignalPoint.FREQ),
         bandwidth = parseInt(SignalPoint.BW),
         tlw = parseInt(SignalPoint.TLW),
-    //size scale uses d3 to calculate the min and max found in the csv and outputs a size for the radius.
-        radius = sizeScale(SignalPoint.AMP),
-        pos_z = parseInt(SignalPoint.Z);
+    //scales use d3 to calculate the min and max found in the csv and outputs value for the variable.
+        radius = sizeScale(SignalPoint.AMP);
     //Generate circle using signal data.
-    return GenerateCircle(pos_x, pos_z, pos_y, radius, id, frequency, bandwidth, tlw);
+    return GenerateCircle(pos_x, pos_y ,pos_z, radius, id, frequency, bandwidth, tlw);
 }

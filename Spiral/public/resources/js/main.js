@@ -5,41 +5,32 @@
 // MAIN //
 //////////
 // standard global variables
+    var scale;
 var currentTimeIndex = 0;
 var Floors = [], dataset = [];
 var Loading = true;
 var SignalDictionary = {};
 var RawSignalData;
 var selected = [];
-var Points = [];
 $(document).ready(function () {
     // initialization
     init();
     // animation loop
     animate();
 });
-function checkSignals(){
-    Points = [];
-    for (var key in SignalDictionary) {
-        Points.push(SignalDictionary[key]);
-    }
-}
 //Pumps signal data to the animation handler.
-function DataPump(SignalData) {
+function DataPump() {
     if (!Loading) {
         //necessary local variables
         var Signal, id, i;
-      //  checkSignals();
         CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
-      //  console.log(selected[0].values);
-        //console.log(SignalData[0].TCODE);
         //TODO: do something when selected length is 0
-
         //current works as intended.
         var currentFilter = selected[0].values;//SignalData.length
-
+        //var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32),
+        var length = currentFilter.length;
         //Signal data is an array of the current time slice that we are observing.
-        for (i = 0; i < currentFilter.length; i++) {
+        for (i = 0; i < length; i++) {
             //Loop through this time slice
             Signal = currentFilter[i];
             id = parseInt(Signal.TXID);
@@ -48,9 +39,6 @@ function DataPump(SignalData) {
                 //Convert it to an object
                 var currentPoint = ConvertSignalToCircle(Signal);
                 //Flag its active state
-                currentPoint.userData.active = true;
-                //Keep track of the time it was last updated.
-                currentPoint.userData.lastUpdated = Date.now();
                 //Set the index key in the dictionary to this object value.
                 SignalDictionary[id] = currentPoint;
                 //Set the current animation of the object to "pop" and start.
@@ -59,20 +47,17 @@ function DataPump(SignalData) {
             }
             //else if the signal object already exists in the dictionary.
             else {
-                SignalDictionary[id].userData.lastUpdated = Date.now();
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
                 //newX,newZ are part of the new signal data that we recieve.
-                var newX = Signal.X, newZ = Signal.Y;
+                var newY = (Signal.Y*scale)/2, newX = (Signal.X*scale)/2;
+              //  console.log("NEW:" + newX + " , " + newY);
                 //Because we are adding the point to the three.js scene. the Y axis is up.
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations.anim.stop();
 
-               newX *= 8;
-               newZ *= 8;
-
                 //Set the current animation to move.
-                SignalDictionary[id].userData.animations.anim = Animator.Move(SignalDictionary[id], newX, newZ).start();
+                SignalDictionary[id].userData.animations.anim = Animator.Move(SignalDictionary[id], newX, newY).start();
 
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
                 //                 else --> move --> dwell --> fade
@@ -102,6 +87,8 @@ function render() {
     var height = Math.floor( window.innerHeight );
     renderer.setViewport( left, bottom, width, height );
     renderer.setScissor( left, bottom, width, height );
+    renderer.setPixelRatio( window.devicePixelRatio );
+
     renderer.enableScissorTest ( true );
     //renderer.setClearColor( new THREE.Color().setRGB( 0.5, 0.5, 0.7 ) );
     renderer.render(scene, camera);

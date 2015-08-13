@@ -6,52 +6,49 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
 <link rel="stylesheet" type="text/css" href="resources/css/charts.css">
-<link rel="stylesheet" type="text/css" href="resources/css/three.css">
 <script src="vendors/jquery.min.js"></script>
-<script src="vendors/three.js"></script>
-<script src="vendors/Detector.js"></script>
-<script src="vendors/stats.js"></script>
-<script src="vendors/OrbitControls.js"></script>
-<script src="vendors/tween.js"></script>
-<script src="vendors/d3.js"></script>
-<script src="resources/js/config.js"></script>
-<script src="resources/js/scene.js"></script>
-<script src="resources/js/controller.js"></script>
-<script src="resources/js/animations.js"></script>
-<script src="resources/js/charts.js"></script>
-<script src="vendors/crossfilter.js"></script>
+
 
 <body>
 <div id="background" style="background:rgba(0, 0, 0, 1);z-index:-1;">
     <div class="charts">
         <div id="frequency-chart" class="chart">
             <div class="title">
-            <a href="javascript:toggleFrequency()" class="toggleColor">Frequency</a></div>
+                <a href="javascript:toggleFrequency()" class="toggleColor">Frequency</a></div>
         </div>
         <div id="bandwidth-chart" class="chart">
-            <div class="title"> <a href="javascript:toggleBandwidth()" class="toggleColor">Bandwidth</a></div>
+            <div class="title"><a href="javascript:toggleBandwidth()" class="toggleColor">Bandwidth</a></div>
         </div>
         <div id="amplitude-chart" class="chart">
             <div class="title"> Amplitude</div>
         </div>
         <div id="tlw-chart" class="chart">
-            <div class="title"> <a href="javascript:toggleTLW()" class="toggleColor">TLW</a> </div>
+            <div class="title"><a href="javascript:toggleTLW()" class="toggleColor">TLW</a></div>
         </div>
-
+        <div id="date-chart" class="chart">
+            <div class="title">TCode</div>
+        </div>
     </div>
 </div>
 <aside id="totals"><span id="active">-</span> of <span id="total">-</span> signals selected.</aside>
-
-
-<div id="ThreeJS">
-</div>
+<div id="ThreeJS"></div>
 <div id="signal-list" class="list">
     <div class="label">Time TXID Freq. BW Amp. #Devices TLW TCode</div>
 </div>
-<script src="resources/js/main.js"></script>
-
-<div id="date-chart" class="chart">
-    <div class="title">Date</div>
-</div>
+<footer>
+    <script src="resources/js/main.js"></script>
+    <script src="vendors/three.js"></script>
+    <script src="vendors/Detector.js"></script>
+    <script src="vendors/stats.js"></script>
+    <script src="vendors/OrbitControls.js"></script>
+    <script src="vendors/tween.js"></script>
+    <script src="vendors/d3.js"></script>
+    <script src="resources/js/config.js"></script>
+    <script src="resources/js/scene.js"></script>
+    <script src="resources/js/controller.js"></script>
+    <script src="resources/js/animations.js"></script>
+    <script src="resources/js/charts.js"></script>
+    <script src="vendors/crossfilter.js"></script>
+</footer>
 </body>
 </html>
