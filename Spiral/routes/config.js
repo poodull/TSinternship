@@ -1,19 +1,16 @@
 var express = require('express');
 var router = express.Router();
 /* GET home page. */
-var html_dir = 'Spiral/public/';
 var loader = require('csv-load-sync');
 var FloorPlan = 'C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/FloorPlan.csv';
-var SignalData = 'C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/SignalData.csv';
 var T2Signals = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals.csv";
 var T2_LARGE = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals_1000.csv";
 var FloorCSV = loader(FloorPlan);
 var d3 = require("d3");
 var fs = require('fs');
-//module.exports = require("C:/Users/tfang/IdeaProjects/Spiral/public/vendors/crossfilter").crossfilter;
 
 router.get('/', function (req, res) {
-    res.sendfile('./public/config.html');
+    res.sendfile('./public/index.html');
 
 });
 

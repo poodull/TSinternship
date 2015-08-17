@@ -5,13 +5,19 @@
 // MAIN //
 //////////
 // standard global variables
-    var scale;
-var currentTimeIndex = 0;
-var Floors = [], dataset = [];
-var Loading = true;
-var SignalDictionary = {};
-var RawSignalData;
-var selected = [];
+var scale, currentTimeIndex = 0,
+    //currentTimeIndex keeps track of the current time selection
+    Floors = [],dataset = [],
+    //These are used to hold the data we receive
+    Loading = true,
+    //Loading is used as a flag variable
+    //We set it to false, after receiving the data from data.js
+    SignalDictionary = {},
+    //SignalDictionary holds all the objects are currently being visualized.
+    //SignalDictionary objects are indexed by TxID
+    selected = [];
+    //The current filtered selection updates as a global,
+    //so we constantly know what the filtered selection is
 $(document).ready(function () {
     // initialization
     init();
@@ -22,9 +28,11 @@ $(document).ready(function () {
 function DataPump() {
     if (!Loading) {
         //necessary local variables
-        var Signal, id, i;
+        var Signal, id, i
+        //Sends the current filtered parameters to chart.js and renders
+        //the selected data across all charts.
         CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
-        //TODO: do something when selected length is 0
+        //TODO: Prompt user to pick a selection when the length is 0
         //current works as intended.
         var currentFilter = selected[0].values;//SignalData.length
         //var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32),
@@ -50,7 +58,7 @@ function DataPump() {
                 //Tween Logic
                 //Find differences and interpolate/change/color/update/etc
                 //newX,newZ are part of the new signal data that we recieve.
-                var newY = (Signal.Y*scale)/2, newX = (Signal.X*scale)/2;
+                var newY =  (-997.5*scale) + (Signal.Y*scale*scale), newX = -(-492.5*scale - (Signal.X*scale*scale));
               //  console.log("NEW:" + newX + " , " + newY);
                 //Because we are adding the point to the three.js scene. the Y axis is up.
                 //Tell the last animation to stop because we've recieved a new update.
@@ -71,7 +79,6 @@ function animate() {
     requestAnimationFrame(animate);
     render();
     update();
-
 }
 
 function update() {
@@ -81,6 +88,9 @@ function update() {
 
 function render() {
     TWEEN.update();
+    //This sets the viewport location. The top/bottom are unaffected because
+    //I move the div down instead, if it causes problems using full screen
+    //adjust the bottom and height of the renderer accordingly to fit the space.
     var left   = Math.floor( window.innerWidth  * 0.248 );
     var bottom = 0;
     var width  = Math.floor( window.innerWidth );
@@ -88,7 +98,6 @@ function render() {
     renderer.setViewport( left, bottom, width, height );
     renderer.setScissor( left, bottom, width, height );
     renderer.setPixelRatio( window.devicePixelRatio );
-
     renderer.enableScissorTest ( true );
     //renderer.setClearColor( new THREE.Color().setRGB( 0.5, 0.5, 0.7 ) );
     renderer.render(scene, camera);

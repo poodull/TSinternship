@@ -2,7 +2,7 @@
  * Created by Tommy Fang on 7/31/2015.
  */
 var container, scene, camera, renderer,
-    controls, stats, Animator, FloorData, CrossFilter;
+    controls, stats, Animator, FloorData, CrossFilter, RawSignalData;
 
 function init() {
     //Create the scene
@@ -16,6 +16,7 @@ function init() {
     var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 10, FAR = 80000;
     // set up camera
     camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+    //A perspective camera that allows us to freely view the scene.
     // add the camera to the scene
     scene.add(camera);
     // the camera defaults to position (0,0,0)
@@ -29,7 +30,7 @@ function init() {
     } else {
         renderer = new THREE.CanvasRenderer();
     }
-
+    //Adjust the renderer view size
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
     // attach div element to variable to contain the renderer
@@ -54,13 +55,13 @@ function init() {
     stats.domElement.style.zIndex = 100;
     container.appendChild(stats.domElement);
 
-
+    //Covers the entire scene and all objects in a yellowish light
     var ambientLight = new THREE.AmbientLight(0xffff00);
-
     scene.add(ambientLight);
 
-    //Load Necessary Data through Config.js
+    //obtain necessary Data through data.js
     LoadData();
+    //Paints the background black
     // fog must be added to scene before first render
     scene.fog = new THREE.FogExp2(0x9999ff, 0);
     // without a Skybox or Fog effect of these, the scene's background color is determined by web page background
@@ -81,7 +82,7 @@ function init() {
 function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     //Create each floor depending on user request.
     var CurrentFloor = dataset[FloorNumber],
-        image = dataset[FloorNumber].image,//ImportFloorImage(dataset, FloorNumber);
+        image = dataset[FloorNumber].image,
     //Deserialize the floor image, which is originally converted into a base64 byte array
         FloorPlan = "data:image/png;base64," + image, //'Assets/Images/NewOfficeTS.png';
     //Load the floorplan as a texture.
@@ -91,15 +92,19 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     var FloorMaterial = new THREE.MeshBasicMaterial({
             map: FloorTexture,
             side: THREE.DoubleSide,
+            //Prevents clipping when viewing from underneath.
             transparent: true,
             depthWrite: false,
+            //Prevents choppy rendering with other objects at the same z-index.
             frustumCulled: false
         }),
+    //Hardcoded image width/height, it should probably be included in the CSV
+    //There is not a built-in method to obtain the parameters of this image.
         ImageHeight = 1985, ImageWidth = 995,
-    //x:242, y: 121
+        //x:242, y: 121
     //Create the geometry of the floor/mesh and adjust using the floor properties given in the CSV file.
         FloorGeometry = new THREE.PlaneBufferGeometry(ImageWidth, ImageHeight, 1, 1), FloorMesh = new THREE.Mesh(FloorGeometry, FloorMaterial);
-   // FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
     scale = CurrentFloor.scale;
     // console.log(FloorMesh);
     //Set the floor that acts as a basis for all floors.
@@ -128,9 +133,10 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
      FloorMesh.rotation.x = -Math.PI / 2;
     //Helps us locate the origin relative to the base.
     var origin = new THREE.AxisHelper(200);
-    origin.position.x = 497.5;
+    //harded coded in to help me figure out where the points are on the map.
+    origin.position.x = -497.5 * CurrentFloor.scale;
     origin.position.y = FloorMesh.position.y;
-    origin.position.z = -992.5;
+    origin.position.z = -992.5 * CurrentFloor.scale;
     var CurrentFloorDimensions = [];
 
     FloorGeometry.computeBoundingBox();
@@ -144,8 +150,8 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
     CurrentFloorDimensions["max_y"] = (FloorGeometry.boundingBox.max.y)*CurrentFloor.scale;//+ Origin_Y + BaseOrigin_Y;
     CurrentFloorDimensions["min_z"] = FloorGeometry.boundingBox.min.z;// + Origin_Y + BaseOrigin_Y;
     CurrentFloorDimensions["max_z"] = FloorGeometry.boundingBox.max.z;//+ Origin_Y + BaseOrigin_Y;
+    CurrentFloorDimensions["scale"] = CurrentFloor.scale;
     FloorDimensions.push(CurrentFloorDimensions);
-    console.log(CurrentFloorDimensions);
     Floors.push(FloorMesh);
     /*  //After drawing the floors, ask for how many circles to draw.
      var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
@@ -153,10 +159,14 @@ function CreateFloor(dataset, FloorNumber, FloorDimensions) {
      CurrentFloorDimensions["min_y"], CurrentFloorDimensions["max_y"],
      FloorMesh, CurrentFloor, inputCircles, scene);*/
     //Add custom lighting function later
-    var light1 = new THREE.PointLight(0xffff00, 1, 0);
-    light1.position.set(BaseOrigin_X + Origin_X, FloorMesh.position.y + 250, BaseOrigin_Y + Origin_Y);
-    scene.add(light1);
-     scene.add(origin);
+    //A point light(hex color, intensity, distance) can be placed
+    //using light.position.set(x,y,z);
+
+    //It acts as a light bulb, shining in all directions at the position.
+    var light = new THREE.PointLight(0xffff00, 1, 0);
+    light.position.set(BaseOrigin_X + Origin_X, FloorMesh.position.y + 250, BaseOrigin_Y + Origin_Y);
+    scene.add(light);
+    scene.add(origin);
     scene.add(FloorMesh);
 }
 
@@ -174,19 +184,21 @@ function LoadData() {
         RawSignalData = result[1];
         if (Loading) {
             LoadFloors(FloorData, 1);
+            //Draw the floors based on number requested.
             CrossFilter = new FilterCharts(result[1]);
+            //Create an instance of the charts class, allowing us to access the filters/charts and render them.
         }
         Loading = false;
-
     });
-
 }
 //Create the circle
 
 function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, tlw) {
-    //Set up a cylinder geometry with args:
+    //Set up a cylinder geometry using above args:
+    //create color based on currently toggled variable
     var signalColor;
     frequency = (frequency / 100000).toFixed(1);
+    //Creates a color based on TLW 0-10
     if (tlwToggle) {
         signalColor = tlwScale(tlw)
     }
@@ -196,7 +208,7 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, t
     if (bwToggle) {
         signalColor = bwScale(bandwidth);
     }
-    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32);
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 2, 32);
     var mat_Circle = new THREE.MeshLambertMaterial({
         color: signalColor, //Set this color using a d3 scale depending on arg
         transparent: true,
@@ -210,11 +222,13 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, t
     //Combine the mesh and material
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
 
-    //Set the position based on input6
-    Circle.position.x = 492.5 + (pos_y*scale);
+    //Set the position based on input
+    var origin_x = -492.5 * scale;
+    var origin_y = -997.5 * scale ;
+
+    Circle.position.x = origin_x - pos_y;
     Circle.position.y = 0;
-    Circle.position.z = (pos_x*scale);
-    console.log(Circle.position);
+    Circle.position.z = origin_y + pos_x;
 
 
     //Builtin vars to help with tweening.
@@ -239,6 +253,9 @@ function ConvertSignalToCircle(SignalPoint) {
         tlw = parseInt(SignalPoint.TLW),
     //scales use d3 to calculate the min and max found in the csv and outputs value for the variable.
         radius = sizeScale(SignalPoint.AMP);
+    pos_x = pos_x * Math.pow(scale,2);
+    pos_y = pos_y * Math.pow(scale,2);
+
     //Generate circle using signal data.
     return GenerateCircle(pos_x, pos_y ,pos_z, radius, id, frequency, bandwidth, tlw);
 }

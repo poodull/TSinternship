@@ -1,19 +1,29 @@
 var express = require('express');
 var router = express.Router();
-//var fp;
-//fp = require('../FloorPlanCSV');
-
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', {
-    title: "Express"
+var loader = require('csv-load-sync');
+var FloorPlan = 'C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/FloorPlan.csv';
+var T2Signals = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals.csv";
+var T2_LARGE = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals_1000.csv";
+var FloorCSV = loader(FloorPlan);
+var d3 = require("d3");
+var fs = require('fs');
+
+router.get('/', function (req, res) {
+  res.sendfile('./public/index.html');
+
+});
+
+router.put('/', function (req, res) {
+  var data = [];
+  data.push(FloorCSV);
+  fs.readFile(T2Signals, "utf8", function(error, csvdata) {
+    csvdata = d3.csv.parse(csvdata);
+    data.push(csvdata);
+    res.send(data);
+
   });
 
 });
-router.post('/', function(req, res){
-  var obj = {};
- // console.log('body: ' + JSON.stringify(req.body));
-  res.contentType('text/plain');
-//  res.send(fp);
-});
+
 module.exports = router;

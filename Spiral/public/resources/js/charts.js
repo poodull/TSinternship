@@ -98,7 +98,7 @@ function FilterCharts(signals) {
             return d.tlw;
         });
     //Increase the range because the values at the end are buggy.
-    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([3,10]);
+    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([30,60]);
     freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
     freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
         .map(freqScale.invert))
@@ -266,7 +266,7 @@ function FilterCharts(signals) {
         renderAll();
     };
     function signalList(div) {
-        var signalsByDate = nestByDate.entries(timecode.bottom(20));
+        var signalsByDate = nestByDate.entries(timecode.bottom(50));
         if (signalsByDate != null) {
             selected = nestByDate.entries(timecode.bottom(Infinity));
         }
