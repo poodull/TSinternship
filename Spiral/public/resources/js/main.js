@@ -28,7 +28,7 @@ $(document).ready(function () {
 function DataPump() {
     if (!Loading) {
         //necessary local variables
-        var Signal, id, i
+        var Signal, id, i;
         //Sends the current filtered parameters to chart.js and renders
         //the selected data across all charts.
         CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);

@@ -23,9 +23,9 @@ function AnimationHandler() {
             .to({
                 //These are relative positions
                 x: parseInt(pos_x), //Moves Signal's current x value by "+pos_x"
-                z: parseInt(pos_y), //Moves Signal's current y value by "+pos_y"
-                duration: .5
-            }, 1000)
+                z: parseInt(pos_y) //Moves Signal's current y value by "+pos_y"
+                //duration: .5
+            }, 1000)//Time it takes to finish this tween in milliseconds.
             .easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(function () {
                 //Chain dwell(which is an idle state), if the animation is able to finish.

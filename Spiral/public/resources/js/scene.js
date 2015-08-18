@@ -223,12 +223,14 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, t
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
 
     //Set the position based on input
+    //origin_x,origin_y should be calculated based on three.js scene positioning.
+    //see documentation for more details on how the scene is set up.
     var origin_x = -492.5 * scale;
     var origin_y = -997.5 * scale ;
 
-    Circle.position.x = origin_x - pos_y;
-    Circle.position.y = 0;
-    Circle.position.z = origin_y + pos_x;
+    Circle.position.x = -(origin_x - pos_x);
+    Circle.position.y = pos_z;
+    Circle.position.z = origin_y + pos_y;
 
 
     //Builtin vars to help with tweening.
@@ -243,8 +245,8 @@ function GenerateCircle(pos_x, pos_y, pos_z, radius, id, frequency, bandwidth, t
 }
 //Parse the signal data
 function ConvertSignalToCircle(SignalPoint) {
-    var pos_x = parseInt(SignalPoint.Y),
-        pos_y = parseInt(SignalPoint.X),
+    var pos_x = parseInt(SignalPoint.X),
+        pos_y = parseInt(SignalPoint.Y),
         pos_z = parseInt(SignalPoint.Z),
         id = parseInt(SignalPoint.TXID),
 

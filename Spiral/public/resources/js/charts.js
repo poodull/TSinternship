@@ -1,11 +1,17 @@
 /**
  * Created by Tommy Fang
  */
+    //Holds all the charts that are rendered onto the screen.
 var charts;
+//These flags toggle which color scheme to use.
 var freqToggle = false, bwToggle = false, tlwToggle = true;
+//These the actual scales, so that they can be used in this file,
+//as well as during the creation of a signal in scene.js
 var freqScale, bwScale, sizeScale, tlwScale;
 function FilterCharts(signals) {
+    //Signals is the csv file that was sent from the server
     // Various formatters.
+    //used to format the timestamp to make it readable.
     var formatNumber = d3.format(",d"),
         formatChange = d3.format("+,d"),
         formatDate = d3.time.format("%B %d, %Y"),
@@ -16,7 +22,10 @@ function FilterCharts(signals) {
         .key(function (d) {
             return d3.time.day(d.date);
         });
-
+    //Take all of the columns and convert it using d3.
+    //If you get a "maximum stack call" error, it means there was an invalid field
+    //or a line is missing data for one of the fields.
+    //The parser will attempt to get data from the field until it reaches the end.
     signals.forEach(function (d, i) {
         d.index = i;
         d.date = parseDate(d.TIMESTAMP);
@@ -32,6 +41,10 @@ function FilterCharts(signals) {
     // Create the crossfilter for the relevant dimensions and groups.
     var signal = crossfilter(signals),
         all = signal.groupAll(),
+        //The group method intersects the current crossfilter
+        //It takes in records from signals that matches the current filter
+        //The rounded number is used to determine how many signals should be
+        //represented within an interval on the chart.
         date = signal.dimension(function (d) {
             return d.date;
         }),
@@ -67,6 +80,9 @@ function FilterCharts(signals) {
         TLWs = TLW.group(function (d) {
             return Math.floor(d / 2) * 2;
         }),
+        //Calculate the max and mins of the ranges
+        //So we can use them to determine the range of the charts
+        //And also the domains of the scales.
         ampMax = d3.max(signals, function (d) {
             return d.amp;
         }),
@@ -98,8 +114,14 @@ function FilterCharts(signals) {
             return d.tlw;
         });
     //Increase the range because the values at the end are buggy.
+    //obtain an output value by inputting within the range of a variable
+    //sizeScale(amplitude) = number between 30 and 60. Increase the range amp
+    //If it seems too small on scale.
     sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([30,60]);
-    freqScale = d3.scale.linear().domain([freqMin, freqMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    freqScale = d3.scale.linear().domain([freqMin, freqMax]);
+    //Dependent on domain, output the according color
+    //We match a range within the domain to a corresponding value in the range.
+    //0-0.14 is red, 0.14-0.28 is orange, etc.
     freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
         .map(freqScale.invert))
         .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
@@ -117,6 +139,11 @@ function FilterCharts(signals) {
             .dimension(frequency)
             .group(frequencies)
             .x(d3.scale.linear()
+                //I attempted to fix these ranges by hard coding in some constants
+                //The issue is that these current domains are not inclusive
+                //At freqmax, the bar representing a signal with value of freqMax will render off the charts
+                //at the end. It occurs with all of the domains in this chart array. I believe it has something to
+                //do with rangeRound or the setup of the grouping function. see above.
                 .domain([freqMin, freqMax + 200])
                 .rangeRound([0, 2 * 130])),
         barChart()
@@ -144,6 +171,7 @@ function FilterCharts(signals) {
             .x(d3.scale.linear()
                 .domain([tcMin, tcMax + 10])
                 .rangeRound([0, 100 * 8]))
+            //filter(null) filters the selection of existing signals with all values of timecode
             .filter(null)
 
 
@@ -159,7 +187,9 @@ function FilterCharts(signals) {
          */
     ];
     this.updateFilter = function (min, max) {
-        //charts[3] is the time chart
+        //charts[4] is the time chart
+        //used in the main animation loop.
+        //live updates the filtered selection of signals and renders them.
         charts[4].filter([min, max]);
         renderAll();
     };
@@ -212,18 +242,23 @@ function FilterCharts(signals) {
         renderAll();
     };
     window.toggleFrequency = function () {
-        tlwToggle = false;
+        tlwToggle = false; //Set other toggle flags to false
         bwToggle = false;
         freqToggle = true;
         var SignalDictLength = SignalDictionary.length;
-
+        //Check if there are objects that can change color
         if (freqToggle && SignalDictLength != 0) {
-
             var SignalFreq, color;
+            //loop through dictionary and change all signal colors.
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
                     SignalFreq = ((SignalDictionary[id].userData.freq));
+                    //create a new color based on the toggle using the scale.
+                    //freqScale(SignalFreq) returns a hexadecimal value.
+                    //I'm not sure how much this function affects performance, further testing needs to be done
+                    //It doesn't seem to have a problem coloring small batches of signals very quickly.
                     color = new THREE.Color(freqScale(SignalFreq));
+                    //We can only change the color of the material of the object.
                     SignalDictionary[id].material.color = color;
                 }
             }
@@ -234,7 +269,6 @@ function FilterCharts(signals) {
         freqToggle = false;
         tlwToggle = false;
         var SignalDictLength = SignalDictionary.length;
-
         if (bwToggle && SignalDictLength != 0) {
             var bandwidth, color;
             for (var id in SignalDictionary) {
@@ -268,6 +302,7 @@ function FilterCharts(signals) {
     function signalList(div) {
         var signalsByDate = nestByDate.entries(timecode.bottom(50));
         if (signalsByDate != null) {
+            //Infinity selects ALL records in the current filtered data.
             selected = nestByDate.entries(timecode.bottom(Infinity));
         }
         div.each(function () {
@@ -281,10 +316,13 @@ function FilterCharts(signals) {
                 .attr("class", "day");
             /*       .text(function (d) {
              return formatDate(d.values[0].date);
-             });*/
+             });
+             This shows the date,month,year of the signals.
+             */
+
 
             date.exit().remove();
-
+            //Select a single signal within the signal table.
             var signal = date.order().selectAll(".signal")
                 .data(function (d) {
                     return d.values;
@@ -292,7 +330,7 @@ function FilterCharts(signals) {
                     return d.index;
                 });
 
-
+            //Display the variables values for each signal within the table.
             var signalEnter = signal.enter().append("div")
                 .attr("class", "signal");
 
@@ -338,20 +376,32 @@ function FilterCharts(signals) {
                 .text(function (d) {
                     return d.tcode;
                 });
+            //Toggle selection on click. We can select the signal on the map and within the table.
             signal.on("click", function (d) {
+                //Flag the signal to be selected.
                 SignalDictionary[d.txid].userData.selected = !SignalDictionary[d.txid].userData.selected;
                 if (SignalDictionary[d.txid].userData.selected) {
+                    //Highlight the signal in the table
                     d3.select(this).style("background", "magenta");
                 }
                 else {
+                    //Unhighlight if unselected.
                     d3.select(this).style("background", "black");
                 }
             });
             var color, material;
             signal.each(function (d) {
+                //Loop through each signal and check if they are selected, so that the renderer
+                //doesn't cause the signal to be unhighlighted.
+                //I think this function could be vastly improved.
+                //I attempted to add a check like this upon creation of an individual signal at a time,
+                //but, it didn't work. I believe this function will check every signal every time a signal is added
+                //So, theres major room for improvement in this function
                 if (SignalDictionary[d.txid] != null) {
                     material = SignalDictionary[d.txid].material;
                     if (tlwToggle) {
+                        //For constant TLW changes
+                        //change the color of the signal based on new TLW value
                         TLW = d.tlw;
                         color = new THREE.Color(tlwScale(TLW));
                         if (material.color != color) {
@@ -360,6 +410,7 @@ function FilterCharts(signals) {
                     }
                     if (SignalDictionary[d.txid].userData.selected) {
                         d3.select(this).style("background", "magenta");
+                        //Change the opacity of the object on the map.
                         if (material.opacity != 0.8)
                             material.opacity = 0.8;
                     }
