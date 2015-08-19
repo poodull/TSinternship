@@ -6,8 +6,9 @@ var charts;
 //These flags toggle which color scheme to use.
 var freqToggle = false, bwToggle = false, tlwToggle = true;
 //These the actual scales, so that they can be used in this file,
-//as well as during the creation of a signal in scene.js
+//as well as during the creation of a signal in _scene.js
 var freqScale, bwScale, sizeScale, tlwScale;
+var _selectedArr = [];
 function FilterCharts(signals) {
     //Signals is the csv file that was sent from the server
     // Various formatters.
@@ -117,7 +118,7 @@ function FilterCharts(signals) {
     //obtain an output value by inputting within the range of a variable
     //sizeScale(amplitude) = number between 30 and 60. Increase the range amp
     //If it seems too small on scale.
-    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([30,60]);
+    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([5,10]);
     freqScale = d3.scale.linear().domain([freqMin, freqMax]);
     //Dependent on domain, output the according color
     //We match a range within the domain to a corresponding value in the range.
@@ -371,11 +372,11 @@ function FilterCharts(signals) {
                 .text(function (d) {
                     return d.tlw;
                 });
-            signalEnter.append("div")
+      /*      signalEnter.append("div")
                 .attr("class", "TCODE")
                 .text(function (d) {
                     return d.tcode;
-                });
+                });*/
             //Toggle selection on click. We can select the signal on the map and within the table.
             signal.on("click", function (d) {
                 //Flag the signal to be selected.
@@ -383,6 +384,7 @@ function FilterCharts(signals) {
                 if (SignalDictionary[d.txid].userData.selected) {
                     //Highlight the signal in the table
                     d3.select(this).style("background", "magenta");
+                    signalSelected = true;
                 }
                 else {
                     //Unhighlight if unselected.
@@ -390,39 +392,48 @@ function FilterCharts(signals) {
                 }
             });
             var color, material;
+            var counter = 0;
+            var flagged = false;
             signal.each(function (d) {
-                //Loop through each signal and check if they are selected, so that the renderer
+                //console.log(counter + " start");
+                counter++;
+             //   counter ++;
+                var SignalObject = SignalDictionary[d.txid];
+                //Loop through each signal and check if they are selected, so that the _renderer
                 //doesn't cause the signal to be unhighlighted.
                 //I think this function could be vastly improved.
                 //I attempted to add a check like this upon creation of an individual signal at a time,
                 //but, it didn't work. I believe this function will check every signal every time a signal is added
                 //So, theres major room for improvement in this function
-                if (SignalDictionary[d.txid] != null) {
-                    material = SignalDictionary[d.txid].material;
+                if (SignalObject != null) {
+                    material = SignalObject.material;
                     if (tlwToggle) {
                         //For constant TLW changes
                         //change the color of the signal based on new TLW value
                         TLW = d.tlw;
                         color = new THREE.Color(tlwScale(TLW));
-                        if (material.color != color) {
+                        if (material.color != color && signalSelected != true) {
                             material.color = color;
                         }
                     }
-                    if (SignalDictionary[d.txid].userData.selected) {
+                    if (SignalObject.userData.selected) {
+                        flagged = true;
+                        signalSelected = true;
                         d3.select(this).style("background", "magenta");
                         //Change the opacity of the object on the map.
-                        if (material.opacity != 0.8)
+                        if (material.opacity != 0.8) {
+                            color = new THREE.Color(tlwScale(TLW));
                             material.opacity = 0.8;
+                            material.color = color;
+                        }
                     }
                     else {
-                        if (material.opacity != 0.2) {
-                            material.opacity = 0.2;
-                        }
+                        material.opacity = 0.05;
+                        material.color.setHex("#29293D");
                     }
                 }
             });
             signal.exit().remove();
-
             signal.order();
         });
     }
@@ -457,7 +468,7 @@ function FilterCharts(signals) {
                         .append("a")
                         .attr("href", "javascript:reset(" + id + ")")
                         .attr("class", "reset")
-                        .text("reset")
+                        .text("reset");
                      //   .style("display", "none");
 
 

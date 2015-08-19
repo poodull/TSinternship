@@ -2,17 +2,19 @@
  * Created by tfang on 7/31/2015.
  */
 var mouse = new THREE.Vector2();
+var signalSelected;
 //Events(Keypresses and Mouse functions)
 function FindIntersects() {
     var raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.setFromCamera(mouse, _camera);
     //TODO: figure out how to select object while tweening
     //The intersects are the points we are checking if the mouse  hovers over.
-    var intersects = raycaster.intersectObjects(scene.children);
+    var intersects = raycaster.intersectObjects(_scene.children);
     //If there are points to check, then we can animate them.
     if (intersects.length > 0) {
         //intersects[ 0 ].object.material.color.setHex( Math.random() * 0xffffff );
         intersects[ 0 ].object.userData.selected = !intersects[ 0 ].object.userData.selected;
+        signalSelected = true;
     }
 }
 
@@ -23,13 +25,15 @@ function onDocumentTouchStart(event) {
     event.clientY = event.touches[0].clientY;
     onDocumentMouseDown(event);
 }
+
 function onDocumentMouseDown(event) {
     event.preventDefault();
     var offset = $('#ThreeJS').offset();
     var top = offset.top;
     var left =  Math.floor( window.innerWidth  * 0.248 );
-    mouse.x = ((event.clientX - left) / renderer.domElement.width ) * 2 - 1;
-    mouse.y = -((event.clientY - top) / renderer.domElement.height) * 2 + 1;
+    mouse.x = ((event.clientX - left) / _renderer.domElement.width ) * 2 - 1;
+    mouse.y = -((event.clientY - top) / _renderer.domElement.height) * 2 + 1;
+  //  console.log(mouse.x + ", " + mouse.y);
     //the range of the mouse space includes(-1 to 1);
     //It uses floats to convert the actual space of the window
     //to this new coordinate system.
@@ -39,13 +43,13 @@ function onDocumentMouseMove(event) {
     event.preventDefault();
     var offset = $('#ThreeJS').offset();
 
-    mouse.x = ( (event.clientX - offset.left ) / renderer.domElement.width ) * 2 - 1;
-    mouse.y = -( (event.clientY - offset.top ) / renderer.domElement.height ) * 2 + 1;
+    mouse.x = ( (event.clientX - offset.left ) / _renderer.domElement.width ) * 2 - 1;
+    mouse.y = -( (event.clientY - offset.top ) / _renderer.domElement.height ) * 2 + 1;
 }
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    _camera.aspect = window.innerWidth / window.innerHeight;
+    _camera.updateProjectionMatrix();
+    _renderer.setSize(window.innerWidth, window.innerHeight);
 
 }
 //Listens for all key presses
@@ -72,7 +76,9 @@ function OnKeyDown(event) {
                     var sliceEnd = slice[slice.length-1].TCODE;
                     //Set the beginning timecode of the loop
                     currentTimeIndex = sliceBegin;
-                    var start = window.setInterval(function () {
+                    signalSelected = false;
+
+                var start = window.setInterval(function () {
                         DataPump();
                         currentTimeIndex++;
                         //If the loop ends, then start over.
@@ -80,7 +86,7 @@ function OnKeyDown(event) {
                             currentTimeIndex = sliceBegin;// 0;
                         }
 
-                    }, 3000); //Time it takes to finish an interval and then repeat.
+                    }, 1200); //Time it takes to finish an interval and then repeat.
             }
             break;
     }

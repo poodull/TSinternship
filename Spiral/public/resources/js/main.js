@@ -31,7 +31,7 @@ function DataPump() {
         var Signal, id, i;
         //Sends the current filtered parameters to chart.js and renders
         //the selected data across all charts.
-        CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
+        _CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
         //TODO: Prompt user to pick a selection when the length is 0
         //current works as intended.
         var currentFilter = selected[0].values;//SignalData.length
@@ -50,23 +50,21 @@ function DataPump() {
                 //Set the index key in the dictionary to this object value.
                 SignalDictionary[id] = currentPoint;
                 //Set the current animation of the object to "pop" and start.
-                currentPoint.userData.animations.anim = Animator.PopSizeIn(currentPoint).start();
+                currentPoint.userData.animations.anim = _Animator.PopSizeIn(currentPoint).start();
 
             }
             //else if the signal object already exists in the dictionary.
             else {
-                //Tween Logic
-                //Find differences and interpolate/change/color/update/etc
                 //newX,newZ are part of the new signal data that we recieve.
-                var newY =  (-997.5*scale) + (Signal.Y*scale*scale), newX = -(-492.5*scale - (Signal.X*scale*scale));
-              //  console.log("NEW:" + newX + " , " + newY);
-                //Because we are adding the point to the three.js scene. the Y axis is up.
+                var lat = parseInt(Signal.X),
+                    long = parseInt(Signal.Y)* -1;
+                var newLong = originAxis.position.z + (long * scale),
+                    newLat = originAxis.position.x + (lat * scale);
+                //Because we are adding the point to the three.js _scene. the Y axis is up.
                 //Tell the last animation to stop because we've recieved a new update.
                 SignalDictionary[id].userData.animations.anim.stop();
-
                 //Set the current animation to move.
-                SignalDictionary[id].userData.animations.anim = Animator.Move(SignalDictionary[id], newX, newY).start();
-
+                SignalDictionary[id].userData.animations.anim = _Animator.Move(SignalDictionary[id], newLat, newLong).start();
                 //ANIMATION CHAIN: If !exists --> pop --> dwell --> fade
                 //                 else --> move --> dwell --> fade
                 // If the object receives an update in between these stages, it will either go back to pop or move.
@@ -82,23 +80,23 @@ function animate() {
 }
 
 function update() {
-    controls.update();
-    stats.update();
+    _controls.update();
+    _stats.update();
 }
 
 function render() {
     TWEEN.update();
     //This sets the viewport location. The top/bottom are unaffected because
     //I move the div down instead, if it causes problems using full screen
-    //adjust the bottom and height of the renderer accordingly to fit the space.
+    //adjust the bottom and height of the _renderer accordingly to fit the space.
     var left   = Math.floor( window.innerWidth  * 0.248 );
     var bottom = 0;
     var width  = Math.floor( window.innerWidth );
     var height = Math.floor( window.innerHeight );
-    renderer.setViewport( left, bottom, width, height );
-    renderer.setScissor( left, bottom, width, height );
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.enableScissorTest ( true );
-    //renderer.setClearColor( new THREE.Color().setRGB( 0.5, 0.5, 0.7 ) );
-    renderer.render(scene, camera);
+    _renderer.setViewport( left, bottom, width, height );
+    _renderer.setScissor( left, bottom, width, height );
+    _renderer.setPixelRatio( window.devicePixelRatio );
+    _renderer.enableScissorTest ( true );
+    //_renderer.setClearColor( new THREE.Color().setRGB( 0.5, 0.5, 0.7 ) );
+    _renderer.render(_scene, _camera);
 }

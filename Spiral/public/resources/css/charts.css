@@ -89,7 +89,6 @@
 
 #date-chart {
     width: 920px;
-    padding-left:0px;
     color:white;
 }
 #frequency-chart > div > a.toggleColor {
@@ -120,6 +119,9 @@
 #signal-list .label {
     background: black;
     margin-bottom: 5px;
+    color: yellow;
+    white-space:pre;
+    font-size:14px;
 
 }
 
@@ -128,17 +130,6 @@
     width:70px;
 }
 
-/*change this to a signal-list id and class*/
-.label
-{
-    word-spacing:2pt;
-}
-
-
-#signal-list .TXID-label {
-    padding-left: 100px;
-    word-spacing: 10px;
-}
 #signal-list .signal div {
     display: inline-block;
     width: 89px;
@@ -146,7 +137,7 @@
 }
 
 #signal-list  .signal div.FREQUENCY {
-    width:65px;
+    width:75px;
     margin-left:35px;
 }
 
@@ -156,11 +147,11 @@
 
 #signal-list  .signal div.DEVICECOUNT {
     width:15px;
-    margin-right:10px;
+    margin-right:25px;
 }
 
 #signal-list  .signal div.TXID {
-    width:35px;
+    width:44px;
     margin-right:10px;
 }
 #signal-list  .signal div.TLW {
@@ -169,10 +160,10 @@
 }
 
 #signal-list  .signal div.AMPLITUDE {
-    width:70px;
+    width:67px;
 }
 #signal-list  .signal div.BANDWIDTH {
-    width:55px;
+    width:60px;
 }
 
 aside {

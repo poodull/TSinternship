@@ -10,6 +10,8 @@ var FloorPlan = 'C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/FloorP
 var T2Signals = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals.csv";
 var T2Large = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals_1000.csv";
 var FloorCSV = loader(FloorPlan);
+var devdata = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/devdata.csv";
+
 var d3 = require("d3");
 var fs = require('fs');
 
@@ -21,7 +23,7 @@ router.get('/', function (req, res) {
 router.put('/', function (req, res) {
     var data = [];
     data.push(FloorCSV);
-    fs.readFile(T2Large, "utf8", function(error, csvdata) {
+    fs.readFile(devdata, "utf8", function(error, csvdata) {
         csvdata = d3.csv.parse(csvdata);
         data.push(csvdata);
         res.send(data);
