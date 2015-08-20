@@ -10,7 +10,7 @@ var FloorPlan = 'C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/FloorP
 var T2Signals = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals.csv";
 var T2Large = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/T2signals_1000.csv";
 var FloorCSV = loader(FloorPlan);
-var devdata = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/devdata.csv";
+var devdata = "C:/Users/tfang/IdeaProjects/Spiral/public/resources/data/devdata-6n.csv";
 
 var d3 = require("d3");
 var fs = require('fs');

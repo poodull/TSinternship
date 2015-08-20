@@ -28,8 +28,8 @@ function TCodeArrayHelper(RawSignalArray) {
         var allTimeCodes = [], //this is all signals, grouped by timecode.
             index = 0, currentTime = -1, //current line of CSV array
         totalTimeCodes = 0,
-        SignalLength = RawSignalArray.length - 1;
-        while (index <= SignalLength) {
+        signalLength = RawSignalArray.length - 1;
+        while (index <= signalLength) {
             // console.log(RawSignalArray[index]);
             if (currentTime != RawSignalArray[index].TCODE) {
                 //new timecode, close up last SignalData[], increment currentTime

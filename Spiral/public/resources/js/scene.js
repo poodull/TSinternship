@@ -2,9 +2,10 @@
  * Created by Tommy Fang on 7/31/2015.
  */
 var _container, _scene, _camera, _renderer,
-    _controls, _stats, _Animator, _FloorData, _CrossFilter, _RawSignalData;
-var FloorDimensions = [];
+    _controls, _stats, _Animator, _FloorData, _crossFilter, _RawSignalData;
+var _FloorDimensions = [];
 var originAxis;
+var selectedSignal = false;
 function init() {
     //Create the _scene
     _scene = new THREE.Scene();
@@ -14,7 +15,7 @@ function init() {
     // var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
     var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
     // _camera attributes
-    var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 10, FAR = 80000;
+    var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 100, FAR = 80000;
     // set up _camera
     _camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
     //A perspective _camera that allows us to freely view the _scene.
@@ -44,7 +45,7 @@ function init() {
     _container.appendChild(_renderer.domElement);
 
 
-    // move mouse and: left   click to rotate,
+    // move _mouse and: left   click to rotate,
     //                 middle click to zoom,
     //                 right  click to pan
     _controls = new THREE.OrbitControls(_camera, _renderer.domElement);
@@ -106,7 +107,7 @@ function CreateFloor(dataset, FloorNumber) {
     //Create the geometry of the floor/mesh and adjust using the floor properties given in the CSV file.
         FloorGeometry = new THREE.PlaneBufferGeometry(ImageHeight, ImageWidth, 1, 1),
         FloorMesh = new THREE.Mesh(FloorGeometry, FloorMaterial);
-   // FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
+    // FloorMesh.scale.set(CurrentFloor.scale, CurrentFloor.scale, CurrentFloor.scale);
     scale = CurrentFloor.scale;
     //Set the floor that acts as a basis for all floors.
     var BaseFloor = dataset[0],
@@ -123,9 +124,9 @@ function CreateFloor(dataset, FloorNumber) {
     //Check if this is the base floor, so we don't move it too much
     //Check to see if we are in the same building and if we are, figure which one is the base floor
     //then move the other floors relative to the base floor.
-/*    FloorMesh.position.x = BaseOrigin_X + Origin_X + ImageWidth/2;//CurrentFloor.building_offset_x + CurrentFloor.Origin_X;
-    FloorMesh.position.z = BaseOrigin_Y + Origin_Y - ImageHeight/2;
-    FloorMesh.position.y = Altitude;// + b_offset_z;*/
+    /*    FloorMesh.position.x = BaseOrigin_X + Origin_X + ImageWidth/2;//CurrentFloor.building_offset_x + CurrentFloor.Origin_X;
+     FloorMesh.position.z = BaseOrigin_Y + Origin_Y - ImageHeight/2;
+     FloorMesh.position.y = Altitude;// + b_offset_z;*/
     //Keep the plane flat on XZ axis!
     FloorMesh.rotation.x = -Math.PI / 2;
     FloorMesh.rotation.z = Math.PI / 2;
@@ -135,15 +136,15 @@ function CreateFloor(dataset, FloorNumber) {
     FloorMesh.position.x = 0;//BaseOrigin_X + Origin_X + ImageWidth/2;//CurrentFloor.building_offset_x + CurrentFloor.Origin_X;
     FloorMesh.position.z = 0;
     FloorMesh.position.y = Altitude;// + b_offset_z;
-   // console.log(FloorMesh.position);
+    // console.log(FloorMesh.position);
     //harded coded in to help me figure out where the points are on the map.
-    var halfX = ImageWidth/ 2, halfY = ImageHeight/2;
+    var halfX = ImageWidth / 2, halfY = ImageHeight / 2;
     originAxis.position.x = -halfX + Origin_X;
     originAxis.position.y = FloorMesh.position.y;
     originAxis.position.z = -halfY + (ImageHeight - Origin_Y);
-    originAxis.rotation.x = -Math.PI/2;
-   // console.log(ImageHeight + " , " + ImageWidth);
-   // console.log(originAxis.position);
+    originAxis.rotation.x = -Math.PI / 2;
+    // console.log(ImageHeight + " , " + ImageWidth);
+    // console.log(originAxis.position);
     var CurrentFloorDimensions = [];
 
     FloorGeometry.computeBoundingBox();
@@ -160,7 +161,7 @@ function CreateFloor(dataset, FloorNumber) {
     CurrentFloorDimensions["scale"] = CurrentFloor.scale;
     CurrentFloorDimensions["origin_x"] = Origin_X;
     CurrentFloorDimensions["origin_y"] = Origin_Y;
-    FloorDimensions.push(CurrentFloorDimensions);
+    _FloorDimensions.push(CurrentFloorDimensions);
     Floors.push(FloorMesh);
     /*  //After drawing the floors, ask for how many circles to draw.
      var inputCircles = prompt("Floor # " + FloorNumber + ": How many circles? ");
@@ -192,7 +193,7 @@ function LoadData() {
         if (Loading) {
             LoadFloors(_FloorData, 1);
             //Draw the floors based on number requested.
-            _CrossFilter = new FilterCharts(result[1]);
+            _crossFilter = new FilterCharts(result[1]);
             //Create an instance of the charts class, allowing us to access the filters/charts and render them.
         }
         Loading = false;
@@ -203,10 +204,10 @@ function LoadData() {
 function GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw) {
     //Set up a cylinder geometry using above args:
     //create color based on currently toggled variable
-    var signalColor;
+    var signalColor, selectedLength = Object.keys(_selectedArr).length;
     frequency = (frequency / 100000).toFixed(1);
-    //Creates a color based on TLW 0-10
     if (tlwToggle) {
+        //Creates a color based on TLW 0-10
         signalColor = tlwScale(tlw)
     }
     if (freqToggle) {
@@ -215,7 +216,8 @@ function GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw) {
     if (bwToggle) {
         signalColor = bwScale(bandwidth);
     }
-    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 2, 32);
+
+    var geo_Circle = new THREE.CylinderGeometry(radius, radius, 1, 32);
     var mat_Circle = new THREE.MeshLambertMaterial({
         color: signalColor, //Set this color using a d3 scale depending on arg
         transparent: true,
@@ -228,16 +230,16 @@ function GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw) {
     });
     //Combine the mesh and material
     var Circle = new THREE.Mesh(geo_Circle, mat_Circle);
+   // console.log(Object.keys(_selectedArr).length);
 
-    if (signalSelected) {
-       console.log(signalSelected);
-        mat_Circle.color.setHex("#29293D");
+    if (selectedLength > 0) {
+        Circle.material.color.setHex("#669999");
     }
     //Set the position based on input
     //origin_x,origin_y should be calculated based on three.js _scene positioning.
     //see documentation for more details on how the _scene is set up.
-    var origin_x = FloorDimensions[0]["origin_x"];
-    var origin_y = FloorDimensions[0]["origin_y"];
+    var origin_x = _FloorDimensions[0]["origin_x"];
+    var origin_y = _FloorDimensions[0]["origin_y"];
 
     Circle.position.x = lat;
     Circle.position.y = alt;
@@ -245,9 +247,14 @@ function GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw) {
 
     //Builtin vars to help with tweening.
     //ID: TxID, active: if we are in a tween state, animations: current animation
+    //selected is used by charts.js/controller.js whenever a signal is clicked.
+    //When a signal is clicked on the signal list or map, the flag gets set to true and the object gets placed
+    //into the _selectedSignals array.
+    //Upon completion of fade out, the pointer to the object, in aforementioned array, gets deleted.
     Circle.userData = {
         id: id, animations: [], selected: false,
         freq: frequency, bw: bandwidth, TLW: tlw
+        //freq,bw,tlw used by charts.css and signal generator to determine color.
     };
     //Draw the circle to the _scene.
     _scene.add(Circle);
@@ -256,8 +263,8 @@ function GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw) {
 //Parse the signal data
 function ConvertSignalToCircle(SignalPoint) {
     var lat = parseInt(SignalPoint.X),
-        long = parseInt(SignalPoint.Y)*-1, //Y is Z longitude
-        alt = parseInt(SignalPoint.Z), //Z is altitude(Y)
+        long = parseInt(SignalPoint.Y) * -1, //Y is Z longitude
+        alt = parseInt(SignalPoint.Z),//Z is altitude(Y in three.js)
         id = parseInt(SignalPoint.TXID),
 
         frequency = parseInt(SignalPoint.FREQ),
@@ -269,5 +276,5 @@ function ConvertSignalToCircle(SignalPoint) {
     long = originAxis.position.z + (long * scale);
 
     //Generate circle using signal data.
-    return GenerateCircle(lat,long, alt, radius, id, frequency, bandwidth, tlw);
+    return GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw);
 }

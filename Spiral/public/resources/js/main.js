@@ -31,12 +31,14 @@ function DataPump() {
         var Signal, id, i;
         //Sends the current filtered parameters to chart.js and renders
         //the selected data across all charts.
-        _CrossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
+        _crossFilter.updateFilter(currentTimeIndex, currentTimeIndex + 1);
         //TODO: Prompt user to pick a selection when the length is 0
         //current works as intended.
         var currentFilter = selected[0].values;//SignalData.length
+
         //var geo_Circle = new THREE.CylinderGeometry(radius, radius, 10, 32),
         var length = currentFilter.length;
+      //  console.log(currentFilter.length);
         //Signal data is an array of the current time slice that we are observing.
         for (i = 0; i < length; i++) {
             //Loop through this time slice

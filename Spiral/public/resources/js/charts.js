@@ -1,7 +1,7 @@
 /**
  * Created by Tommy Fang
  */
-    //Holds all the charts that are rendered onto the screen.
+//Holds all the charts that are rendered onto the screen.
 var charts;
 //These flags toggle which color scheme to use.
 var freqToggle = false, bwToggle = false, tlwToggle = true;
@@ -23,6 +23,10 @@ function FilterCharts(signals) {
         .key(function (d) {
             return d3.time.day(d.date);
         });
+    var nestByTCode = d3.nest()
+        .key(function (d) {
+            return d.tcode;
+        });
     //Take all of the columns and convert it using d3.
     //If you get a "maximum stack call" error, it means there was an invalid field
     //or a line is missing data for one of the fields.
@@ -30,7 +34,7 @@ function FilterCharts(signals) {
     signals.forEach(function (d, i) {
         d.index = i;
         d.date = parseDate(d.TIMESTAMP);
-        d.bw = +d.BW;
+        d.bw = +(d.BW / 1000);
         d.freq = +((d.FREQ / 100000)).toFixed(1); //convert to mhz, round to 1 decimal
         d.amp = +d.AMP;
         d.tcode = +d.TCODE;
@@ -42,10 +46,10 @@ function FilterCharts(signals) {
     // Create the crossfilter for the relevant dimensions and groups.
     var signal = crossfilter(signals),
         all = signal.groupAll(),
-        //The group method intersects the current crossfilter
-        //It takes in records from signals that matches the current filter
-        //The rounded number is used to determine how many signals should be
-        //represented within an interval on the chart.
+    //The group method intersects the current crossfilter
+    //It takes in records from signals that matches the current filter
+    //The rounded number is used to determine how many signals should be
+    //represented within an interval on the chart.
         date = signal.dimension(function (d) {
             return d.date;
         }),
@@ -81,9 +85,9 @@ function FilterCharts(signals) {
         TLWs = TLW.group(function (d) {
             return Math.floor(d / 2) * 2;
         }),
-        //Calculate the max and mins of the ranges
-        //So we can use them to determine the range of the charts
-        //And also the domains of the scales.
+    //Calculate the max and mins of the ranges
+    //So we can use them to determine the range of the charts
+    //And also the domains of the scales.
         ampMax = d3.max(signals, function (d) {
             return d.amp;
         }),
@@ -118,7 +122,7 @@ function FilterCharts(signals) {
     //obtain an output value by inputting within the range of a variable
     //sizeScale(amplitude) = number between 30 and 60. Increase the range amp
     //If it seems too small on scale.
-    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([5,10]);
+    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([5, 10]);
     freqScale = d3.scale.linear().domain([freqMin, freqMax]);
     //Dependent on domain, output the according color
     //We match a range within the domain to a corresponding value in the range.
@@ -172,8 +176,8 @@ function FilterCharts(signals) {
             .x(d3.scale.linear()
                 .domain([tcMin, tcMax + 10])
                 .rangeRound([0, 100 * 8]))
-            //filter(null) filters the selection of existing signals with all values of timecode
             .filter(null)
+            // filters the selection of existing signals with all values of timecode
 
 
         /*      barChart()
@@ -249,7 +253,7 @@ function FilterCharts(signals) {
         var SignalDictLength = SignalDictionary.length;
         //Check if there are objects that can change color
         if (freqToggle && SignalDictLength != 0) {
-            var SignalFreq, color;
+            var SignalFreq, color, newColor;
             //loop through dictionary and change all signal colors.
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
@@ -258,9 +262,10 @@ function FilterCharts(signals) {
                     //freqScale(SignalFreq) returns a hexadecimal value.
                     //I'm not sure how much this function affects performance, further testing needs to be done
                     //It doesn't seem to have a problem coloring small batches of signals very quickly.
-                    color = new THREE.Color(freqScale(SignalFreq));
+                    newColor = new THREE.Color(freqScale(SignalFreq));
                     //We can only change the color of the material of the object.
-                    SignalDictionary[id].material.color = color;
+                    color = SignalDictionary[id].material.color;
+                    _Animator.TweenColor(color,newColor).start();
                 }
             }
         }
@@ -269,14 +274,16 @@ function FilterCharts(signals) {
         bwToggle = true;
         freqToggle = false;
         tlwToggle = false;
-        var SignalDictLength = SignalDictionary.length;
-        if (bwToggle && SignalDictLength != 0) {
-            var bandwidth, color;
+        var signalDictLength = SignalDictionary.length;
+        if (bwToggle && signalDictLength != 0) {
+            var bandwidth, color, newColor;
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
                     bandwidth = ((SignalDictionary[id].userData.bw));
-                    color = new THREE.Color(bwScale(bandwidth));
-                    SignalDictionary[id].material.color = color;
+                    newColor = new THREE.Color(bwScale(bandwidth));
+                    color = SignalDictionary[id].material.color;
+                    _Animator.TweenColor(color,newColor).start();
+
                 }
             }
         }
@@ -286,25 +293,48 @@ function FilterCharts(signals) {
         bwToggle = false;
         freqToggle = false;
         if (tlwToggle && SignalDictionary.length != 0) {
-            var tlw, color;
+            var tlw, color,newColor;
             for (var id in SignalDictionary) {
                 if (SignalDictionary.hasOwnProperty(id)) {
                     tlw = ((SignalDictionary[id].userData.TLW));
-                    color = new THREE.Color(tlwScale(tlw));
-                    SignalDictionary[id].material.color = color;
+                    newColor = new THREE.Color(tlwScale(tlw));
+                   color = SignalDictionary[id].material.color;
+                    _Animator.TweenColor(color, newColor);
+
                 }
             }
         }
     };
+
     window.reset = function (i) {
         charts[i].filter(null);
         renderAll();
     };
+    function ToggleCheck(d){
+        var TLW, BW, FREQ, color;
+        if (tlwToggle) {
+            TLW = d.tlw;
+            color = new THREE.Color(tlwScale(TLW));
+        }
+        else if (bwToggle) {
+            BW = d.bw;
+            color = new THREE.Color(bwScale(BW));
+        }
+        else if (freqToggle) {
+            FREQ = d.freq;
+            color = new THREE.Color(freqScale(FREQ));
+        }
+        return color;
+
+    }
     function signalList(div) {
-        var signalsByDate = nestByDate.entries(timecode.bottom(50));
+        var signalsByDate = nestByDate.entries(timecode.bottom(10));
         if (signalsByDate != null) {
             //Infinity selects ALL records in the current filtered data.
             selected = nestByDate.entries(timecode.bottom(Infinity));
+            if (selected[0] == null){
+                currentTimeIndex++;
+            }
         }
         div.each(function () {
             var date = d3.select(this).selectAll(".date")
@@ -360,6 +390,10 @@ function FilterCharts(signals) {
             signalEnter.append("div")
                 .attr("class", "AMPLITUDE")
                 .text(function (d) {
+                    //Round Floats to one decimal
+                    if (d.amp % 1 != 0) {
+                        d.amp = (d.amp).toFixed(1);
+                    }
                     return d.amp;
                 });
             signalEnter.append("div")
@@ -372,64 +406,78 @@ function FilterCharts(signals) {
                 .text(function (d) {
                     return d.tlw;
                 });
-      /*      signalEnter.append("div")
-                .attr("class", "TCODE")
-                .text(function (d) {
-                    return d.tcode;
-                });*/
+            /*      signalEnter.append("div")
+             .attr("class", "TCODE")
+             .text(function (d) {
+             return d.tcode;
+             });*/
             //Toggle selection on click. We can select the signal on the map and within the table.
             signal.on("click", function (d) {
+                var SignalObject = SignalDictionary[d.txid];
                 //Flag the signal to be selected.
-                SignalDictionary[d.txid].userData.selected = !SignalDictionary[d.txid].userData.selected;
-                if (SignalDictionary[d.txid].userData.selected) {
+                SignalObject.userData.selected = !SignalObject.userData.selected;
+                if (SignalObject.userData.selected) {
                     //Highlight the signal in the table
                     d3.select(this).style("background", "magenta");
-                    signalSelected = true;
                 }
                 else {
                     //Unhighlight if unselected.
+                    if (_selectedArr[d.txid] != null) {
+                        delete _selectedArr[d.txid];
+                    }
                     d3.select(this).style("background", "black");
                 }
             });
-            var color, material;
-            var counter = 0;
-            var flagged = false;
+            var color, material, newColor;
             signal.each(function (d) {
-                //console.log(counter + " start");
-                counter++;
-             //   counter ++;
-                var SignalObject = SignalDictionary[d.txid];
+                var signalObject = SignalDictionary[d.txid];
+                var selectedLength = Object.keys(_selectedArr).length;
                 //Loop through each signal and check if they are selected, so that the _renderer
                 //doesn't cause the signal to be unhighlighted.
                 //I think this function could be vastly improved.
                 //I attempted to add a check like this upon creation of an individual signal at a time,
                 //but, it didn't work. I believe this function will check every signal every time a signal is added
                 //So, theres major room for improvement in this function
-                if (SignalObject != null) {
-                    material = SignalObject.material;
-                    if (tlwToggle) {
+                if (signalObject != null) {
+                    material = signalObject.material;
+                    color = material.color;
+                    var selectedFlag = signalObject.userData.selected;
+                    if (!selectedFlag && selectedLength > 0) {
+                       // newColor = new THREE.Color("#29293D");
+                       // console.log(newColor);
+                        //_Animator.TweenColor(color,newColor).start();
+                       color.setHex("##669999");
+                    }
+             /*       else if (selectedFlag && tlwToggle) {
                         //For constant TLW changes
                         //change the color of the signal based on new TLW value
                         TLW = d.tlw;
                         color = new THREE.Color(tlwScale(TLW));
-                        if (material.color != color && signalSelected != true) {
+                        if (material.color != color && _signalSelected != true) {
                             material.color = color;
                         }
-                    }
-                    if (SignalObject.userData.selected) {
-                        flagged = true;
-                        signalSelected = true;
+                    }*/
+                    if (selectedFlag) {
+                        newColor = ToggleCheck(d);
+                        material.color = newColor;
+                        //signalObject.position.y += 50;
+                        if (_selectedArr[d.txid] == null) {
+                            _selectedArr[d.txid] = signalObject;
+                        }
                         d3.select(this).style("background", "magenta");
                         //Change the opacity of the object on the map.
                         if (material.opacity != 0.8) {
-                            color = new THREE.Color(tlwScale(TLW));
                             material.opacity = 0.8;
-                            material.color = color;
                         }
+
                     }
-                    else {
-                        material.opacity = 0.05;
-                        material.color.setHex("#29293D");
+                    else if (!selectedFlag && selectedLength == 0) {
+                        material.opacity = 0.1;
+                        newColor = ToggleCheck(d);
+                        material.color = newColor;
+                     /*   TLW = d.tlw;
+                        newColor = new THREE.Color(tlwScale(TLW));
+                        _Animator.TweenColor(color,newColor).start();*/
                     }
                 }
             });
@@ -469,7 +517,7 @@ function FilterCharts(signals) {
                         .attr("href", "javascript:reset(" + id + ")")
                         .attr("class", "reset")
                         .text("reset");
-                     //   .style("display", "none");
+                    //   .style("display", "none");
 
 
                     g = div.append("svg")
@@ -511,7 +559,7 @@ function FilterCharts(signals) {
                 if (brushDirty) {
                     brushDirty = false;
                     g.selectAll(".brush").call(brush);
-                  //  div.select(".title a").style("display", brush.empty() ? "none" : null);
+                    //  div.select(".title a").style("display", brush.empty() ? "none" : null);
                     if (brush.empty()) {
                         g.selectAll("#clip-" + id + " rect")
                             .attr("x", 0)

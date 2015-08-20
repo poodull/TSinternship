@@ -31,10 +31,12 @@ function AnimationHandler() {
                 //Chain dwell(which is an idle state), if the animation is able to finish.
                 Signal.userData.animations.anim = Dwell(Signal).start();
             });
-    };/*
-    this.TweenColor = function(Signal, color) {
-        return new TWEEN.Tween(Signal.material.color)
-    }*/
+    };
+    this.TweenColor = function(color,newColor) {
+        return new TWEEN.Tween( color )
+            .to({ color: newColor }
+            , 200);
+    };
     //idle state
     var Dwell = function (Signal) {
         return new TWEEN.Tween(Signal.material)
@@ -49,6 +51,9 @@ function AnimationHandler() {
     var DeleteSignal = function (Signal) {
         _scene.remove(Signal);
         delete SignalDictionary[Signal.userData.id];
+        if (Signal.userData.selected) {
+            delete _selectedArr[Signal.userData.id];
+        }
     };
     //delete stage
     var FadeOut = function (Signal) {
