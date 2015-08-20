@@ -186,7 +186,7 @@ function LoadFloors(data, FloorNumber) {
 }
 
 function LoadData() {
-    //Grab the data from the ajax call started in config.js
+    //Grab the data from the ajax call started in the router index.js
     LoadCSV(dataset, function (result) {
         _FloorData = result[0];
         _RawSignalData = result[1];
@@ -225,7 +225,6 @@ function GenerateCircle(lat, long, alt, radius, id, frequency, bandwidth, tlw) {
         side: THREE.DoubleSide,
         frustumCulled: false,
         depthWrite: false, //Prevents z-fighting
-        depthTest: false,
         shading: THREE.SmoothShading
     });
     //Combine the mesh and material

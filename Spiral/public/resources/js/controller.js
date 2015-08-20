@@ -36,9 +36,6 @@ function FindIntersects() {
        else if (!signal.userData.selected) {
            delete _selectedArr[signal.userData.id];
        }
-        console.log(signal.userData.selected);
-          console.log(_selectedArr);
-
     }
 }
 
@@ -120,7 +117,7 @@ function OnKeyDown(event) {
                             currentTimeIndex = sliceBegin;// 0;
                         }
 
-                    }, 2000); //Time it takes to finish an interval and then repeat.
+                    }, 200); //Time it takes to finish an interval and then repeat.
             }
             break;
     }

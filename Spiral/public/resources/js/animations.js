@@ -40,7 +40,7 @@ function AnimationHandler() {
     //idle state
     var Dwell = function (Signal) {
         return new TWEEN.Tween(Signal.material)
-            .to({}, 3000)
+            .to({}, 1000)
             .onComplete(function () {
                 //If we reach the end of the idle state, it means that there has not been any recent updates
                 //So we begin the fade out animation.

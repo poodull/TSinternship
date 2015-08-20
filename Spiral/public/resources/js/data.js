@@ -6,7 +6,7 @@ function LoadCSV(dataset, callback) {
     $.ajax({
         type: 'PUT', //define request type, types include 'POST', 'GET', 'PUT'
         contentType: 'text/csv', //We are loading CSVs
-        url: 'http://localhost:1337/config', //Where to send the files
+        url: 'http://localhost:1337/', //Where to send the files
         //CSV ARRAY CONTAINS AN ARRAY OF ALL NECESSARY CSV FILES
         success: function (CSV_ARRAY) {
             //alert(data);

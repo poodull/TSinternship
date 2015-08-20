@@ -328,7 +328,7 @@ function FilterCharts(signals) {
 
     }
     function signalList(div) {
-        var signalsByDate = nestByDate.entries(timecode.bottom(10));
+        var signalsByDate = nestByDate.entries(timecode.bottom(50));
         if (signalsByDate != null) {
             //Infinity selects ALL records in the current filtered data.
             selected = nestByDate.entries(timecode.bottom(Infinity));
@@ -391,9 +391,7 @@ function FilterCharts(signals) {
                 .attr("class", "AMPLITUDE")
                 .text(function (d) {
                     //Round Floats to one decimal
-                    if (d.amp % 1 != 0) {
-                        d.amp = (d.amp).toFixed(1);
-                    }
+
                     return d.amp;
                 });
             signalEnter.append("div")
