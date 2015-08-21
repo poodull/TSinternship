@@ -19,7 +19,8 @@
         1. cd into path/to/project_directory using Cygwin.
         2. type npm install [module_name], it will be installed into the modules directory.
   4. Run bin/www and go to localhost:1337.
-  5. You're running!
+  5. If running from command line. cd into project bin folder. type "node www" to run the server.
+  6. Press "CTRL + C" to close.
 
 ##How to use JMeter:
   1. Download [JMeter 2.13](http://jmeter.apache.org/)
