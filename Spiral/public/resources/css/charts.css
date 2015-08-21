@@ -58,8 +58,8 @@
 
 #frequency-chart {
     width: 9%;
-    color:orange;
-    margin-left:0px;
+    margin-left:500px;
+    color: orange;
     font-weight:bold;
 
 }
@@ -102,7 +102,7 @@
 }
 #signal-list {
     min-height: 512px;
-    width:25%;
+    width:29%;
     color: green;
     position:absolute;
     top:169px;
@@ -166,7 +166,8 @@
 
 aside {
     position: absolute;
-    left: 500px;
+    left: 570px;
+    top:168px;
     font-size: smaller;
     width: 220px;
     color:white;
