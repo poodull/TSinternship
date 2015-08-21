@@ -108,9 +108,8 @@
     top:169px;
     margin: 0;
     z-index:1;
-
-
 }
+
 #signal-list .signal {
     background: black;
     margin-bottom: 1px;
@@ -133,7 +132,6 @@
 #signal-list .signal div {
     display: inline-block;
     width: 89px;
-
 }
 
 #signal-list  .signal div.FREQUENCY {

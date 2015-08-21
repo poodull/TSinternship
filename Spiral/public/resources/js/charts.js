@@ -176,9 +176,12 @@ function FilterCharts(signals) {
             .x(d3.scale.linear()
                 .domain([tcMin, tcMax + 10])
                 .rangeRound([0, 100 * 8]))
+            //Initial filter
             .filter(null)
             // filters the selection of existing signals with all values of timecode
-
+            //Keep this at null when the live data pump is implemented
+            //It will read in all of the signals at the current time code,
+            //instead of all possible timecodes
 
         /*      barChart()
          .dimension(date)
@@ -231,12 +234,13 @@ function FilterCharts(signals) {
 
     // Like d3.time.format, but faster.
     function parseDate(d) {
-        return new Date(d.substring(0, 4),
-            d.substring(5, 7) - 1,
-            d.substring(8, 10),
-            d.substring(11, 13),
-            d.substring(14, 16),
-            d.substring(17, 19)
+        //Parse the time stamp string
+        return new Date(d.substring(0, 4), //year
+            d.substring(5, 7) - 1, //month
+            d.substring(8, 10), //day
+            d.substring(11, 13), //hours
+            d.substring(14, 16),//minutes
+            d.substring(17, 19)//seconds
         );
     }
 
@@ -449,18 +453,16 @@ function FilterCharts(signals) {
                         //_Animator.TweenColor(color,newColor).start();
                        color.setHex("##669999");
                     }
-             /*       else if (selectedFlag && _tlwToggle) {
-                        //For constant TLW changes
-                        //change the color of the signal based on new TLW value
-                        TLW = d.tlw;
-                        color = new THREE.Color(_tlwScale(TLW));
-                        if (material.color != color && _signalSelected != true) {
-                            material.color = color;
-                        }
-                    }*/
                     if (selectedFlag) {
                         newColor = ToggleCheck(d);
                         material.color = newColor;
+                        //prevents z-fighting
+                        //Higher render order means later rendering
+                        //If things are disappearing and prevent rendering when it should be,
+                        //comment out the render order functions
+                        //I have not thoroughly tested it, but it seems to be working.
+                        signalObject.renderOrder = 1;
+                        //material.transparent = false;
                         //signalObject.position.y += 50;
                         if (_selectedArr[d.txid] == null) {
                             _selectedArr[d.txid] = signalObject;
@@ -474,6 +476,9 @@ function FilterCharts(signals) {
                     }
                     else if (!selectedFlag && selectedLength == 0) {
                         material.opacity = 0.1;
+                        //prevents z-fighting
+                        //Higher render order means later rendering
+                        signalObject.renderOrder = 2;
                         newColor = ToggleCheck(d);
                         material.color = newColor;
                      /*   TLW = d.tlw;

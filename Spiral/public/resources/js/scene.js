@@ -5,6 +5,8 @@ var _container, _scene, _camera, _renderer,
     _controls, _stats, _Animator, _floorData, _crossFilter, _rawSignalData;
 var _floorDimensions = [];
 var _originAxis;
+//var _floorOrigins = [];// origins indexed by floorNumber
+//var floorOriginPosition = []; //array that holds x,y,z positions of origin
 /*
  _container: refers to the div element that holds all of the rendering we will do
  _scene: the background /3D plane, it holds the three.js objects that we add.
@@ -150,7 +152,8 @@ function CreateFloor(dataset, floorNumber) {
     floorMesh.position.z = 0;
     floorMesh.position.y = altitude;// + b_offset_z;
     // console.log(FloorMesh.position);
-    //harded coded in to help me figure out where the points are on the map.
+    //It will probably help to keep the axis this way for development purposes.
+    //All floor origins should be organized into one array
     var halfX = imageWidth / 2, halfY = imageHeight / 2;
     _originAxis.position.x = -halfX + originX;
     _originAxis.position.y = floorMesh.position.y;
