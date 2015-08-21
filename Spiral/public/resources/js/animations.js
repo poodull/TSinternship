@@ -1,9 +1,9 @@
 /**
- * Created by tfang on 7/31/2015.
+ * Created by Tommy Fang on 7/31/2015.
  */
 //Handles creating all necessary tweens for animations
 function AnimationHandler() {
-    //Take in a signal data OBJECT (contained inside SignalDictionary)
+    //Take in a signal data OBJECT (contained inside _signalDictionary)
     this.PopSizeIn = function (Signal) {
         //Size bounces as it pops into existence.
         return new TWEEN.Tween(Signal.scale)
@@ -50,7 +50,7 @@ function AnimationHandler() {
     //Helper function to cleanly remove inactive signals.
     var DeleteSignal = function (Signal) {
         _scene.remove(Signal);
-        delete SignalDictionary[Signal.userData.id];
+        delete _signalDictionary[Signal.userData.id];
         if (Signal.userData.selected) {
             delete _selectedArr[Signal.userData.id];
         }

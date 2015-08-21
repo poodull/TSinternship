@@ -1,14 +1,16 @@
 /**
- * Created by tfang on 7/31/2015.
+ * Created by Tommy Fang on 7/31/2015.
  */
 var _mouse = new THREE.Vector2();
 var _signalSelected = false, _points = [];
 //Events(Keypresses and Mouse functions)
 function CheckSignals(){
+    //We only want to check the current points in the signal dictionary
+    //Clear the array each on click and check which points are currently on screen
     _points = [];
-    for (var id in SignalDictionary) {
-        if (SignalDictionary.hasOwnProperty(id)) {
-            _points.push(SignalDictionary[id]);
+    for (var id in _signalDictionary) {
+        if (_signalDictionary.hasOwnProperty(id)) {
+            _points.push(_signalDictionary[id]);
         }
     }
 }
@@ -20,7 +22,6 @@ function FindIntersects() {
     CheckSignals();
     var intersects = raycaster.intersectObjects(_points);
     var intersectedPoint, signal;
-    var selectedLength = Object.keys(_selectedArr).length;
 
     //If there are points to check, then we can animate them.
     if (intersects.length > 0) {
@@ -77,47 +78,45 @@ function onWindowResize() {
 //Look up Javascript key codes to bind new functions to keys.
 function OnKeyDown(event) {
     switch (event.keyCode) {
-        case 46: // 'DELETE' Key, Toggle delete selected point
+        case 46: // 'DELETE' Key, Toggle delete _filteredSelection point
             break;
         case 45: //'INSERT' Key, add one single point
-            FilteredTCodeArray([selected[0].values]);
+            FilteredTCodeArray([_filteredSelection[0].values]);
             break;
         case 35:
             // RemovePoints(); //Remove point when clicked!
             break;
         case 76: //'L'
             event.preventDefault();
-            if (!Loading) {
+            if (!_loading) {
 
                    //Slice is used to play a current selection
-                    var slice = selected[0].values;
-                  //  var testArray = TCodeArrayHelper(_RawSignalData);
+                    var slice = _filteredSelection[0].values;
+                  //  var testArray = TCodeArrayHelper(_rawSignalData);
                 //console.log(testArray);
                     //Slice is sorted by time code values
                     //Therefore, the first index has the first tcode.
                     var sliceBegin = slice[0].TCODE;
-                    var test = TCodeArrayHelper(_RawSignalData);
-
 
                 //The last index has the last tcode
                     var sliceEnd = slice[slice.length-1].TCODE;
                     //Set the beginning timecode of the loop
-                    currentTimeIndex = sliceBegin;
+                    _currentTimeIndex = sliceBegin;
                     _signalSelected = false;
-
-                var start = window.setInterval(function () {
+                var play = window.setInterval(function () {
                         DataPump();
                  //   _crossFilter.updateFilter(sliceBegin, sliceBegin + 1);
 
-                    currentTimeIndex++;
+                    _currentTimeIndex++;
 
                         //If the loop ends, then start over.
-                        //console.log(currentTimeIndex);
-                        if (currentTimeIndex > sliceEnd) {
-                            currentTimeIndex = sliceBegin;// 0;
+                        //console.log(_currentTimeIndex);
+                        if (_currentTimeIndex > sliceEnd) {
+                            _currentTimeIndex = sliceBegin;// 0;
                         }
 
-                    }, 200); //Time it takes to finish an interval and then repeat.
+                    }, 200);//Time it takes to finish an interval and then repeat.
+
             }
             break;
     }

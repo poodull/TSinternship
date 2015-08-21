@@ -1,21 +1,22 @@
 /**
  * Created by Tommy Fang
  */
-var totalTimeCodes;
-
 function LoadCSV(dataset, callback) {
     var result = [];
 
     $.ajax({
         type: 'PUT',
         contentType: 'text/csv',
-        url: 'http://localhost:1337/config',
+        //url: string containing the url to which  the request is sent
+        url: 'http://localhost:1337/',
         //CSV ARRAY CONTAINS AN ARRAY OF ALL NECESSARY CSV FILES
         success: function (CSV_ARRAY) {
             //alert(data);
             if (dataset != null) {
                 result[0] = CSV_ARRAY[0];
                 result[1] = CSV_ARRAY[1];
+                //Store the result using a callback function
+                //Result is sent to _charts.js (crossfilter/d3.js) and scene.js(three.js) upon load
             }
             //Callback returns the csv files for usage in main.js
             callback(result);

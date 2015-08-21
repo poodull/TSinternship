@@ -1,13 +1,13 @@
 /**
  * Created by Tommy Fang
  */
-//Holds all the charts that are rendered onto the screen.
-var charts;
+//Holds all the _charts that are rendered onto the screen.
+var _charts;
 //These flags toggle which color scheme to use.
-var freqToggle = false, bwToggle = false, tlwToggle = true;
+var _freqToggle = false, _bwToggle = false, _tlwToggle = true;
 //These the actual scales, so that they can be used in this file,
 //as well as during the creation of a signal in _scene.js
-var freqScale, bwScale, sizeScale, tlwScale;
+var _freqScale, _bwScale, _sizeScale, _tlwScale;
 var _selectedArr = [];
 function FilterCharts(signals) {
     //Signals is the csv file that was sent from the server
@@ -86,7 +86,7 @@ function FilterCharts(signals) {
             return Math.floor(d / 2) * 2;
         }),
     //Calculate the max and mins of the ranges
-    //So we can use them to determine the range of the charts
+    //So we can use them to determine the range of the _charts
     //And also the domains of the scales.
         ampMax = d3.max(signals, function (d) {
             return d.amp;
@@ -120,33 +120,33 @@ function FilterCharts(signals) {
         });
     //Increase the range because the values at the end are buggy.
     //obtain an output value by inputting within the range of a variable
-    //sizeScale(amplitude) = number between 30 and 60. Increase the range amp
+    //_sizeScale(amplitude) = number between 30 and 60. Increase the range amp
     //If it seems too small on scale.
-    sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([5, 10]);
-    freqScale = d3.scale.linear().domain([freqMin, freqMax]);
+    _sizeScale = d3.scale.linear().domain([ampMin, ampMax]).range([5, 10]);
+    _freqScale = d3.scale.linear().domain([freqMin, freqMax]);
     //Dependent on domain, output the according color
     //We match a range within the domain to a corresponding value in the range.
     //0-0.14 is red, 0.14-0.28 is orange, etc.
-    freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
-        .map(freqScale.invert))
+    _freqScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+        .map(_freqScale.invert))
         .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
 
-    bwScale = d3.scale.linear().domain([bwMin, bwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
-    bwScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
-        .map(bwScale.invert))
+    _bwScale = d3.scale.linear().domain([bwMin, bwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    _bwScale.domain([0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1]
+        .map(_bwScale.invert))
         .range(["red", "orange", "yellow", "green", "blue", "indigo", "violet"]);
-    tlwScale = d3.scale.linear().domain([tlwMin, tlwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
-    tlwScale.domain([0, 0.3, 0.6, 0.9]
-        .map(tlwScale.invert))
+    _tlwScale = d3.scale.linear().domain([tlwMin, tlwMax]); //Dependent on domain, output the according color <--may need to be constantly updated.
+    _tlwScale.domain([0, 0.3, 0.6, 0.9]
+        .map(_tlwScale.invert))
         .range(["green", "orangered", "orange", "red"]);
-    charts = [
+    _charts = [
         barChart()
             .dimension(frequency)
             .group(frequencies)
             .x(d3.scale.linear()
                 //I attempted to fix these ranges by hard coding in some constants
                 //The issue is that these current domains are not inclusive
-                //At freqmax, the bar representing a signal with value of freqMax will render off the charts
+                //At freqmax, the bar representing a signal with value of freqMax will render off the _charts
                 //at the end. It occurs with all of the domains in this chart array. I believe it has something to
                 //do with rangeRound or the setup of the grouping function. see above.
                 .domain([freqMin, freqMax + 200])
@@ -192,18 +192,18 @@ function FilterCharts(signals) {
          */
     ];
     this.updateFilter = function (min, max) {
-        //charts[4] is the time chart
+        //_charts[4] is the time chart
         //used in the main animation loop.
         //live updates the filtered selection of signals and renders them.
-        charts[4].filter([min, max]);
+        _charts[4].filter([min, max]);
         renderAll();
     };
 
-    // Given our array of charts, which we assume are in the same order as the
-    // .chart elements in the DOM, bind the charts to the DOM and render them.
+    // Given our array of _charts, which we assume are in the same order as the
+    // .chart elements in the DOM, bind the _charts to the DOM and render them.
     // We also listen to the chart's brush events to update the display.
     var chart = d3.selectAll(".chart")
-            .data(charts)
+            .data(_charts)
             .each(function (chart) {
                 chart.on("brush", renderAll).on("brushend", renderAll);
             }),
@@ -242,46 +242,46 @@ function FilterCharts(signals) {
 
     window.filter = function (filters) {
         filters.forEach(function (d, i) {
-            charts[i].filter(d);
+            _charts[i].filter(d);
         });
         renderAll();
     };
     window.toggleFrequency = function () {
-        tlwToggle = false; //Set other toggle flags to false
-        bwToggle = false;
-        freqToggle = true;
-        var SignalDictLength = SignalDictionary.length;
+        _tlwToggle = false; //Set other toggle flags to false
+        _bwToggle = false;
+        _freqToggle = true;
+        var SignalDictLength = _signalDictionary.length;
         //Check if there are objects that can change color
-        if (freqToggle && SignalDictLength != 0) {
+        if (_freqToggle && SignalDictLength != 0) {
             var SignalFreq, color, newColor;
             //loop through dictionary and change all signal colors.
-            for (var id in SignalDictionary) {
-                if (SignalDictionary.hasOwnProperty(id)) {
-                    SignalFreq = ((SignalDictionary[id].userData.freq));
+            for (var id in _signalDictionary) {
+                if (_signalDictionary.hasOwnProperty(id)) {
+                    SignalFreq = ((_signalDictionary[id].userData.freq));
                     //create a new color based on the toggle using the scale.
-                    //freqScale(SignalFreq) returns a hexadecimal value.
+                    //_freqScale(SignalFreq) returns a hexadecimal value.
                     //I'm not sure how much this function affects performance, further testing needs to be done
                     //It doesn't seem to have a problem coloring small batches of signals very quickly.
-                    newColor = new THREE.Color(freqScale(SignalFreq));
+                    newColor = new THREE.Color(_freqScale(SignalFreq));
                     //We can only change the color of the material of the object.
-                    color = SignalDictionary[id].material.color;
+                    color = _signalDictionary[id].material.color;
                     _Animator.TweenColor(color,newColor).start();
                 }
             }
         }
     };
     window.toggleBandwidth = function () {
-        bwToggle = true;
-        freqToggle = false;
-        tlwToggle = false;
-        var signalDictLength = SignalDictionary.length;
-        if (bwToggle && signalDictLength != 0) {
+        _bwToggle = true;
+        _freqToggle = false;
+        _tlwToggle = false;
+        var signalDictLength = _signalDictionary.length;
+        if (_bwToggle && signalDictLength != 0) {
             var bandwidth, color, newColor;
-            for (var id in SignalDictionary) {
-                if (SignalDictionary.hasOwnProperty(id)) {
-                    bandwidth = ((SignalDictionary[id].userData.bw));
-                    newColor = new THREE.Color(bwScale(bandwidth));
-                    color = SignalDictionary[id].material.color;
+            for (var id in _signalDictionary) {
+                if (_signalDictionary.hasOwnProperty(id)) {
+                    bandwidth = ((_signalDictionary[id].userData.bw));
+                    newColor = new THREE.Color(_bwScale(bandwidth));
+                    color = _signalDictionary[id].material.color;
                     _Animator.TweenColor(color,newColor).start();
 
                 }
@@ -289,16 +289,16 @@ function FilterCharts(signals) {
         }
     };
     window.toggleTLW = function () {
-        tlwToggle = true;
-        bwToggle = false;
-        freqToggle = false;
-        if (tlwToggle && SignalDictionary.length != 0) {
+        _tlwToggle = true;
+        _bwToggle = false;
+        _freqToggle = false;
+        if (_tlwToggle && _signalDictionary.length != 0) {
             var tlw, color,newColor;
-            for (var id in SignalDictionary) {
-                if (SignalDictionary.hasOwnProperty(id)) {
-                    tlw = ((SignalDictionary[id].userData.TLW));
-                    newColor = new THREE.Color(tlwScale(tlw));
-                   color = SignalDictionary[id].material.color;
+            for (var id in _signalDictionary) {
+                if (_signalDictionary.hasOwnProperty(id)) {
+                    tlw = ((_signalDictionary[id].userData.TLW));
+                    newColor = new THREE.Color(_tlwScale(tlw));
+                   color = _signalDictionary[id].material.color;
                     _Animator.TweenColor(color, newColor);
 
                 }
@@ -307,33 +307,36 @@ function FilterCharts(signals) {
     };
 
     window.reset = function (i) {
-        charts[i].filter(null);
+        _charts[i].filter(null);
         renderAll();
     };
     function ToggleCheck(d){
         var TLW, BW, FREQ, color;
-        if (tlwToggle) {
+        if (_tlwToggle) {
             TLW = d.tlw;
-            color = new THREE.Color(tlwScale(TLW));
+            color = new THREE.Color(_tlwScale(TLW));
         }
-        else if (bwToggle) {
+        else if (_bwToggle) {
             BW = d.bw;
-            color = new THREE.Color(bwScale(BW));
+            color = new THREE.Color(_bwScale(BW));
         }
-        else if (freqToggle) {
+        else if (_freqToggle) {
             FREQ = d.freq;
-            color = new THREE.Color(freqScale(FREQ));
+            color = new THREE.Color(_freqScale(FREQ));
         }
         return color;
 
     }
     function signalList(div) {
+        //Organizes all signals in signal list by TCode
         var signalsByDate = nestByDate.entries(timecode.bottom(50));
         if (signalsByDate != null) {
             //Infinity selects ALL records in the current filtered data.
-            selected = nestByDate.entries(timecode.bottom(Infinity));
-            if (selected[0] == null){
-                currentTimeIndex++;
+            _filteredSelection = nestByDate.entries(timecode.bottom(Infinity));
+            if (_filteredSelection[0] == null){
+                //If there is an invalid timecode with zero signals
+                //move to the next timecode
+                _currentTimeIndex++;
             }
         }
         div.each(function () {
@@ -391,7 +394,7 @@ function FilterCharts(signals) {
                 .attr("class", "AMPLITUDE")
                 .text(function (d) {
                     //Round Floats to one decimal
-
+                    
                     return d.amp;
                 });
             signalEnter.append("div")
@@ -411,7 +414,7 @@ function FilterCharts(signals) {
              });*/
             //Toggle selection on click. We can select the signal on the map and within the table.
             signal.on("click", function (d) {
-                var SignalObject = SignalDictionary[d.txid];
+                var SignalObject = _signalDictionary[d.txid];
                 //Flag the signal to be selected.
                 SignalObject.userData.selected = !SignalObject.userData.selected;
                 if (SignalObject.userData.selected) {
@@ -428,7 +431,7 @@ function FilterCharts(signals) {
             });
             var color, material, newColor;
             signal.each(function (d) {
-                var signalObject = SignalDictionary[d.txid];
+                var signalObject = _signalDictionary[d.txid];
                 var selectedLength = Object.keys(_selectedArr).length;
                 //Loop through each signal and check if they are selected, so that the _renderer
                 //doesn't cause the signal to be unhighlighted.
@@ -446,11 +449,11 @@ function FilterCharts(signals) {
                         //_Animator.TweenColor(color,newColor).start();
                        color.setHex("##669999");
                     }
-             /*       else if (selectedFlag && tlwToggle) {
+             /*       else if (selectedFlag && _tlwToggle) {
                         //For constant TLW changes
                         //change the color of the signal based on new TLW value
                         TLW = d.tlw;
-                        color = new THREE.Color(tlwScale(TLW));
+                        color = new THREE.Color(_tlwScale(TLW));
                         if (material.color != color && _signalSelected != true) {
                             material.color = color;
                         }
@@ -474,7 +477,7 @@ function FilterCharts(signals) {
                         newColor = ToggleCheck(d);
                         material.color = newColor;
                      /*   TLW = d.tlw;
-                        newColor = new THREE.Color(tlwScale(TLW));
+                        newColor = new THREE.Color(_tlwScale(TLW));
                         _Animator.TweenColor(color,newColor).start();*/
                     }
                 }
